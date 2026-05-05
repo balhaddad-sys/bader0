@@ -1,0 +1,9 @@
+# Required for live AI responses
+OPENAI_API_KEY=sk-your-key-here
+
+# Use any OpenAI model available to your account.
+# Example: gpt-4.1-mini, gpt-5-mini, or your preferred production model.
+OPENAI_MODEL=gpt-4.1-mini
+
+# Optional: set to true if deploying behind your own auth gateway.
+BADER_REQUIRE_APP_AUTH=false

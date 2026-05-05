@@ -1,0 +1,15 @@
+import type { ThinkingMode } from './baderPrompt';
+
+export type ChatMessage = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  mode?: ThinkingMode;
+  createdAt: string;
+  evaluation?: {
+    score: number;
+    flags: string[];
+    missing: string[];
+    strengths: string[];
+  };
+};

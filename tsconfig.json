@@ -1,0 +1,90 @@
+# Deployment Checklist
+
+## Local readiness
+
+```bash
+npm install
+npm run typecheck
+npm run build
+npm run start
+```
+
+## Environment variables
+
+Required:
+
+```bash
+OPENAI_API_KEY=
+OPENAI_MODEL=
+```
+
+Optional:
+
+```bash
+BADER_REQUIRE_APP_AUTH=false
+```
+
+## Vercel deployment
+
+1. Connect GitHub repository.
+2. Add environment variables in Project Settings.
+3. Deploy.
+4. Test `/api/chat` from the UI.
+5. Check Vercel function logs for upstream model errors.
+
+## Docker deployment
+
+```bash
+docker build -t bader-thinking-app .
+docker run -p 3000:3000 --env-file .env.local bader-thinking-app
+```
+
+## Hardening before real users
+
+### Authentication
+Add an auth provider before storing user conversations server-side.
+
+### Rate limiting
+Protect `/api/chat` from abuse.
+
+Suggested constraints:
+
+- anonymous: disabled
+- authenticated: 20 requests/hour initially
+- admin/dev: higher quota
+
+### Persistence
+Use `supabase/schema.sql` if you want durable sessions.
+
+### Audit logging
+Log these fields:
+
+- user_id
+- mode
+- model
+- latency_ms
+- response_score
+- error state
+- created_at
+
+Do not log secrets.
+
+### Clinical mode hardening
+
+For medical deployment:
+
+- require source-grounding for clinical claims
+- add local protocol field
+- add disclaimer and escalation rules
+- record source citations
+- separate educational answer from patient-specific recommendation
+
+## Failure modes
+
+| Failure | Surface | Response |
+|---|---|---|
+| Missing API key | `/api/chat` fallback | Show deterministic setup instruction |
+| Invalid model | API error card | Tell user to check `OPENAI_MODEL` |
+| Rate limit | API error | Add retry-after and quota display |
+| Bad answer structure | Evaluator warning | Mark missing sections |
+| Medical unsupported claim | Clinical guard | Ask for sources or mark uncertainty |
