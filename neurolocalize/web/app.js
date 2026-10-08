@@ -11,7 +11,7 @@ const drillById = Object.fromEntries(drills.map(d=>[d.id,d]));
 const finder = extras.finder;
 const diagramById = Object.fromEntries((atlas||[]).map(d=>[d.id,d]));
 const BANK_REVISION = 2;
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 const main = document.getElementById('main');
 if (!curriculum || !bank || !practice || !atlas || !finder || expansions.length !== 2) {
   main.innerHTML = '<div class="empty-state"><h1>The study library could not load.</h1><p>Please close and reopen NeuroLocalize. If this continues, reinstall the APK.</p></div>';

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Generate the NeuroLocalize atlas diagrams (figures 12–35) as standalone SVG files.
+"""Generate all 35 NeuroLocalize atlas figures as standalone SVG files.
 
-Every diagram uses the same visual language as the original 1.1 atlas:
-a 720px-wide warm canvas, Arial labels, teal/blue/gold accents and a
-"not to scale" footer. Run:  python3 tools/diagrams.py web/assets/atlas
+House style: 720px canvas with a hairline frame, serif title, Arial labels on a fixed
+type scale, flat teal/blue/gold accents, shading reserved for anatomy, leader-line
+callouts and key panels. Run:  python3 tools/diagrams.py web/assets/atlas
 """
 import os
 import sys
@@ -14,6 +14,7 @@ TEAL = '#278278'
 BLUE = '#527da2'
 GOLD = '#b17b30'
 MUTED = '#64736c'
+TEXT = '#3b4c46'
 BG = '#f4f5ee'
 LINE = '#d6dfd3'
 PALE = '#e5ece0'
@@ -64,8 +65,8 @@ class Svg:
         self.body.append(s)
 
     def paint(self, fill):
-        """Swap a solid accent colour for a subtle top-lit gradient of the same hue."""
-        if fill not in SOLID:
+        """Accents stay flat in the house style; anatomy uses radial() shading explicitly."""
+        if fill not in SOLID or True:
             return fill
         gid = 'g' + fill.strip('#')
         if gid not in self.grads:
@@ -87,21 +88,19 @@ class Svg:
         lines = s if isinstance(s, (list, tuple)) else [s]
         extra = (f' font-weight="{weight}"' if weight else '') + (' font-style="italic"' if italic else '')
         if weight == '700' and size <= 13 and fill not in (WHITE,):
-            extra += ' letter-spacing=".6"'
+            extra += ' letter-spacing=".9"'
         for i, line in enumerate(lines):
             self.add(f'<text x="{x}" y="{y + i * round(size * 1.35)}" font-size="{size}" fill="{fill}" '
                      f'text-anchor="{anchor}"{extra}>{escape(line)}</text>')
 
     def rect(self, x, y, w, h, fill=WHITE, stroke=None, sw=2, rx=12, extra=''):
-        st = f' stroke="{stroke}" stroke-width="{min(sw, 1.6)}"' if stroke else ''
-        lift = ' filter="url(#shadow)"' if stroke and fill in (WHITE, PALE) and w > 40 and h > 24 else ''
-        if fill == WHITE and lift:
-            fill = 'url(#card)'
+        st = f' stroke="{stroke}" stroke-width="{min(sw, 1.2)}"' if stroke else ''
+        lift = ''
         self.add(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx}" fill="{self.paint(fill)}"{st}{lift}{extra}/>')
 
     def circle(self, cx, cy, r, fill=WHITE, stroke=None, sw=2, extra=''):
         st = f' stroke="{stroke}" stroke-width="{sw}"' if stroke else ''
-        lift = ' filter="url(#lift)"' if fill in SOLID and 5 < r <= 26 else ''
+        lift = ''
         self.add(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{self.paint(fill)}"{st}{lift}{extra}/>')
 
     def ellipse(self, cx, cy, rx, ry, fill=WHITE, stroke=None, sw=2, extra=''):
@@ -111,8 +110,8 @@ class Svg:
     def path(self, d, stroke=TEAL, sw=3, fill='none', arrow=None, dash=None, extra='', glow=True):
         mk = f' marker-end="url(#{self.marker(arrow)})"' if arrow else ''
         ds = f' stroke-dasharray="{dash}"' if dash else ''
-        if glow and sw >= 3.5 and stroke in SOLID and fill == 'none' and not dash:
-            self.add(f'<path d="{d}" fill="none" stroke="{stroke}" stroke-width="{sw + 7}" stroke-opacity=".13" '
+        if glow and sw >= 3 and stroke in SOLID and fill == 'none' and not dash:
+            self.add(f'<path d="{d}" fill="none" stroke="#ffffff" stroke-width="{sw + 3.5}" '
                      f'stroke-linecap="round" stroke-linejoin="round"/>')
         self.add(f'<path d="{d}" fill="{fill}" stroke="{stroke}" stroke-width="{sw}" '
                  f'stroke-linecap="round" stroke-linejoin="round"{ds}{mk}{extra}/>')
@@ -120,8 +119,8 @@ class Svg:
     def marker(self, color):
         mid = 'arrow-' + color.strip('#')
         if not any(f'id="{mid}"' in d for d in self.defs):
-            self.defs.append(f'<marker id="{mid}" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" '
-                             f'refX="11" refY="8" orient="auto"><path d="M2 2.5L13 8L2 13.5L5 8Z" fill="{color}"/></marker>')
+            self.defs.append(f'<marker id="{mid}" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" '
+                             f'refX="10" refY="7" orient="auto"><path d="M1.5 2.5L12 7L1.5 11.5L4 7Z" fill="{color}"/></marker>')
         return mid
 
     def clip(self, inner):
@@ -134,11 +133,13 @@ class Svg:
         self.text(cx, cy + size * 0.36, str(label), size=size, fill=WHITE, anchor='middle', weight='700')
 
     def card(self, x, y, w, h, heading, lines, color=TEAL, size=14, hsize=17, fill=WHITE):
-        self.rect(x, y, w, h, fill=fill, stroke=mix(color, WHITE, .25))
-        self.add(f'<rect x="{x + 1}" y="{y + 10}" width="3.5" height="{min(h - 20, 30)}" rx="1.75" fill="{color}"/>')
-        self.text(x + 14, y + 26, heading, size=hsize, fill=color)
+        """Key panel: hairline frame, coloured top rule, small-caps heading, body text."""
+        self.add(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="8" fill="#ffffff" stroke="{mix(color, WHITE, .55)}" stroke-width="1"/>')
+        self.add(f'<path d="M{x + 8} {y + .6}L{x + w - 8} {y + .6}" stroke="{color}" stroke-width="2.4" stroke-linecap="round"/>')
+        self.add(f'<text x="{x + 14}" y="{y + 24}" font-size="12" fill="{color}" font-weight="700" letter-spacing="1.1">'
+                 f'{escape(heading.upper())}</text>')
         if lines:
-            self.text(x + 14, y + 26 + round(hsize * 1.45), lines, size=size)
+            self.text(x + 14, y + 24 + round(hsize * 1.45), lines, size=min(size, 14), fill=TEXT)
 
     def note(self, y, heading, lines, h=None, color=GOLD):
         lines = lines if isinstance(lines, list) else [lines]
@@ -160,16 +161,15 @@ class Svg:
         head = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
                 f'role="img"><title>{escape(self.title)}</title><desc>{escape(self.subtitle)} Original '
                 f'simplified teaching diagram; not to scale.</desc><defs>{base}{"".join(self.defs)}</defs>'
-                f'<rect width="{w}" height="{h}" rx="18" fill="url(#bg)"/>'
-                f'<rect width="{w}" height="{h}" rx="18" fill="url(#dots)" opacity=".55"/>'
-                f'<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="17.5" fill="none" stroke="#dfe5da"/>'
+                f'<rect width="{w}" height="{h}" rx="14" fill="#fcfcf9"/>'
+                f'<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="13.5" fill="none" stroke="#dde3d8"/>'
                 f'<g font-family="Arial,Helvetica,sans-serif">'
-                f'<text x="28" y="40" font-size="26" fill="{INK}" font-family="Georgia,\'Times New Roman\',serif" '
-                f'letter-spacing="-.4">{escape(self.title)}</text>'
-                f'<text x="28" y="68" font-size="15" fill="{MUTED}" text-anchor="start">{escape(self.subtitle)}</text>')
+                f'<text x="28" y="40" font-size="25" fill="{INK}" font-family="Georgia,\'Times New Roman\',serif" '
+                f'letter-spacing="-.3">{escape(self.title)}</text>'
+                f'<text x="28" y="66" font-size="14" fill="{MUTED}" text-anchor="start">{escape(self.subtitle)}</text>')
         foot = (f'<path d="M28 {h - 36}L{w - 28} {h - 36}" fill="none" stroke="{LINE}" stroke-width="1"/>'
                 f'<text x="28" y="{h - 13}" font-size="11" fill="{MUTED}" letter-spacing="1.2">'
-                f'NEUROLOCALIZE  ·  ORIGINAL SCHEMATIC  ·  NOT TO SCALE</text>'
+                f'NEUROLOCALIZE ATLAS  ·  SCHEMATIC, NOT TO SCALE</text>'
                 f'<text x="{w - 28}" y="{h - 13}" font-size="11" fill="{TEAL}" text-anchor="end" letter-spacing="1.2" '
                 f'font-weight="700">{escape(self.fig)}</text></g></svg>')
         return head + ''.join(self.body) + foot
@@ -304,10 +304,10 @@ def umn_lmn():
     s.path('M34 272L26 272L26 400L34 400', GOLD, 3)
     s.add(f'<text x="18" y="336" font-size="14" fill="{GOLD}" text-anchor="middle" transform="rotate(-90 18 336)">LOWER</text>')
     # table
-    x0, xu, xl, y = 228, 370, 532, 104
+    x0, xu, xl, y = 228, 362, 526, 104
     s.text(x0, y + 10, 'SIGN', 12, MUTED, weight='700')
-    s.text(xu, y + 10, 'UPPER MOTOR NEURON', 12, TEAL, weight='700')
-    s.text(xl, y + 10, 'LOWER MOTOR NEURON', 12, GOLD, weight='700')
+    s.text(xu, y + 10, 'UPPER MOTOR NEURON', 11, TEAL, weight='700')
+    s.text(xl, y + 10, 'LOWER MOTOR NEURON', 11, GOLD, weight='700')
     rows = [('Tone', 'Increased, spastic', 'Reduced, flaccid'),
             ('Reflexes', 'Brisk, may spread', 'Reduced or absent'),
             ('Plantar', 'Extensor', 'Flexor'),
@@ -1014,7 +1014,7 @@ def eye_muscles():
 def pupil_reflex():
     s = Svg('The pupillary light reflex', 'Light in one eye constricts both pupils through a bilateral relay.', h=640)
     s.rect(130, 282, 460, 112, fill=s.radial('#eef3ea', '#dce6d7'), rx=40)
-    s.text(146, 302, 'MIDBRAIN', 11, MUTED, weight='700')
+    s.text(574, 302, 'MIDBRAIN', 11, MUTED, 'end', weight='700')
     for x, lab in ((230, 'Left eye'), (490, 'Right eye')):
         eyeball_top(s, x, 130, 32)
         s.text(x + 44, 134, lab, 12, MUTED, 'start' if x > 360 else 'start')
@@ -1263,6 +1263,499 @@ def conus_cauda():
     return s
 
 
+# ---------------------------------------------------------------- 1.5 redraws of the original figures
+
+PURPLE = '#7a64a3'
+
+
+def callout(s, x, y, tx, ty, text, color=TEXT, anchor='start', size=13, weight=None):
+    """Leader line from an anatomical point (dot) to a label."""
+    s.circle(x, y, 2.6, fill=INK)
+    s.add(f'<path d="M{x} {y}L{tx} {ty}" stroke="{INK}" stroke-width=".9" fill="none"/>')
+    dx = 5 if anchor == 'start' else -5
+    s.text(tx + dx, ty + 4, text, size, color, anchor, weight=weight)
+
+
+def brain_lateral(cx, cy, k=1.0):
+    """Lateral hemisphere outline (anterior to the left) and principal sulci, scaled by k."""
+    def P(x, y):
+        return f'{cx + x * k:.1f} {cy + y * k:.1f}'
+    d = (f'M{P(-150, 4)}C{P(-154, -62)} {P(-104, -124)} {P(-14, -126)}C{P(78, -128)} {P(150, -82)} {P(154, -10)}'
+         f'C{P(158, 38)} {P(134, 70)} {P(98, 78)}C{P(70, 84)} {P(42, 78)} {P(22, 88)}C{P(-14, 104)} {P(-66, 100)} {P(-92, 74)}'
+         f'C{P(-104, 60)} {P(-112, 44)} {P(-130, 42)}C{P(-146, 38)} {P(-150, 24)} {P(-150, 4)}Z')
+    sulci = {'sylvian': f'M{P(-112, 40)}C{P(-80, 20)} {P(-30, 8)} {P(30, -14)}',
+             'central': f'M{P(18, -126)}C{P(6, -90)} {P(2, -56)} {P(-16, 4)}',
+             'precentral': f'M{P(-8, -124)}C{P(-20, -90)} {P(-24, -54)} {P(-40, 10)}',
+             'postcentral': f'M{P(44, -120)}C{P(32, -84)} {P(30, -50)} {P(12, -6)}',
+             'sts': f'M{P(-86, 66)}C{P(-40, 50)} {P(20, 40)} {P(72, 20)}',
+             'sfs': f'M{P(-124, -40)}C{P(-96, -58)} {P(-70, -62)} {P(-44, -58)}',
+             'ifs': f'M{P(-136, -2)}C{P(-106, -16)} {P(-80, -14)} {P(-52, -20)}',
+             'ips': f'M{P(60, -62)}C{P(84, -50)} {P(110, -56)} {P(134, -40)}',
+             'occ': f'M{P(70, -8)}C{P(96, -2)} {P(120, 2)} {P(146, -6)}'}
+    stem = (f'M{P(28, 70)}C{P(34, 108)} {P(42, 130)} {P(46, 150)}L{P(72, 150)}C{P(66, 126)} {P(66, 100)} {P(72, 70)}Z')
+    return d, sulci, stem
+
+
+def draw_brain_lateral(s, cx, cy, k=1.0, regions=None, stem=True):
+    d, sulci, st = brain_lateral(cx, cy, k)
+    if stem:
+        s.add(f'<path d="{st}" fill="{s.radial("#eef2ea", "#cfdaca")}" stroke="{INK}" stroke-width="{1.6}"/>')
+        s.ellipse(cx + 104 * k, cy + 92 * k, 50 * k, 27 * k, fill=s.radial('#eef2ea', '#cdd8c7'), stroke=INK, sw=1.6)
+        s.add(''.join(f'<path d="M{cx + 62 * k:.1f} {cy + (84 + j * 7) * k:.1f}Q{cx + 104 * k:.1f} {cy + (76 + j * 9) * k:.1f} '
+                      f'{cx + 148 * k:.1f} {cy + (86 + j * 6) * k:.1f}" fill="none" stroke="{GREY}" stroke-width="1"/>' for j in range(4)))
+    s.add(f'<path d="{d}" fill="{s.radial("#fbfcf8", "#e3eadf")}"/>')
+    cid = s.clip(f'<path d="{d}"/>')
+    if regions:
+        s.add(f'<g clip-path="url(#{cid})">{regions}</g>')
+    s.add(f'<g clip-path="url(#{cid})" fill="none" stroke="{INK}" stroke-opacity=".3" stroke-width="1.6" stroke-linecap="round">'
+          + ''.join(f'<path d="{x}"/>' for x in sulci.values()) + '</g>')
+    s.add(f'<path d="{d}" fill="none" stroke="{INK}" stroke-width="2.2"/>')
+    return sulci
+
+
+def neuraxis():
+    s = Svg('A map from brain to muscle', 'Start with distribution; then look for the finding that separates levels.', h=650)
+    draw_brain_lateral(s, 150, 170, .7)
+    # brainstem continues as the spinal cord
+    s.add(f'<path d="M171 268C172 300 174 330 174 360L174 470C174 482 178 492 180 500C182 492 186 482 186 470L186 360'
+          f'C186 330 188 300 190 268Z" fill="{s.radial("#f4f7f1", "#d6e1d2")}" stroke="{INK}" stroke-width="1.6"/>')
+    # root, ganglion, plexus, nerve, muscle
+    s.path('M186 372C200 372 208 376 216 380', mix(GOLD, WHITE, .2), 4, glow=False)
+    s.ellipse(222, 382, 8, 5.5, fill=SAND, stroke=GOLD, sw=1.2)
+    for dy, col in ((-6, GOLD), (0, mix(GOLD, TEAL, .5)), (6, TEAL)):
+        s.path(f'M230 {384 + dy}C246 {392 + dy} 248 {410 - dy} 262 {420 + dy / 2}', col, 2.2, glow=False)
+    s.path('M262 420C268 444 268 470 262 500', mix(GOLD, INK, .2), 3, glow=False)
+    mus = 'M212 528C230 500 296 500 314 528C296 556 230 556 212 528Z'
+    s.add(f'<path d="{mus}" fill="{s.radial("#efc9b6", "#c98f78")}" stroke="{mix(RED, INK, .3)}" stroke-width="1.5"/>')
+    s.add(''.join(f'<path d="M{x} 508Q{x + 3} 528 {x} 548" fill="none" stroke="#ffffff" stroke-opacity=".4"/>' for x in range(222, 308, 8)))
+    s.circle(262, 506, 4, fill=GOLD)
+    marks = [(1, 108, 128, TEAL), (2, 150, 178, TEAL), (3, 182, 244, TEAL), (4, 180, 330, TEAL),
+             (5, 204, 360, GOLD), (6, 252, 400, GOLD), (7, 276, 462, GOLD), (8, 300, 512, GOLD)]
+    for n, x, y, c in marks:
+        s.badge(x, y, n, fill=c, r=10, size=11)
+    rows = [('Cerebral cortex', 'Language, neglect, field cut, cortical sensory loss'),
+            ('Deep hemisphere', 'Dense face–arm–leg weakness, no cortical signs'),
+            ('Brainstem', 'Cranial nerve signs with crossed limb findings'),
+            ('Spinal cord', 'Sensory level, both sides, sphincter change'),
+            ('Nerve root', 'Pain and deficit in one root territory'),
+            ('Plexus', 'Several nerves and roots in one limb'),
+            ('Peripheral nerve', 'Deficit confined to one named nerve'),
+            ('Junction or muscle', 'Weakness without any sensory loss')]
+    s.text(352, 98, 'CENTRAL NERVOUS SYSTEM', 11, TEAL, weight='700')
+    s.text(352, 344, 'PERIPHERAL NERVOUS SYSTEM', 11, GOLD, weight='700')
+    for i, (lvl, clue) in enumerate(rows):
+        y = 110 + i * 54 + (30 if i >= 4 else 0)
+        c = TEAL if i < 4 else GOLD
+        s.add(f'<path d="M340 {y + 46}L690 {y + 46}" stroke="{LINE}" stroke-width="1"/>')
+        s.badge(352, y + 20, i + 1, fill=c, r=10, size=11)
+        s.text(372, y + 18, lvl, 15, INK, weight='700')
+        s.text(372, y + 37, clue, 13, TEXT)
+    s.text(40, 604, 'One clue rarely fixes a level: combine motor, sensory, reflex, cranial and cortical findings.', 13, GOLD)
+    return s
+
+
+def brain_coronal(s, cx, cy):
+    """Coronal section through both hemispheres (posterior view). Returns key points."""
+    for side in (-1, 1):
+        x0 = cx + side * 6
+        d = (f'M{x0} {cy - 120}C{x0 + side * 70} {cy - 124} {x0 + side * 142} {cy - 96} {x0 + side * 150} {cy - 20}'
+             f'C{x0 + side * 154} {cy + 30} {x0 + side * 128} {cy + 70} {x0 + side * 90} {cy + 80}C{x0 + side * 60} {cy + 86} '
+             f'{x0 + side * 30} {cy + 60} {x0} {cy + 60}Z')
+        s.add(f'<path d="{d}" fill="{s.radial("#f0f3ec", "#cfd9ca")}" stroke="{INK}" stroke-width="2"/>')
+        # white matter core
+        w = (f'M{x0 + side * 8} {cy - 96}C{x0 + side * 60} {cy - 100} {x0 + side * 118} {cy - 76} {x0 + side * 124} {cy - 20}'
+             f'C{x0 + side * 128} {cy + 22} {x0 + side * 104} {cy + 52} {x0 + side * 76} {cy + 58}C{x0 + side * 50} {cy + 62} '
+             f'{x0 + side * 26} {cy + 46} {x0 + side * 8} {cy + 46}Z')
+        s.add(f'<path d="{w}" fill="#fbfcf8"/>')
+        s.ellipse(x0 + side * 22, cy - 22, 9, 22, fill='#dde7ea', stroke=GREY, sw=1)        # lateral ventricle
+        s.ellipse(x0 + side * 34, cy + 22, 22, 18, fill=s.radial('#e8e2d3', '#d3c6aa'), stroke=GREY, sw=1)  # thalamus
+        s.add(f'<path d="M{x0 + side * 74} {cy - 18}L{x0 + side * 92} {cy + 30}L{x0 + side * 62} {cy + 32}Z" '
+              f'fill="{s.radial("#e8e2d3", "#cdbf9f")}" stroke="{GREY}" stroke-width="1"/>')  # lentiform
+
+
+def motor():
+    s = Svg('Where the motor pathway crosses', 'Lateral corticospinal route to the RIGHT limbs, viewed from behind.', h=660)
+    cx, cy = 300, 214
+    brain_coronal(s, cx, cy)
+    s.text(cx - 140, 100, 'LEFT', 11, MUTED, weight='700')
+    s.text(cx + 140, 100, 'RIGHT', 11, MUTED, 'end', weight='700')
+    # brainstem (posterior view silhouette)
+    bs = (f'M{cx - 30} {cy + 64}C{cx - 34} {cy + 100} {cx - 46} {cy + 116} {cx - 46} {cy + 150}C{cx - 46} {cy + 180} {cx - 30} {cy + 196} '
+          f'{cx - 24} {cy + 222}L{cx - 16} {cy + 380}L{cx + 16} {cy + 380}L{cx + 24} {cy + 222}C{cx + 30} {cy + 196} {cx + 46} {cy + 180} '
+          f'{cx + 46} {cy + 150}C{cx + 46} {cy + 116} {cx + 34} {cy + 100} {cx + 30} {cy + 64}Z')
+    s.add(f'<path d="{bs}" fill="{s.radial("#f2f5ef", "#d3ddcf")}" stroke="{INK}" stroke-width="2"/>')
+    for y, lab in ((cy + 90, 'midbrain'), (cy + 150, 'pons'), (cy + 210, 'medulla'), (cy + 262, 'cervical cord')):
+        s.text(cx + 62, y, lab, 12, MUTED)
+        s.path(f'M{cx + 28} {y - 4}L{cx + 56} {y - 4}', LINE, 1, glow=False)
+    # pathway
+    path = (f'M{cx - 100} {cy - 104}C{cx - 76} {cy - 60} {cx - 58} {cy - 10} {cx - 54} {cy + 26}C{cx - 50} {cy + 60} {cx - 22} {cy + 80} '
+            f'{cx - 16} {cy + 120}L{cx - 12} {cy + 214}C{cx - 10} {cy + 230} {cx + 10} {cy + 238} {cx + 10} {cy + 256}L{cx + 10} {cy + 330}')
+    s.path(path, TEAL, 4, arrow=None)
+    s.circle(cx - 100, cy - 104, 7, fill=TEAL, stroke=WHITE, sw=2)
+    # cervical section with right lateral corticospinal tract, then nerve to arm
+    sx, sy = 440, 528
+    cord_section(s, sx, sy, 46, 38, roots=False)
+    s.ellipse(sx + 28, sy - 8, 9, 11, fill=TEAL)
+    s.circle(sx + 18, sy + 18, 4.5, fill=GOLD)
+    s.path(f'M{cx + 10} {cy + 330}C{cx + 40} {cy + 340} {sx - 20} {sy - 50} {sx + 22} {sy - 20}', TEAL, 2, dash='4 4')
+    s.path(f'M{sx + 22} {sy + 24}C{sx + 60} {sy + 46} {sx + 100} {sy + 40} {sx + 126} {sy + 12}', GOLD, 3.5, arrow=GOLD)
+    mus = f'M{sx + 130} {sy + 8}C{sx + 144} {sy - 16} {sx + 198} {sy - 16} {sx + 212} {sy + 8}C{sx + 198} {sy + 32} {sx + 144} {sy + 32} {sx + 130} {sy + 8}Z'
+    s.add(f'<path d="{mus}" fill="{s.radial("#efc9b6", "#c98f78")}" stroke="{mix(RED, INK, .3)}" stroke-width="1.5"/>')
+    s.text(sx + 171, sy + 52, 'right arm muscle', 12, MUTED, 'middle')
+    callout(s, cx - 100, cy - 104, 150, 96, 'Left motor cortex', TEAL, 'end', weight='700')
+    callout(s, cx - 54, cy + 26, 160, cy + 64, 'Internal capsule', TEXT, 'end')
+    callout(s, cx, cy + 238, 196, cy + 238, 'Pyramidal decussation', TEAL, 'end', weight='700')
+    s.text(191, cy + 256, '(caudal medulla)', 12, MUTED, 'end')
+    callout(s, sx + 28, sy - 8, sx + 70, sy - 62, 'Lateral corticospinal tract', TEXT)
+    callout(s, sx + 18, sy + 18, sx - 30, sy + 76, 'Anterior horn', TEXT, 'end')
+    s.text(cx - 40, cy + 182, 'above', 11, TEAL, 'end', weight='700')
+    s.text(cx - 24, cy + 300, 'below', 11, GOLD, 'end', weight='700')
+    s.card(476, 104, 214, 104, 'Above the crossing', ['A lesion here weakens the', 'limbs on the opposite side.'], color=TEAL, size=13)
+    s.card(476, 222, 214, 104, 'Below the crossing', ['A cord lesion weakens the', 'limbs on the same side.'], color=GOLD, size=13)
+    return s
+
+
+def cortex_map():
+    s = Svg('Clues on the cortical surface', 'Left hemisphere, lateral view; anterior is to the left.', h=600)
+    cx, cy, k = 320, 275, 1.15
+    d, sulci, _ = brain_lateral(cx, cy, k)
+    regions = (f'<path d="{sulci["precentral"]}" stroke="{TINT[TEAL]}" stroke-width="24" fill="none" transform="translate(10 0)"/>'
+               f'<path d="{sulci["postcentral"]}" stroke="{TINT[BLUE]}" stroke-width="24" fill="none" transform="translate(-6 0)"/>'
+               f'<ellipse cx="{cx - 108 * k}" cy="{cy + 10 * k}" rx="{28 * k}" ry="{20 * k}" fill="{TINT[GOLD]}"/>'
+               f'<ellipse cx="{cx + 40 * k}" cy="{cy + 34 * k}" rx="{34 * k}" ry="{18 * k}" fill="{TINT[GOLD]}"/>'
+               f'<ellipse cx="{cx + 92 * k}" cy="{cy - 40 * k}" rx="{36 * k}" ry="{26 * k}" fill="#e3dcef"/>'
+               f'<ellipse cx="{cx + 150 * k}" cy="{cy - 4 * k}" rx="{30 * k}" ry="{40 * k}" fill="{RED_PALE}"/>')
+    draw_brain_lateral(s, cx, cy, k, regions)
+    s.path(f'M{cx - 100 * k} {cy + 2 * k}C{cx - 60 * k} {cy - 40 * k} {cx} {cy - 30 * k} {cx + 30 * k} {cy + 24 * k}', GOLD, 2.2, dash='5 4')
+    callout(s, cx + 2 * k, cy - 96 * k, 250, 104, 'Primary motor cortex', TEAL, 'end', weight='700')
+    s.text(245, 122, 'precentral · opposite face, arm, leg', 12, MUTED, 'end')
+    callout(s, cx + 34 * k, cy - 92 * k, 420, 104, 'Primary sensory cortex', BLUE, weight='700')
+    s.text(425, 122, 'postcentral · opposite-side sensation', 12, MUTED)
+    callout(s, cx - 108 * k, cy + 10 * k, 170, 420, 'Broca area', GOLD, 'end', weight='700')
+    s.text(165, 438, ['expressive language', '(usually left)'], 12, MUTED, 'end')
+    callout(s, cx + 40 * k, cy + 34 * k, 310, 480, 'Wernicke area', GOLD, 'end', weight='700')
+    s.text(305, 498, 'comprehension (usually left)', 12, MUTED, 'end')
+    callout(s, cx + 92 * k, cy - 40 * k, 560, 188, 'Parietal association', PURPLE, weight='700')
+    s.text(565, 206, ['attention, praxis;', 'neglect when right'], 12, MUTED)
+    callout(s, cx + 150 * k, cy - 4 * k, 560, 310, 'Visual cortex', RED, weight='700')
+    s.text(565, 328, 'opposite hemifield', 12, MUTED)
+    s.text(cx - 40, cy - 4, 'arcuate links', 11, GOLD, 'middle', italic=True)
+    s.text(40, 560, 'Boundaries are approximate and functions are network-based, not single spots.', 13, GOLD)
+    return s
+
+
+def internal_capsule():
+    s = Svg('Compact pathways in the internal capsule', 'Axial section of one hemisphere; anterior is at the top.', h=620)
+    mx = 452  # midline
+    hemi = 'M452 92C360 92 250 124 228 220C214 290 230 380 288 430C330 468 400 482 452 482Z'
+    s.add(f'<path d="{hemi}" fill="{s.radial("#eef2ea", "#cfd9ca")}" stroke="{INK}" stroke-width="2"/>')
+    inner = 'M452 112C370 112 270 140 252 224C240 290 254 372 304 414C342 446 404 460 452 460Z'
+    s.add(f'<path d="{inner}" fill="#fbfcf8"/>')
+    s.path(f'M{mx} 86L{mx} 488', GREY, 1, dash='4 4', glow=False)
+    s.text(mx + 8, 104, 'midline', 11, MUTED)
+    # deep nuclei
+    s.add(f'<path d="M438 158C438 140 416 132 404 146C392 160 392 196 402 214C410 226 428 222 434 210Z" fill="#dde7ea" stroke="{GREY}"/>')  # frontal horn
+    s.add(f'<path d="M402 150C380 152 370 176 372 200C374 222 388 232 400 226C396 206 394 172 402 150Z" fill="{s.radial("#ece4d2", "#d1c19f")}" stroke="{GREY}"/>')  # caudate
+    s.add(f'<path d="M318 176C298 210 296 290 316 330L372 262C376 240 362 200 318 176Z" fill="{s.radial("#ece4d2", "#cbbb98")}" stroke="{GREY}"/>')  # lentiform
+    s.add(f'<path d="M352 238L372 262L330 316" fill="none" stroke="{GREY}" stroke-dasharray="3 3"/>')
+    s.add(f'<path d="M444 262C420 256 398 270 394 300C390 334 406 362 430 366C446 368 452 352 452 340L452 268Z" fill="{s.radial("#ece4d2", "#cfbf9c")}" stroke="{GREY}"/>')  # thalamus
+    s.text(424, 340, 'thalamus', 11, INK, 'middle')
+    s.text(388, 134, 'caudate', 11, INK, 'middle')
+    s.text(326, 262, 'lentiform', 11, INK, 'middle')
+    # capsule limbs
+    s.path('M396 168L370 238', mix(GOLD, WHITE, .35), 14, glow=False)
+    s.path('M370 240L376 254', GOLD, 14, glow=False)
+    s.path('M378 258L392 300', TEAL, 14, glow=False)
+    s.path('M392 302L402 332', BLUE, 14, glow=False)
+    s.path('M340 338C360 352 372 372 380 392', mix(RED, WHITE, .3), 10, glow=False)
+    callout(s, 384, 200, 520, 160, 'Anterior limb', INK, weight='700')
+    s.text(525, 178, 'frontal–pontine and thalamic links', 12, MUTED)
+    callout(s, 373, 247, 520, 226, 'Genu', GOLD, weight='700')
+    s.text(525, 244, 'corticobulbar: face and tongue', 12, MUTED)
+    callout(s, 385, 280, 520, 290, 'Posterior limb', TEAL, weight='700')
+    s.text(525, 308, 'corticospinal: arm, then leg', 12, MUTED)
+    callout(s, 397, 318, 520, 350, 'Thalamocortical sensory', BLUE, weight='700')
+    s.text(525, 368, 'opposite face and body', 12, MUTED)
+    callout(s, 366, 376, 520, 414, 'Retrolenticular', RED, weight='700')
+    s.text(525, 432, 'optic radiation', 12, MUTED)
+    s.note(500, 'Why small lesions matter here', ['Fibres for face, arm and leg converge, so a small deep lesion can weaken all three',
+                                                  'equally without cortical signs. Positions are approximate.'], h=84)
+    return s
+
+
+def lateral_medulla():
+    s = Svg('Crossed face and body findings', 'Open medulla in cross-section, dorsal up; a left lateral lesion is shaded.', h=650)
+    cx, cy = 362, 268
+    outline = (f'M{cx - 150} {cy - 60}C{cx - 150} {cy - 110} {cx - 110} {cy - 128} {cx - 70} {cy - 120}L{cx - 22} {cy - 70}'
+               f'L{cx + 22} {cy - 70}L{cx + 70} {cy - 120}C{cx + 110} {cy - 128} {cx + 150} {cy - 110} {cx + 150} {cy - 60}'
+               f'C{cx + 156} {cy + 10} {cx + 120} {cy + 84} {cx + 60} {cy + 112}C{cx + 30} {cy + 126} {cx - 30} {cy + 126} {cx - 60} {cy + 112}'
+               f'C{cx - 120} {cy + 84} {cx - 156} {cy + 10} {cx - 150} {cy - 60}Z')
+    s.add(f'<path d="{outline}" fill="{s.radial("#f6f8f3", "#d8e2d3")}"/>')
+    cid = s.clip(f'<path d="{outline}"/>')
+    g = []
+    for side in (-1, 1):
+        g.append(f'<ellipse cx="{cx + side * 24}" cy="{cy + 92}" rx="20" ry="18" fill="{TINT[TEAL]}"/>')          # pyramid
+        g.append(f'<path d="M{cx + side * 50} {cy + 40}C{cx + side * 90} {cy + 30} {cx + side * 96} {cy + 80} {cx + side * 60} {cy + 86}'
+                 f'C{cx + side * 82} {cy + 70} {cx + side * 78} {cy + 46} {cx + side * 50} {cy + 52}Z" fill="#e2d6bd" stroke="{GREY}"/>')  # olive
+        g.append(f'<rect x="{cx + side * 12 - 6}" y="{cy - 30}" width="12" height="96" rx="6" fill="{TINT[GOLD]}"/>')           # medial lemniscus
+        g.append(f'<circle cx="{cx + side * 14}" cy="{cy - 56}" r="9" fill="#cfc4dd"/>')                                     # XII nucleus
+        g.append(f'<ellipse cx="{cx + side * 112}" cy="{cy - 46}" rx="22" ry="30" fill="{TINT[BLUE]}"/>')                       # spinal V
+        g.append(f'<ellipse cx="{cx + side * 120}" cy="{cy + 30}" rx="16" ry="22" fill="{RED_PALE}"/>')                        # spinothalamic
+        g.append(f'<ellipse cx="{cx + side * 130}" cy="{cy - 98}" rx="20" ry="16" fill="#d9e4cf"/>')                           # ICP
+        g.append(f'<circle cx="{cx + side * 86}" cy="{cy}" r="8" fill="#d6c7a8"/>')                                           # ambiguus
+    s.add(f'<g clip-path="url(#{cid})" stroke-width="1">{"".join(g)}</g>')
+    lesion = f'M{cx - 160} {cy - 130}L{cx - 70} {cy - 130}C{cx - 76} {cy - 40} {cx - 72} {cy + 20} {cx - 100} {cy + 80}L{cx - 170} {cy + 80}Z'
+    s.add(f'<path d="{lesion}" fill="{RED}" opacity=".18" clip-path="url(#{cid})"/>')
+    s.add(f'<path d="{lesion}" fill="none" stroke="{RED}" stroke-width="1.6" stroke-dasharray="5 4" clip-path="url(#{cid})"/>')
+    s.add(f'<path d="{outline}" fill="none" stroke="{INK}" stroke-width="2.2"/>')
+    s.text(cx, cy - 92, 'fourth ventricle', 11, MUTED, 'middle')
+    s.text(cx, cy - 140, 'DORSAL', 11, MUTED, 'middle', weight='700')
+    s.text(cx - 165, cy - 140, 'LEFT', 11, RED, weight='700')
+    callout(s, cx - 112, cy - 46, 196, 160, 'Spinal trigeminal nucleus', BLUE, 'end', weight='700')
+    s.text(191, 178, ['same-side face pain,', 'temperature'], 12, MUTED, 'end')
+    callout(s, cx - 120, cy + 30, 196, cy + 58, 'Spinothalamic tract', RED, 'end', weight='700')
+    s.text(191, cy + 76, ['opposite body pain,', 'temperature'], 12, MUTED, 'end')
+    callout(s, cx - 130, cy - 98, 196, 108, 'Cerebellar peduncle', TEXT, 'end')
+    callout(s, cx - 86, cy, 196, cy - 4, 'Nucleus ambiguus', TEXT, 'end')
+    s.text(191, cy + 14, 'hoarseness, dysphagia', 12, MUTED, 'end')
+    callout(s, cx - 92, cy + 62, 196, cy + 124, 'Sympathetic fibres', TEXT, 'end')
+    callout(s, cx + 24, cy + 92, 540, cy + 120, 'Pyramid (spared)', TEAL)
+    callout(s, cx + 12, cy + 10, 540, cy - 30, 'Medial lemniscus', GOLD)
+    callout(s, cx + 70, cy + 62, 540, cy + 60, 'Inferior olive', TEXT)
+    s.text(545, cy - 12, '(spared)', 12, MUTED)
+    s.card(30, 448, 250, 150, 'Same side as lesion', ['Face pain/temperature loss,', 'Horner syndrome, limb ataxia,', 'hoarseness, dysphagia'], color=RED, size=13)
+    s.card(296, 448, 394, 150, 'Why the sides differ', ['Facial pain fibres descend in the spinal', 'trigeminal tract before crossing; body pain', 'fibres crossed in the cord. So: same-side face,', 'opposite-side body. Lesions are often partial.'], color=GOLD, size=13)
+    return s
+
+
+def cranial_exits():
+    s = Svg('Where the cranial nerves leave the brainstem', 'Anterior (ventral) view; nerves labelled on the left only.', h=640)
+    cx = 360
+    stem = (f'M{cx - 60} 96C{cx - 66} 120 {cx - 50} 150 {cx - 44} 176C{cx - 80} 186 {cx - 96} 214 {cx - 96} 242C{cx - 96} 272 {cx - 76} 292 {cx - 46} 300'
+            f'L{cx - 40} 330C{cx - 52} 344 {cx - 52} 374 {cx - 38} 392L{cx - 26} 470L{cx + 26} 470L{cx + 38} 392C{cx + 52} 374 {cx + 52} 344 {cx + 40} 330'
+            f'L{cx + 46} 300C{cx + 76} 292 {cx + 96} 272 {cx + 96} 242C{cx + 96} 214 {cx + 80} 186 {cx + 44} 176C{cx + 50} 150 {cx + 66} 120 {cx + 60} 96Z')
+    s.add(f'<path d="{stem}" fill="{s.radial("#f4f7f1", "#d3ddce")}"/>')
+    cid = s.clip(f'<path d="{stem}"/>')
+    det = (''.join(f'<path d="M{cx - 100} {y}Q{cx} {y + 10} {cx + 100} {y}" fill="none" stroke="{GREY}" stroke-width="1.1"/>' for y in range(196, 296, 12))
+           + f'<path d="M{cx} 96L{cx} 176M{cx} 300L{cx} 470" stroke="{GREY}" stroke-width="1.2"/>'
+           + f'<path d="M{cx - 10} 110L{cx - 6} 170M{cx + 10} 110L{cx + 6} 170" stroke="{GREY}"/>'
+           + ''.join(f'<ellipse cx="{cx + side * 30}" cy="362" rx="10" ry="24" fill="#e2d6bd" stroke="{GREY}"/>' for side in (-1, 1))
+           + ''.join(f'<path d="M{cx + side * 12} 312L{cx + side * 14} 420" stroke="{GREY}"/>' for side in (-1, 1)))
+    s.add(f'<g clip-path="url(#{cid})">{det}</g>')
+    s.add(f'<path d="{stem}" fill="none" stroke="{INK}" stroke-width="2.2" stroke-linejoin="round"/>')
+    # nerves: (name, exit point, end point, colour)
+    nerves = [('III oculomotor', (cx - 10, 168), (220, 150), TEAL), ('IV trochlear', (cx - 48, 160), (220, 186), TEAL),
+              ('V trigeminal', (cx - 90, 230), (220, 228), BLUE), ('VI abducens', (cx - 14, 300), (220, 300), BLUE),
+              ('VII facial', (cx - 70, 290), (220, 264), BLUE), ('VIII vestibulocochlear', (cx - 64, 298), (220, 282), BLUE),
+              ('IX glossopharyngeal', (cx - 44, 342), (220, 334), GOLD), ('X vagus', (cx - 44, 356), (220, 356), GOLD),
+              ('XI accessory', (cx - 40, 380), (220, 400), GOLD), ('XII hypoglossal', (cx - 22, 372), (220, 378), GOLD)]
+    for name, (x0, y0), (x1, y1), c in nerves:
+        w = 5 if name.startswith('V ') else 3
+        s.path(f'M{x0} {y0}C{(x0 + x1) / 2 + 20} {y0} {(x0 + x1) / 2 - 10} {y1} {x1} {y1}', mix(c, WHITE, .1), w, glow=False)
+        mx0 = 2 * cx - x0
+        s.path(f'M{mx0} {y0}C{mx0 + 26} {y0} {mx0 + 34} {y0 + 4} {mx0 + 44} {y0 + 6}', mix(c, WHITE, .1), w, glow=False)
+        s.text(x1 - 6, y1 + 4, name, 13, INK, 'end')
+    s.path(f'M{cx - 34} 420C{cx - 60} 420 {cx - 70} 404 {cx - 82} 400', GOLD, 2, dash='3 3', glow=False)
+    for y0, y1, lab, col in ((96, 176, 'MIDBRAIN', TEAL), (176, 300, 'PONS', BLUE), (300, 470, 'MEDULLA', GOLD)):
+        s.path(f'M500 {y0 + 4}L508 {y0 + 4}L508 {y1 - 4}L500 {y1 - 4}', col, 2, glow=False)
+        s.text(518, (y0 + y1) / 2 + 4, lab, 11, col, weight='700')
+    s.text(518, 154, 'III, IV', 13, TEXT)
+    s.text(518, 260, 'V, VI, VII, VIII', 13, TEXT)
+    s.text(518, 404, 'IX, X, XI, XII', 13, TEXT)
+    s.text(cx + 20, 210, 'pons', 11, MUTED)
+    s.text(cx + 30, 404, 'olive', 11, MUTED, 'middle')
+    s.text(cx + 4, 330, 'pyramid', 11, MUTED)
+    s.note(500, 'Use the level, then the neighbours', ['A cranial nerve sign sets the level; limb, sensory and gaze findings decide whether the',
+                                                       'lesion is inside the brainstem or along the nerve. IV exits dorsally and wraps forward.'], h=92)
+    return s
+
+
+def hemicord():
+    s = Svg('Why a hemicord splits modalities', 'Axial cord at one level, dorsal up; the left half is damaged.', h=620)
+    cx, cy, rx, ry = 300, 290, 170, 140
+    shade = f'<rect x="{cx - rx - 5}" y="{cy - ry - 5}" width="{rx + 5}" height="{2 * ry + 10}"/>'
+    cord_section(s, cx, cy, rx, ry, roots=True)
+    cid = s.clip(f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}"/>')
+    tr = []
+    for side in (-1, 1):
+        tr.append(f'<path d="M{cx + side * 4} {cy - ry}L{cx + side * 58} {cy - ry + 8}L{cx + side * 22} {cy - 40}L{cx + side * 4} {cy - 36}Z" fill="{TINT[GOLD]}"/>')
+        tr.append(f'<ellipse cx="{cx + side * 118}" cy="{cy - 6}" rx="32" ry="40" fill="{TINT[TEAL]}"/>')
+        tr.append(f'<path d="M{cx + side * 150} {cy + 34}C{cx + side * 150} {cy + 80} {cx + side * 100} {cy + 120} {cx + side * 60} {cy + 128}'
+                  f'L{cx + side * 52} {cy + 96}C{cx + side * 88} {cy + 86} {cx + side * 116} {cy + 60} {cx + side * 118} {cy + 30}Z" fill="{TINT[BLUE]}"/>')
+    s.add(f'<g clip-path="url(#{cid})">{"".join(tr)}</g>')
+    k = rx / 150
+    s.add(f'<path d="{GREY_MATTER}" fill="{s.radial(mix(GREY, WHITE, .25), mix(GREY, INK, .2))}" '
+          f'transform="translate({cx} {cy}) scale({k:.4f} {ry / 135:.4f}) translate(-327 -264)"/>')
+    s.add(f'<g clip-path="url(#{cid})"><g fill="{RED}" opacity=".16">{shade}</g>'
+          f'<path d="M{cx} {cy - ry}L{cx} {cy + ry}" stroke="{RED}" stroke-width="2" stroke-dasharray="6 4"/></g>')
+    s.ellipse(cx, cy, rx, ry, fill='none', stroke=INK, sw=2.4)
+    s.text(cx, cy - ry - 30, 'DORSAL', 11, MUTED, 'middle', weight='700')
+    s.text(cx - rx + 20, cy + ry + 26, 'damaged half', 12, RED, weight='700')
+    callout(s, cx - 30, cy - ry + 30, 530, 116, 'Dorsal column', GOLD, weight='700')
+    s.text(535, 134, ['vibration and position;', 'loss on the SAME side'], 12, TEXT)
+    callout(s, cx - 118, cy - 6, 530, 230, 'Lateral corticospinal', TEAL, weight='700')
+    s.text(535, 248, ['already crossed; weakness', 'on the SAME side'], 12, TEXT)
+    callout(s, cx - 120, cy + 80, 530, 350, 'Anterolateral tract', BLUE, weight='700')
+    s.text(535, 368, ['pain and temperature from the', 'OTHER side, from a level or', 'two below'], 12, TEXT)
+    s.note(474, 'Different crossings, different sides', ['Dorsal column fibres cross in the medulla and motor fibres crossed above the cord,',
+                                                          'while pain fibres cross near entry. Shading illustrates a pattern, not a scan.'], h=88)
+    return s
+
+
+def root_plexus():
+    s = Svg('Root, plexus and nerve wiring', 'Five roots mix in a plexus and leave as three nerves (illustrative).', h=620)
+    cols = [TEAL, BLUE, GOLD, RED, PURPLE]
+    s.add(f'<path d="M60 96L60 416C60 426 68 432 78 432C88 432 96 426 96 416L96 96Z" fill="{s.radial("#f4f7f1", "#d6e1d2")}" stroke="{INK}" stroke-width="1.8"/>')
+    s.text(78, 452, 'spinal cord', 11, MUTED, 'middle')
+    roots_y = [130, 190, 250, 310, 370]
+    nerves = {'A': (200, [0, 1, 2]), 'B': (300, [1, 2, 3]), 'C': (400, [2, 3, 4])}
+    for i, y in enumerate(roots_y):
+        s.path(f'M96 {y}L160 {y}', cols[i], 6, glow=False)
+        s.ellipse(150, y, 11, 7, fill=mix(cols[i], WHITE, .55), stroke=cols[i], sw=1.2)
+        s.text(118, y - 11, f'Root {i + 1}', 11, cols[i], 'middle', weight='700')
+    for name, (ny, members) in nerves.items():
+        for j, r in enumerate(members):
+            off = (j - 1) * 5
+            s.path(f'M161 {roots_y[r]}C240 {roots_y[r]} 270 {ny + off} 360 {ny + off}L470 {ny + off}', cols[r], 3.2, glow=False)
+        s.add(f'<rect x="470" y="{ny - 11}" width="16" height="22" rx="4" fill="#ffffff" stroke="{INK}" stroke-width="1.2"/>')
+        s.path(f'M486 {ny}L530 {ny}', INK, 4, glow=False)
+        mus = f'M532 {ny}C546 {ny - 26} 640 {ny - 26} 654 {ny}C640 {ny + 26} 546 {ny + 26} 532 {ny}Z'
+        s.add(f'<path d="{mus}" fill="{s.radial("#efc9b6", "#c98f78")}" stroke="{mix(RED, INK, .3)}" stroke-width="1.4"/>')
+        s.text(593, ny + 5, f'Muscle {name}', 12, INK, 'middle', weight='700')
+        s.text(476, ny - 18, f'Nerve {name}', 11, INK, 'middle', weight='700')
+    s.rect(236, 110, 120, 330, fill='none', stroke=GREY, sw=1, rx=14, extra=' stroke-dasharray="4 4"')
+    s.text(296, 104, 'PLEXUS', 11, MUTED, 'middle', weight='700')
+    s.card(30, 474, 322, 96, 'Root 3 lesion', ['Partial weakness in all three', 'muscles: a myotome pattern'], color=GOLD, size=13)
+    s.card(368, 474, 322, 96, 'Nerve B lesion', ['Muscle B alone, with that', "nerve's sensory territory"], color=INK, size=13)
+    return s
+
+
+def nmj_detail():
+    s = Svg('The neuromuscular junction', 'Magnified view of one motor end-plate.', h=640)
+    cx = 330
+    s.path(f'M{cx} 84L{cx} 160', mix(GOLD, INK, .1), 14, glow=False)
+    for y in (90, 122):
+        s.rect(cx - 14, y, 28, 26, fill=s.radial('#fbf1dc', '#e2c891'), stroke=GOLD, sw=1, rx=12)
+    bout = f'M{cx - 18} 160C{cx - 120} 168 {cx - 160} 220 {cx - 156} 262L{cx + 156} 262C{cx + 160} 220 {cx + 120} 168 {cx + 18} 160Z'
+    s.add(f'<path d="M{cx - 30} 150C{cx - 150} 150 {cx - 186} 220 {cx - 178} 258L{cx - 156} 262C{cx - 160} 220 {cx - 120} 168 {cx - 18} 160Z" fill="#e8eee2" stroke="{GREY}"/>')
+    s.add(f'<path d="{bout}" fill="{s.radial("#ffffff", "#e6ece2")}" stroke="{INK}" stroke-width="2"/>')
+    for x, y in ((-30, 196), (40, 194)):
+        s.ellipse(cx + x, y, 22, 9, fill=mix(GOLD, WHITE, .55), stroke=GOLD, sw=1)
+        s.path(f'M{cx + x - 16} {y}C{cx + x - 10} {y - 6} {cx + x - 4} {y + 6} {cx + x + 2} {y}C{cx + x + 8} {y - 6} {cx + x + 12} {y + 6} {cx + x + 16} {y}', GOLD, 1, glow=False)
+    import random
+    rnd = random.Random(4)
+    for zone in (-110, -50, 10, 70, 120):
+        for _ in range(6):
+            x, y = cx + zone + rnd.uniform(-16, 16), rnd.uniform(222, 250)
+            s.circle(round(x, 1), round(y, 1), 5, fill='#fff6e6', stroke=GOLD, sw=1)
+        s.rect(cx + zone - 6, 256, 12, 7, fill=BLUE, rx=2)
+    for _ in range(26):
+        s.circle(round(cx + rnd.uniform(-140, 140), 1), round(rnd.uniform(268, 284), 1), 1.8, fill=GOLD)
+    folds = ''.join(f'L{cx - 160 + i * 32 + 10} 290L{cx - 160 + i * 32 + 14} 330L{cx - 160 + i * 32 + 22} 330L{cx - 160 + i * 32 + 26} 290' for i in range(10))
+    mus = f'M{cx - 200} 290' + folds + f'L{cx + 200} 290L{cx + 200} 420L{cx - 200} 420Z'
+    s.add(f'<path d="{mus}" fill="{s.radial("#f3dacd", "#d7a994")}" stroke="{mix(RED, INK, .3)}" stroke-width="1.8"/>')
+    mcid = s.clip(f'<path d="{mus}"/>')
+    s.add(f'<g clip-path="url(#{mcid})">' + ''.join(f'<rect x="{x}" y="344" width="6" height="80" fill="#ffffff" opacity=".35"/>' for x in range(cx - 200, cx + 200, 18))
+          + ''.join(f'<rect x="{x}" y="344" width="2" height="80" fill="{mix(RED, INK, .3)}" opacity=".35"/>' for x in range(cx - 192, cx + 200, 18)) + '</g>')
+    for i in range(11):
+        x = cx - 160 + i * 32 - 2 if i else cx - 176
+        if i < 10:
+            for dx in (-8, 0, 8):
+                s.add(f'<path d="M{cx - 160 + i * 32 + 18 + dx / 2} 290L{cx - 160 + i * 32 + 18 + dx / 2} 284" stroke="{TEAL}" stroke-width="3" stroke-linecap="round"/>') if False else None
+    for i in range(11):
+        x0 = cx - 196 + i * 32
+        if x0 < cx - 186 or x0 > cx + 180:
+            continue
+        for dx in (4, 10, 16):
+            s.add(f'<path d="M{x0 + dx} 290L{x0 + dx} 283" stroke="{TEAL}" stroke-width="3.2" stroke-linecap="round"/>')
+    callout(s, cx, 104, 250, 100, 'Myelinated axon', TEXT, 'end')
+    callout(s, cx - 172, 220, 120, 176, 'Schwann cell', TEXT, 'end')
+    callout(s, cx - 104, 236, 120, 226, 'Vesicles (ACh)', GOLD, 'end', weight='700')
+    callout(s, cx - 50, 259, 120, 276, 'Ca²⁺ channels', BLUE, 'end', weight='700')
+    callout(s, cx + 40, 194, 548, 170, 'Mitochondria', TEXT)
+    callout(s, cx + 100, 276, 548, 248, 'Synaptic cleft', TEXT)
+    callout(s, cx + 108, 284, 548, 298, 'ACh receptors', TEAL, weight='700')
+    s.text(553, 316, 'on the fold crests', 12, MUTED)
+    callout(s, cx + 142, 320, 548, 346, 'Junctional folds', TEXT)
+    callout(s, cx + 170, 390, 548, 392, 'Muscle fibre', TEXT)
+    keys = [(BLUE, 'Presynaptic', ['release fails:', 'Lambert–Eaton']), (TEAL, 'Postsynaptic', ['receptors fail:', 'myasthenia']),
+            (RED, 'Muscle itself', ['effector fails:', 'myopathy'])]
+    for i, (c, h, l) in enumerate(keys):
+        s.card(30 + i * 225, 452, 210, 104, h, l, color=c, size=13)
+    return s
+
+
+def cerebellum():
+    s = Svg('Cerebellar regions and ataxia', 'Posterior view: midline vermis and the two hemispheres.', h=620)
+    cx, cy = 300, 270
+    s.add(f'<path d="M{cx - 26} 96L{cx - 22} 170L{cx + 22} 170L{cx + 26} 96Z" fill="{s.radial("#f2f5ef", "#d3ddcf")}" stroke="{INK}" stroke-width="1.8"/>')
+    s.text(cx, 90, 'brainstem', 11, MUTED, 'middle')
+    for side in (-1, 1):
+        h = (f'M{cx + side * 14} 160C{cx + side * 80} 140 {cx + side * 190} 150 {cx + side * 200} {cy}C{cx + side * 206} {cy + 80} '
+             f'{cx + side * 130} {cy + 130} {cx + side * 40} {cy + 110}C{cx + side * 20} {cy + 104} {cx + side * 14} {cy + 60} {cx + side * 14} 160Z')
+        s.add(f'<path d="{h}" fill="{s.radial("#eef3ec", TINT[TEAL])}" stroke="{INK}" stroke-width="2"/>')
+        hid = s.clip(f'<path d="{h}"/>')
+        s.add(f'<g clip-path="url(#{hid})" fill="none" stroke="{mix(TEAL, INK, .4)}" stroke-opacity=".35" stroke-width="1.2">'
+              + ''.join(f'<path d="M{cx + side * 10} {150 + k * 14}C{cx + side * 80} {136 + k * 16} {cx + side * 170} {150 + k * 16} {cx + side * 220} {170 + k * 18}"/>' for k in range(16)) + '</g>')
+    v = f'M{cx - 22} 156C{cx - 30} 200 {cx - 30} {cy + 70} {cx - 14} {cy + 108}L{cx + 14} {cy + 108}C{cx + 30} {cy + 70} {cx + 30} 200 {cx + 22} 156Z'
+    s.add(f'<path d="{v}" fill="{s.radial("#f8efdd", TINT[GOLD])}" stroke="{INK}" stroke-width="1.8"/>')
+    s.add(''.join(f'<path d="M{cx - 24} {170 + k * 14}Q{cx} {176 + k * 14} {cx + 24} {170 + k * 14}" fill="none" stroke="{GOLD}" stroke-opacity=".5"/>' for k in range(16)))
+    callout(s, cx, cy, 540, 150, 'Vermis (midline)', GOLD, weight='700')
+    s.text(545, 168, ['stance and gait ataxia,', 'truncal sway'], 12, TEXT)
+    callout(s, cx + 120, cy + 10, 540, 280, 'Hemisphere', TEAL, weight='700')
+    s.text(545, 298, ['same-side limb ataxia:', 'dysmetria, intention tremor,', 'dysdiadochokinesia'], 12, TEXT)
+    callout(s, cx - 120, cy + 10, 120, cy + 110, 'Left hemisphere', TEAL, 'end')
+    s.text(115, cy + 128, 'left limbs', 12, MUTED, 'end')
+    s.note(474, 'Before you call it cerebellar', ['Check position sense and whether ataxia worsens with eyes closed (sensory ataxia), and',
+                                                  'examine eye movements and vestibular signs. Connected pathways can mimic these signs.'], h=88)
+    return s
+
+
+def visual_pathway():
+    s = Svg('How a visual hemifield crosses', 'Viewed from above. Gold carries the LEFT visual hemifield.', h=600)
+    s.add('<g transform="translate(360 96) scale(.78) translate(-360 -96)">')
+    T = lambda x, y: (round(360 + (x - 360) * .78, 1), round(96 + (y - 96) * .78, 1))
+    brain = 'M150 210C150 160 230 150 360 150C490 150 570 160 570 210L590 420C596 520 470 560 360 560C250 560 124 520 130 420Z'
+    s.add(f'<path d="{brain}" fill="{s.radial("#f8faf5", "#e1e9dd")}" stroke="{GREY}" stroke-width="1.5"/>')
+    s.text(360, 548, 'brain outline (axial)', 11, MUTED, 'middle')
+    # field of view
+    s.add(f'<path d="M210 104A150 60 0 0 1 360 92L360 132Z" fill="{TINT[GOLD]}"/>'
+          f'<path d="M360 92A150 60 0 0 1 510 104L360 132Z" fill="{TINT[BLUE]}"/>')
+    s.text(282, 112, 'left hemifield', 11, GOLD, 'middle', weight='700')
+    s.text(438, 112, 'right hemifield', 11, BLUE, 'middle', weight='700')
+    for x in (280, 440):
+        eyeball_top(s, x, 168, 26)
+    # retinal halves to chiasm
+    cxh, cyh = 360, 250
+    s.path(f'M{280 + 10} 192C{300} 220 {330} 240 {cxh} {cyh}L{430} 300', GOLD, 3.5)           # left eye nasal -> crosses -> right tract
+    s.path(f'M{440 + 12} 192C{440} 230 {430} 260 {430} 300', GOLD, 3.5)                          # right eye temporal -> same side
+    s.path(f'M{440 - 10} 192C{420} 220 {390} 240 {cxh} {cyh}L{290} 300', BLUE, 3.5)
+    s.path(f'M{280 - 12} 192C{280} 230 {290} 260 {290} 300', BLUE, 3.5)
+    for x, c in ((290, BLUE), (430, GOLD)):
+        s.ellipse(x, 312, 18, 12, fill=s.radial(mix(GREY, WHITE, .3), mix(GREY, INK, .2)), stroke=INK, sw=1)
+    # radiations with Meyer loop
+    s.path('M430 324C480 360 490 420 420 480', GOLD, 3.5)
+    s.path('M430 324C440 380 430 430 400 486', GOLD, 3.5, dash='0')
+    s.path('M290 324C240 360 230 420 300 480', BLUE, 3.5)
+    s.path('M290 324C280 380 290 430 320 486', BLUE, 3.5)
+    for x, c in ((310, BLUE), (410, GOLD)):
+        s.add(f'<path d="M{x - 40} 470Q{x} 520 {x + 40} 470L{x + 40} 506Q{x} 530 {x - 40} 506Z" fill="{TINT[c]}" stroke="{c}" stroke-width="1.4"/>')
+    s.add('</g>')
+    callout(s, *T(cxh, cyh), 180, 240, 'Optic chiasm', INK, 'end', weight='700')
+    s.text(175, 258, ['nasal fibres cross;', 'temporal fibres do not'], 12, MUTED, 'end')
+    callout(s, *T(268, 230), 180, 190, 'Optic nerve', INK, 'end')
+    callout(s, *T(300, 290), 180, 310, 'Optic tract', INK, 'end')
+    callout(s, *T(290, 312), 180, 350, 'LGN (thalamus)', INK, 'end')
+    callout(s, *T(482, 400), 552, 360, 'Meyer loop', GOLD, weight='700')
+    s.text(557, 378, ['upper quadrant', 'of the field'], 12, MUTED)
+    callout(s, *T(434, 420), 552, 286, 'Parietal fibres', GOLD, weight='700')
+    s.text(557, 304, 'lower quadrant', 12, MUTED)
+    callout(s, *T(440, 500), 552, 440, 'Right visual cortex', GOLD, weight='700')
+    s.text(557, 458, ['left hemifield', 'of both eyes'], 12, MUTED)
+    s.text(40, 552, 'Pupillary fibres and the detailed radiations are simplified.', 13, GOLD)
+    return s
+
+
 def atlas_order():
     """Diagram ids in atlas order, so figure numbers match their position in the app."""
     import re
@@ -1278,6 +1771,9 @@ DIAGRAMS = {
     'weakness-flow': weakness_flow, 'time-course': time_course, 'reflex-arc': reflex_arc, 'eye-muscles': eye_muscles,
     'pupil-reflex': pupil_reflex, 'cavernous-sinus': cavernous_sinus, 'hand-nerves': hand_nerves,
     'dermatome-landmarks': dermatome_landmarks, 'lumbosacral': lumbosacral, 'conus-cauda': conus_cauda,
+    'neuraxis': neuraxis, 'motor': motor, 'cortex': cortex_map, 'compact': internal_capsule,
+    'crossed': lateral_medulla, 'cranial': cranial_exits, 'hemicord': hemicord, 'peripheral': root_plexus,
+    'motor-unit': nmj_detail, 'coordination': cerebellum, 'vision': visual_pathway,
 }
 
 if __name__ == '__main__':
