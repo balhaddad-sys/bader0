@@ -9,7 +9,8 @@ const context = vm.createContext({});
 vm.runInContext(`${src('data.js')}\n${src('model.js')}\n${src('anatomy.js')}
 globalThis.api = {SITES, FINDINGS, PRESETS, ZONES, TOPICS, GROUPS, NERVES, STRUCTURES, SECTIONS,
   FINDING_BY_ID, TOPIC_BY_SITE, scoreSite, rankSites, examineNext, findingLabel, parseLink,
-  makePracticeCase, practiceOptions, sectionForSite, structureStates, sectionSvg, anatomyArt, PRACTICE_SITES};`, context);
+  makePracticeCase, practiceOptions, sectionForSite, structureStates, sectionSvg, anatomyArt, PRACTICE_SITES,
+  levelGlyph, NERVE_GLYPHS};`, context);
 const top = findings => m.rankSites(findings)[0];
 const m = context.api;
 
@@ -189,6 +190,30 @@ test('structure states follow marked findings and their sides', () => {
   states = m.structureStates('medulla', { dysphagia: 'P' }, ['L']);
   assert.equal(states.get('na:L'), 'involved');
   assert.equal(states.get('na:R'), undefined);
+});
+
+test('section drawings: labels, legend states and the compact copy', () => {
+  for (const section of m.SECTIONS) {
+    for (const id of section.structures) {
+      assert.ok(['tract', 'nucleus'].includes(m.STRUCTURES[id].kind), `${id}: kind`);
+      assert.ok(m.STRUCTURES[id].tag, `${id}: label`);
+    }
+    const full = m.sectionSvg(section.id, { prefix: 'f' });
+    assert.equal((full.match(/class="leader/g) || []).length, section.structures.length, `${section.id}: one label per structure`);
+    const mini = m.sectionSvg(section.id, { prefix: 'm', mini: true });
+    assert.ok(!mini.includes('class="leader'), `${section.id}: compact copy has no labels`);
+  }
+  // Involved structures get a glow; only once per side.
+  const svg = m.sectionSvg('medulla', { states: m.structureStates('medulla', { spinothalamic: 'L' }), prefix: 'g' });
+  assert.equal((svg.match(/class="halo"/g) || []).length, 1);
+});
+
+test('every nerve has a level diagram', () => {
+  for (const n of m.NERVES) {
+    const glyph = m.NERVE_GLYPHS[n.roman];
+    assert.ok(glyph, `${n.roman}: glyph`);
+    assert.ok(m.levelGlyph(...glyph).includes('glyph-part on'), `${n.roman}: highlighted level`);
+  }
 });
 
 test('finding labels', () => {

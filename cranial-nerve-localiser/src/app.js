@@ -235,7 +235,8 @@ function renderSectionViewer(key){
   const chips=structures.map(id=>{const st=stateOf(id);return `<button class="structure-chip ${st}" data-structure-chip="${id}" aria-pressed="${id===focus}">${esc(STRUCTURES[id].name)}${st?`<span class="sr-only">, ${st}</span>`:''}</button>`;}).join('');
   el.innerHTML=`<div class="level-tabs" role="group" aria-label="Level">${levelButtons}</div>
     <figure class="section-figure">${sectionSvg(cfg.section,{zoneSides:cfg.zoneSides,zone:cfg.zone,states:cfg.states,focus,prefix:`${key}-${cfg.section}`})}
-    <figcaption>${esc(section.name)}, ${esc(section.level.toLowerCase())} level. Axial, as on MRI: front at the top, patient’s right on your left. Schematic.</figcaption></figure>
+    <figcaption>${esc(section.name)}, ${esc(section.level.toLowerCase())} level. Axial, as on MRI: front at the top, patient’s right on your left. Schematic.</figcaption>
+    <div class="section-legend" aria-hidden="true"><span><i class="lg-nucleus"></i>Nucleus</span><span><i class="lg-tract"></i>Tract</span>${key==='results'?`<span><i class="lg-involved"></i>Explains a finding</span><span><i class="lg-spared"></i>Tested normal</span>${cfg.zone?'<span><i class="lg-zone"></i>Leading region</span>':''}`:''}</div></figure>
     <div class="section-info">${focus?structureInfo(focus,key==='results'):`<p class="section-hint">${esc(cfg.note||'Tap a structure in the diagram or the list below.')}</p>`}</div>
     <div class="structure-list" role="group" aria-label="Structures at this level">${chips}</div>`;
 }
@@ -265,12 +266,19 @@ function evidenceFor(r,findings){
   }
   return {explains,unexplained,against};
 }
+/* The leading card's picture: the axial section for brainstem and cord sites, the sagittal sketch otherwise. */
+function heroArt(r){
+  const s=r.site,section=sectionForSite(s);
+  if(!section)return `<div class="hero-art">${anatomyArt(s.zone,'lead-'+s.id)}</div><span class="anatomy-caption">${esc(zoneName(s.zone))}<small>Schematic · level only</small></span>`;
+  const sides=resultSides(r);
+  return `<div class="hero-art axial">${sectionSvg(section,{zoneSides:sides,zone:s.zone,states:structureStates(section,state.findings,sides),mini:true,prefix:'hero-'+s.id})}</div><span class="anatomy-caption">${esc(zoneName(s.zone))}<small>Axial · patient’s right on the left</small></span>`;
+}
 function resultCard(r,index){
   const s=r.site,pct=Math.round(r.fit*100);
   const {explains,unexplained,against}=evidenceFor(r,state.findings);
   const worth=FINDINGS.filter(f=>!state.findings[f.id]&&(weightOf(s,f.id)>=2||excludes(s,f.id))).sort((a,b)=>(weightOf(s,b.id)||2)-(weightOf(s,a.id)||2)).slice(0,5);
   return `<details class="result-card ${index===0?'top':''}" data-result="${s.id}" ${index===0?'open':''}>
-  <summary class="result-summary"><span class="rank-no">${String(ranked.indexOf(r)+1).padStart(2,'0')}</span><div class="result-copy"><h3 class="result-name">${esc(siteTitle(s))}</h3>${s.eponym?`<p class="result-anatomy">${esc(s.name)}</p>`:''}<div class="result-subline"><span class="side-pill">${esc(lesionText(r))}</span></div></div><div class="result-metric"><div class="percent">${pct}<small>%</small></div><div class="fit-caption">Pattern fit</div><div class="fit-bar" aria-hidden="true"><span style="--fit:${pct}%"></span></div><span class="expand-hint" aria-hidden="true"></span></div>${index===0?`<div class="hero-art">${anatomyArt(s.zone,'lead-'+s.id)}</div><span class="anatomy-caption">${esc(zoneName(s.zone))}<small>Schematic · level only</small></span>`:''}</summary>
+  <summary class="result-summary"><span class="rank-no">${String(ranked.indexOf(r)+1).padStart(2,'0')}</span><div class="result-copy"><h3 class="result-name">${esc(siteTitle(s))}</h3>${s.eponym?`<p class="result-anatomy">${esc(s.name)}</p>`:''}<div class="result-subline"><span class="side-pill">${esc(lesionText(r))}</span></div></div><div class="result-metric"><div class="percent">${pct}<small>%</small></div><div class="fit-caption">Pattern fit</div><div class="fit-bar" aria-hidden="true"><span style="--fit:${pct}%"></span></div><span class="expand-hint" aria-hidden="true"></span></div>${index===0?heroArt(r):''}</summary>
   <div class="result-details">${tagsBlock('Explains','good',explains)}${unexplained.length?tagsBlock('Doesn’t explain','unexplained',unexplained):''}${against.length?tagsBlock('Argues against','against',against):''}${!unexplained.length&&!against.length?'<p class="clear-evidence">No mismatches among marked findings.</p>':''}<details class="clinical-more"><summary>Clinical notes & investigation</summary>${worth.length?`<div class="evidence-block"><div class="evidence-label">Worth checking</div><div class="chips">${worth.map(suggestionButton).join('')}</div></div>`:''}<dl class="clinical-dl"><dt>Region</dt><dd>${esc(zoneName(s.zone))}</dd><dt>Usual causes</dt><dd>${esc(s.causes)}</dd><dt>Investigation</dt><dd>${esc(s.investigation)}</dd></dl><blockquote class="pearl"><span class="pearl-label">At the bedside</span>${esc(s.pearl)}</blockquote><p class="score-detail" title="Evidence, absent expected signs, untested signs, contradictions, unexplained findings">Score components · E ${r.E} · A ${r.A} · U ${r.U} · C ${r.C} · O ${r.O}</p></details></div></details>`;
 }
 function renderResults(){
@@ -350,7 +358,9 @@ function practiceHint(site){
 }
 function practiceScore(){
   const p=state.practice;
-  $('practice-score').innerHTML=p.answered?`<span><b>${p.streak}</b> in a row</span><span><b>${p.correct}</b>/${p.answered} correct</span><span>Best run <b>${p.best}</b></span><button class="text-button" id="practice-reset">Reset</button>`:'<span>Your score appears here</span>';
+  const share=p.answered?p.correct/p.answered:0,circumference=2*Math.PI*15;
+  const ring=`<svg class="score-ring" viewBox="0 0 36 36" role="img" aria-label="${Math.round(share*100)} percent correct"><circle class="ring-bg" cx="18" cy="18" r="15"/><circle class="ring-fg" cx="18" cy="18" r="15" stroke-dasharray="${(circumference*share).toFixed(1)} ${circumference.toFixed(1)}" transform="rotate(-90 18 18)"/><text x="18" y="21.3" text-anchor="middle">${Math.round(share*100)}%</text></svg>`;
+  $('practice-score').innerHTML=p.answered?`${ring}<span><b>${p.streak}</b> in a row</span><span><b>${p.correct}</b>/${p.answered} correct</span><span>Best run <b>${p.best}</b></span><button class="text-button" id="practice-reset">Reset</button>`:'<span>Your score appears here</span>';
   $('practice-badge').textContent=p.streak>1?String(p.streak):'';
 }
 function renderPractice(){
@@ -425,7 +435,7 @@ function setTab(name){
   announce({results:'Results. Use Findings to return to the examination.',reference:'Bedside reference.',practice:`Practice. Case ${practice.number}.`,localise:'Findings. Your examination has been retained.'}[name]);
 }
 function renderReference(){
-  $('nerve-grid').innerHTML=NERVES.map(n=>`<details class="nerve-card"><summary class="nerve-head"><span class="roman">${n.roman}</span><h3>${esc(n.name)}</h3></summary><dl class="nerve-dl">${[['Nucleus',n.nucleus],['Course / foramen',n.course],['Function',n.function],['Bedside test',n.test],['Lesion signs',n.signs]].map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></details>`).join('');
+  $('nerve-grid').innerHTML=NERVES.map(n=>`<details class="nerve-card"><summary class="nerve-head"><span class="roman">${n.roman}</span><h3>${esc(n.name)}</h3>${levelGlyph(...NERVE_GLYPHS[n.roman])}</summary><dl class="nerve-dl">${[['Nucleus',n.nucleus],['Course / foramen',n.course],['Function',n.function],['Bedside test',n.test],['Lesion signs',n.signs]].map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></details>`).join('');
   $('rule-table').innerHTML=RULE_OF_FOUR.map(r=>`<tr><th scope="row">${esc(r.level)}</th><td>${esc(r.nerves)}</td><td>${esc(r.medial)}</td><td>${esc(r.lateral)}</td></tr>`).join('');
   $('rules-grid').innerHTML=RULES.map((r,i)=>`<article class="rule"><span class="rule-number">${String(i+1).padStart(2,'0')}</span><div><h3>${esc(r.title)}</h3><p>${esc(r.text)}</p></div></article>`).join('');
   const sources=[['Cranial nerve examination · Merck Manual','https://www.merckmanuals.com/professional/neurologic-disorders/neurologic-examination/how-to-assess-the-cranial-nerves'],['Neuroanatomy · University of Utah','https://neurologicexam.med.utah.edu/adult/html/cranialnerve_anatomy.html'],['Rule of 4 · Practical Neurology','https://pn.bmj.com/content/11/3/167'],['Modern management of III palsy · Eye','https://pmc.ncbi.nlm.nih.gov/articles/PMC8727561/'],['Adult strabismus guidance · AAO','https://www.aaojournal.org/article/S0161-6420%2824%2900013-7/fulltext'],['Kernohan phenomenon · Systematic review','https://pmc.ncbi.nlm.nih.gov/articles/PMC9452377/'],['Numb chin syndrome · Case series','https://pmc.ncbi.nlm.nih.gov/articles/PMC6217713/'],['HINTS in the acute vestibular syndrome · Stroke','https://pubmed.ncbi.nlm.nih.gov/19762709/'],['Pituitary apoplexy · UK guideline','https://doi.org/10.1111/j.1365-2265.2010.03913.x'],['Giant cell arteritis · BSR guideline','https://ueaeprints.uea.ac.uk/id/eprint/73817/']];

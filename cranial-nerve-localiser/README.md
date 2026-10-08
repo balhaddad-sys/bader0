@@ -5,6 +5,21 @@ the anatomical sites that best explain them, shows the involved brainstem
 structures, and lets you practise on generated cases. It is a teaching aid, not
 a diagnostic tool.
 
+## What is in 3.1
+
+- **Atlas-style sections.** Nuclei are drawn as grey matter and tracts with a
+  fibre texture; the fourth ventricle, aqueduct and central canal are shown as
+  CSF. Labels sit in a column with leader lines, involved structures glow,
+  the leading region is hatched, and a legend explains the shading. Tapping a
+  label works like tapping the structure.
+- **The result card shows the lesion.** For brainstem and cord sites the
+  leading card draws the axial section with the lesion and involved structures,
+  in place of the generic sagittal sketch.
+- **Nerve cards** in Reference carry a small brainstem diagram marking the
+  level of each nucleus and where the nerve leaves.
+- Joined R / L / Both control, a practice accuracy ring, and single-column
+  finding rows on wide screens.
+
 ## What is in 3.0
 
 - **A side for every sign.** Each sided finding has Right, Left and Both
@@ -70,7 +85,7 @@ sets the version and app id from `android/version.json` in the binary manifest, 
 v2, which is enough for the app's minSdk of 26. To check a build independently:
 
 ```sh
-pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-3.0.0.apk
+pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-3.1.0.apk
 ```
 
 ### Application id and signing

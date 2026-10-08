@@ -238,6 +238,21 @@ const SECTIONS = [
 ].map(s=>({...s,structures:Object.keys(s.parts)}));
 const SECTION_BY_ID = new Map(SECTIONS.map(s=>[s.id,s]));
 
+/* Drawing style (grey-matter nucleus or white-matter tract) and the label used beside each section. */
+const STRUCTURE_STYLE = {
+  cst:['tract','Corticospinal'], ml:['tract','Med. lemniscus'], mlf:['tract','MLF'], stt:['tract','Spinothalamic'],
+  sp5:['nucleus','Spinal V'], symp:['tract','Sympathetic'], na:['nucleus','N. ambiguus'], xii:['nucleus','XII nucleus'],
+  dmx:['nucleus','Dorsal X'], nts:['nucleus','Solitary n.'], vest:['nucleus','Vestibular n.'], icp:['tract','Inf. peduncle'],
+  olive:['nucleus','Inf. olive'], mcp:['tract','Mid. peduncle'], vi:['tract','VI fascicle'], gaze:['nucleus','VI n. · PPRF'],
+  vii:['nucleus','VII nucleus'], coch:['nucleus','Cochlear n.'], vsens:['nucleus','Sensory V'], vmot:['nucleus','Motor V'],
+  scp:['tract','Sup. peduncle'], iii:['nucleus','III nucleus'], rn:['nucleus','Red nucleus'], sn:['nucleus','S. nigra'],
+  tectum:['nucleus','Sup. colliculus'], lcst:['tract','Lat. CST'], dc:['tract','Dorsal columns'], alst:['tract','Spinothalamic'],
+  ah:['nucleus','Anterior horn'], awc:['tract','Commissure']
+};
+for(const [id,[kind,tag]] of Object.entries(STRUCTURE_STYLE))Object.assign(STRUCTURES[id],{kind,tag});
+/* The fourth ventricle sits behind the pons and medulla; the tissue outline hides its front half. */
+const VENTRICLES = {'pons-mid':[160,186,32,10],'pons-caudal':[160,186,58,13],medulla:[160,183,66,14]};
+
 function sectionForSite(site){
   if(site.zone.startsWith('midbrain-'))return 'midbrain';
   if(site.zone.startsWith('pons-'))return site.id==='lateral-midpons'?'pons-mid':'pons-caudal';
@@ -280,41 +295,91 @@ function symmetricOutline([start,...segments]){
   }
   return d+'Z';
 }
+/* Where a leader line meets a structure: its first ellipse or circle, else its label position. */
+function structureAnchor(section,id){
+  const m=section.parts[id].match(/c[x]="([\d.]+)"\s+c[y]="([\d.]+)"/);
+  return m?[+m[1],+m[2]]:section.labels[id][0].slice(0,2);
+}
 
 /*
  * opts.zoneSides: patient sides ('R'/'L') on which to shade opts.zone; opts.states from
- * structureStates; opts.focus: a structure id to outline.
+ * structureStates; opts.focus: a structure id to outline. opts.mini drops labels for the
+ * small copy in the result card. Labels sit in a column on the side without the lesion.
  */
-function sectionSvg(sectionId,{zoneSides=[],zone=null,states=new Map(),focus=null,prefix='sec'}={}){
+function sectionSvg(sectionId,{zoneSides=[],zone=null,states=new Map(),focus=null,prefix='sec',mini=false}={}){
   const section=SECTION_BY_ID.get(sectionId);
   const pid=String(prefix).replace(/[^a-zA-Z0-9_-]/g,'')||'sec';
   const outline=symmetricOutline(section.outline);
-  const labelSide=zoneSides.length===1&&zoneSides[0]==='L'?'R':'L';
   const flip='matrix(-1 0 0 1 320 0)';
-  // Crop to the outline (control points bound the curve), leaving room for the R/L marks.
+  const labelSide=zoneSides.length===1&&zoneSides[0]==='L'?'R':'L',labelsRight=labelSide==='L';
+  // Bounds from the outline's points (control points bound the curve) and the ventricle.
   const points=section.outline.flatMap(p=>p.reduce((pairs,v,i)=>i%2?pairs:[...pairs,[v,p[i+1]]],[]));
-  const minX=Math.max(0,Math.min(...points.map(p=>p[0]))-22),minY=Math.max(0,Math.min(...points.map(p=>p[1]))-8);
-  const maxY=Math.max(...points.map(p=>p[1]))+10,midY=Math.round((minY+maxY)/2)+4;
+  const oMinX=Math.min(...points.map(p=>p[0])),oMaxX=320-oMinX,oMinY=Math.min(...points.map(p=>p[1]));
+  const ventricle=VENTRICLES[sectionId];
+  const oMaxY=Math.max(...points.map(p=>p[1]),ventricle?ventricle[1]+ventricle[3]:0);
+  const column=mini?0:86,pad=mini?4:10;
+  const left=oMinX-pad-(labelsRight?14:column),right=oMaxX+pad+(labelsRight?column:14);
+  const top=oMinY-(mini?4:18),bottom=oMaxY+(mini?4:16);
   const half=side=>{
-    const zonePath=zoneSides.includes(side)&&zone&&section.zones[zone]?`<path class="zone" d="${section.zones[zone]}"/>`:'';
+    const zoneHere=zoneSides.includes(side)&&zone&&section.zones[zone];
+    const zonePath=zoneHere?`<path class="zone" d="${section.zones[zone]}"/><path class="zone-hatch" fill="url(#${pid}-hatch)" d="${section.zones[zone]}"/>`:'';
     const parts=section.structures.map(id=>{
-      const state=states.get(`${id}:${side}`)||'';
-      return `<g class="st ${state}${focus===id?' focus':''}" data-structure="${id}" data-side="${side}">${section.parts[id]}</g>`;
+      const state=states.get(`${id}:${side}`)||'',shapes=section.parts[id],kind=STRUCTURES[id].kind;
+      const halo=state==='involved'&&!mini?`<g class="halo" filter="url(#${pid}-glow)">${shapes}</g>`:'';
+      const texture=kind==='tract'&&state!=='involved'?`<g class="tex" fill="url(#${pid}-fibres)">${shapes}</g>`:'';
+      return `<g class="st ${kind} ${state}${focus===id?' focus':''}" data-structure="${id}" data-side="${side}">${halo}<g class="shape">${shapes}</g>${texture}</g>`;
     }).join('');
-    return `<g${side==='L'?` transform="${flip}"`:''}>${zonePath}${section.decor||''}${parts}</g>`;
+    return `<g${side==='L'?` transform="${flip}"`:''}>${section.decor||''}${zonePath}${parts}</g>`;
   };
-  const labels=section.structures.flatMap(id=>section.labels[id].map(([x,y,anchor,text])=>{
-    const mirrored=labelSide==='L';
-    const lx=mirrored?320-x:x,la=mirrored?{start:'end',end:'start',middle:'middle'}[anchor]:anchor;
-    const state=states.get(`${id}:${labelSide}`)||'';
-    return `<text class="st-label ${state}${focus===id?' focus':''}" x="${lx}" y="${y}" text-anchor="${la}">${text||STRUCTURES[id].short}</text>`;
-  })).join('');
-  return `<svg class="section-art" viewBox="${minX} ${minY} ${320-2*minX} ${maxY-minY}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-    <defs><clipPath id="${pid}-clip"><path d="${outline}"/></clipPath></defs>
-    <path class="outline" d="${outline}"/>
+  let labels='';
+  if(!mini){
+    // Stack labels in a column, in the order of their structures from front to back.
+    const gap=11.6,colX=labelsRight?oMaxX+16:oMinX-16,elbowX=labelsRight?oMaxX+7:oMinX-7;
+    const items=section.structures.map(id=>{const [x,y]=structureAnchor(section,id);return {id,ax:labelsRight?320-x:x,ay:y};}).sort((a,b)=>a.ay-b.ay);
+    let prev=top+8;for(const it of items){it.ly=Math.max(it.ay,prev+gap);prev=it.ly;}
+    let next=bottom-6;for(let i=items.length-1;i>=0;i--){items[i].ly=Math.min(items[i].ly,next);next=items[i].ly-gap;}
+    labels=items.map(({id,ax,ay,ly})=>{
+      const state=states.get(`${id}:${labelSide}`)||'',cls=`${state}${focus===id?' focus':''}`;
+      return `<g class="leader ${cls}" data-structure="${id}"><path d="M${ax} ${ay}L${elbowX} ${ly}H${colX+(labelsRight?-3:3)}"/><circle cx="${ax}" cy="${ay}" r="1.4"/><text x="${colX}" y="${ly+3}" text-anchor="${labelsRight?'start':'end'}">${STRUCTURES[id].tag}</text></g>`;
+    }).join('');
+  }
+  const csf=ventricle?`<ellipse class="csf ventricle" cx="${ventricle[0]}" cy="${ventricle[1]}" rx="${ventricle[2]}" ry="${ventricle[3]}"/>`:'';
+  const orient=mini?`<text class="orient mini" x="${left+3}" y="${top+16}">R</text><text class="orient mini" x="${right-3}" y="${top+16}" text-anchor="end">L</text>`
+    :`<text class="orient" x="${left+2}" y="${top+11}">R</text><text class="orient" x="${right-2}" y="${top+11}" text-anchor="end">L</text><path class="front-mark" d="M156 ${top+9}L160 ${top+3}L164 ${top+9}"/><text class="front-label" x="160" y="${top+17}" text-anchor="middle">front</text>`;
+  return `<svg class="section-art${mini?' mini':''}" viewBox="${left} ${top} ${right-left} ${bottom-top}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <defs>
+      <clipPath id="${pid}-clip"><path d="${outline}"/></clipPath>
+      <radialGradient id="${pid}-tissue" cx="50%" cy="45%" r="62%"><stop offset="0" class="tissue-a"/><stop offset="1" class="tissue-b"/></radialGradient>
+      <pattern id="${pid}-fibres" width="3.2" height="3.2" patternUnits="userSpaceOnUse" patternTransform="rotate(-32)"><path class="fibre-line" d="M0 0V3.2"/></pattern>
+      <pattern id="${pid}-hatch" width="4.5" height="4.5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path class="hatch-line" d="M0 0V4.5"/></pattern>
+      <filter id="${pid}-glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.6"/></filter>
+    </defs>
+    ${csf}${ventricle&&!mini?`<text class="csf-label" x="160" y="${ventricle[1]+ventricle[3]-3}" text-anchor="middle">IV</text>`:''}
+    <path class="outline" d="${outline}" fill="url(#${pid}-tissue)"/>
     <g clip-path="url(#${pid}-clip)">${section.midline}${half('R')}${half('L')}</g>
     <path class="outline-edge" d="${outline}"/>
-    ${labels}
-    <text class="orient" x="${minX+4}" y="${midY}">R</text><text class="orient" x="${316-minX}" y="${midY}" text-anchor="end">L</text>
+    ${labels}${orient}
+  </svg>`;
+}
+
+/*
+ * Small lateral view of the brainstem for the reference cards: the level holding a nerve's
+ * nucleus is filled and a dot marks where the nerve leaves. Anterior is to the left.
+ */
+const NERVE_GLYPHS = {
+  I:['forebrain',[11,24]], II:['forebrain',[22,27]], III:['midbrain',[28.5,30.5]], IV:['midbrain',[38.5,29.5]],
+  V:['pons',[30,36.5]], VI:['pons',[25.5,40.5]], VII:['pons',[33,41]], VIII:['pons',[35.5,40.8]],
+  IX:['medulla',[31.5,43.5]], X:['medulla',[32.5,45]], XI:['cord',[34.5,52]], XII:['medulla',[27,43.5]]
+};
+function levelGlyph(level,exit){
+  const part=(name,d)=>`<path class="glyph-part${level===name?' on':''}" d="${d}"/>`;
+  return `<svg class="level-glyph" viewBox="4 13 54 45" aria-hidden="true" focusable="false">
+    <path class="glyph-cerebellum" d="M38 33C46 30 54 33 55 39C56 45 50 49 43 48C39 47 37 44 37 41Z"/>
+    ${part('forebrain','M5 20C5 10 16 3 30 3C45 3 56 10 56 19C56 25 50 28 44 27C39 26 35 26 31 27C25 29 17 29 11 27C7 25 5 23 5 20Z')}
+    ${part('midbrain','M29 27.5C32 27 35 27 38 27.5L37 33C34 34 31 33.5 28.5 32.5Z')}
+    ${part('pons','M28.5 32.5C24.5 33.5 23.5 37.5 25.5 40.5C27.5 42.5 32.5 42.5 37 40.5L37 33C34 34 31 33.5 28.5 32.5Z')}
+    ${part('medulla','M25.5 40.5C27 43.5 28 45.5 29.5 47.5L35 47C35 45 36 42.5 37 40.5C32.5 42.5 27.5 42.5 25.5 40.5Z')}
+    ${part('cord','M29.5 47.5L30.5 57H35.5L35 47Z')}
+    ${exit?`<circle class="glyph-exit" cx="${exit[0]}" cy="${exit[1]}" r="2.1"/>`:''}
   </svg>`;
 }
