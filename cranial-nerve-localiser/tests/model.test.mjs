@@ -126,6 +126,25 @@ test('bilateral findings', () => {
   assert.equal(top({ homonymous: 'B', rapd: 'N', pupil: 'N' }).site.id, 'cortical-blindness');
 });
 
+test('consciousness, coma and the gag reflex', () => {
+  // Drowsiness alone: a toxic or metabolic cause is the commonest.
+  assert.equal(top({ consciousness: 'P' }).site.id, 'metabolic-encephalopathy');
+  // The pupils localise coma: pinpoint to the pons, fixed mid-position to the midbrain.
+  assert.equal(top({ consciousness: 'P', pinpointPupils: 'P' }).site.id, 'pontine-haemorrhage');
+  assert.equal(top({ consciousness: 'P', fixedMidPupils: 'P' }).site.id, 'aras-coma');
+  // Awake but unable to move or speak is locked-in, which reduced consciousness argues against.
+  assert.equal(top({ lockedIn: 'P', quadriparesis: 'P' }).site.id, 'locked-in');
+  const lockedIn = m.SITES.find(s => s.id === 'locked-in');
+  assert.ok(m.scoreSite(lockedIn, { lockedIn: 'P', quadriparesis: 'P', consciousness: 'P' }).C > 0);
+  // A one-sided reduced gag supports a lower cranial nerve lesion on that side.
+  const vernet = m.SITES.find(s => s.id === 'vernet');
+  const fit = gag => m.scoreSite(vernet, { palate: 'R', xi: 'R', gag }).fit;
+  assert.ok(fit('R') > fit('N') + .1);
+  const r = top({ gag: 'R', palate: 'R', dysphagia: 'P', xi: 'R' });
+  assert.equal(r.site.id, 'vernet'); assert.equal(r.side, 'R');
+  assert.equal(m.structureStates('medulla', { gag: 'L' }).get('na:L'), 'involved');
+});
+
 test('practice cases are solvable and their options are fair', () => {
   const rng = mulberry32(7);
   const unplayable = [];

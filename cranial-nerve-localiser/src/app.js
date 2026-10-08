@@ -453,7 +453,7 @@ function findingRow(f){
 
 function init(){
   applyTheme();
-  const categories=[['eyes','III','Eyes'],['vision','I–II','Vision & smell'],['nystagmus','≋','Nystagmus'],['face','VII','Face'],['hearing','VIII','Hearing & balance'],['bulbar','XII','Bulbar'],['tracts','↕','Limbs'],['cortex','Cx','Cortex'],['cord','C–S','Spinal cord'],['context','＋','Context'],['all','∴','All signs']];
+  const categories=[['eyes','III','Eyes'],['vision','I–II','Vision & smell'],['nystagmus','≋','Nystagmus'],['face','VII','Face'],['hearing','VIII','Hearing & balance'],['bulbar','XII','Bulbar'],['tracts','↕','Limbs'],['cortex','Cx','Cortex'],['cord','C–S','Spinal cord'],['coma','GCS','Conscious level'],['context','＋','Context'],['all','∴','All signs']];
   $('categories').innerHTML=categories.map(([id,symbol,name])=>`<button class="category" data-category="${id}" aria-pressed="${id===activeCategory}"><span class="category-symbol" aria-hidden="true">${symbol}</span><span>${name}</span><span class="category-count"></span></button>`).join('');
   $('finding-groups').innerHTML=GROUPS.map(g=>`<details class="group" id="group-${g.id}" open><summary><span class="nerve-label" aria-hidden="true">${g.nerve}</span><span class="group-title">${g.name}</span><span class="group-counter" id="counter-${g.id}"></span><span class="chevron" aria-hidden="true"></span></summary><div class="group-content"><div class="chips">${FINDINGS.filter(f=>f.group===g.id).map(findingRow).join('')}</div></div></details>`).join('');
   renderCases();

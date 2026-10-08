@@ -94,7 +94,7 @@ const SITES_A = [
   },
   {
     id: "uncal", name: "Tentorial edge and compressed III nerve", eponym: "Uncal herniation", zone: "subarachnoid", side: "unilateral", prior: 5,
-    w: {pupil: 3, consciousness: 3, iii: 2, ptosis: 1, "weak:c": 2, weak: 1, papilloedema: 1}, ex: [],
+    w: {pupil: 3, consciousness: 3, iii: 2, ptosis: 1, "weak:c": 2, weak: 1, papilloedema: 1, posturingFlexor: 1, posturingExtensor: 1}, ex: [],
     causes: "Expanding haematoma, tumour, oedema or other supratentorial mass effect.",
     investigation: "Immediate emergency and neurosurgical assessment with urgent CT brain; resuscitation and treatment must not wait for a teaching tool.",
     pearl: "Declining consciousness with a dilating pupil is an emergency. Usually the pupil is on the mass side and weakness is opposite. Kernohan’s notch can compress the opposite cerebral peduncle against the tentorium, producing weakness on the same side as the mass: a classic false-localising exception."
@@ -293,14 +293,14 @@ const SITES_B = [
   },
   {
     id: "bulbar", name: "Bulbar lower motor neurons or nerves", eponym: "Bulbar palsy pattern", zone: "diffuse", side: "none", prior: 5,
-    w: {xii: 3, palate: 2, dysphagia: 3, hoarseness: 2, dysarthria: 2, xi: 1}, ex: ["jawJerk", "lability"],
+    w: {xii: 3, palate: 2, dysphagia: 3, hoarseness: 2, dysarthria: 2, xi: 1, gag: 1}, ex: ["jawJerk", "lability"],
     causes: "Motor neuron disease, lower cranial polyneuropathy or structural medullary/skull-base disease.",
     investigation: "Assess swallowing and respiratory function promptly; MRI brain/skull base and EMG guided by the pattern and time course.",
     pearl: "Flaccid dysarthria, palatal weakness and a wasted or fasciculating tongue indicate lower motor neuron involvement. Bulbar palsy describes a pattern rather than one small anatomical site. Examine limbs and reflexes for a wider motor neuron disorder, and prioritise airway protection and swallowing safety when symptoms are significant."
   },
   {
     id: "wallenberg", name: "Lateral medulla", eponym: "Wallenberg syndrome", zone: "medulla-lateral", side: "unilateral", prior: 9,
-    w: {palate: 2, dysphagia: 3, hoarseness: 3, dissociatedFace: 3, "spinothalamic:c": 3, horner: 2, limbAtaxia: 2, vertigo: 1, skew: 1, gaitAtaxia: 1, hiccups: 1, dysarthria: 1, vascular: 1}, ex: ["dcml:c", "xii"],
+    w: {palate: 2, dysphagia: 3, hoarseness: 3, dissociatedFace: 3, "spinothalamic:c": 3, horner: 2, limbAtaxia: 2, gag: 1, vertigo: 1, skew: 1, gaitAtaxia: 1, hiccups: 1, dysarthria: 1, vascular: 1}, ex: ["dcml:c", "xii"],
     causes: "Vertebral or PICA territory infarction, including vertebral dissection; less often demyelination or tumour.",
     investigation: "Urgent stroke pathway with MRI diffusion and head/neck vascular imaging; assess swallowing before oral intake.",
     pearl: "Crossed pain/temperature loss, bulbar weakness, ipsilateral Horner and ataxia form the lateral medullary pattern. The face loses pain/temperature on the lesion side while the body loses them opposite. Marked limb weakness is atypical of a pure lateral lesion but can occur with extension into corticospinal fibres."
@@ -314,7 +314,7 @@ const SITES_B = [
   },
   {
     id: "avellis", name: "Lateral medulla, ambiguus and spinothalamic", eponym: "Avellis syndrome", zone: "medulla-lateral", side: "unilateral", prior: 3,
-    w: {palate: 3, hoarseness: 3, dysphagia: 2, "spinothalamic:c": 3, dysarthria: 1, vascular: 1}, ex: ["xii", "dcml:c"],
+    w: {palate: 3, hoarseness: 3, dysphagia: 2, "spinothalamic:c": 3, gag: 1, dysarthria: 1, vascular: 1}, ex: ["xii", "dcml:c"],
     causes: "Focal medullary infarction; occasionally tumour, inflammation or demyelination.",
     investigation: "Urgent diffusion MRI and vascular imaging for acute onset; laryngoscopy and swallowing assessment where indicated.",
     pearl: "Palatal or vocal-fold weakness on one side with pain/temperature loss in the opposite body links nucleus ambiguus output to the spinothalamic tract. This is a restricted lateral medullary pattern. Additional facial sensory loss, Horner or ipsilateral ataxia makes the broader Wallenberg description more useful."
@@ -328,42 +328,42 @@ const SITES_B = [
   },
   {
     id: "vernet", name: "Jugular foramen", eponym: "Vernet syndrome", zone: "skull-base", side: "unilateral", prior: 6,
-    w: {palate: 3, dysphagia: 2, hoarseness: 3, xi: 3, dysarthria: 1}, ex: ["xii", "horner", "weak:c"],
+    w: {palate: 3, dysphagia: 2, hoarseness: 3, xi: 3, gag: 2, dysarthria: 1}, ex: ["xii", "horner", "weak:c"],
     causes: "Paraganglioma, schwannoma, metastasis, skull-base fracture or jugular-region infection/thrombosis.",
     investigation: "Contrast MRI of skull base and upper neck; CT for bone disease, laryngoscopy and swallowing assessment.",
     pearl: "IX, X and XI travel through the jugular foramen, linking palatal/laryngeal dysfunction with SCM and trapezius weakness. XII exits through a separate nearby canal. Tongue wasting or deviation therefore suggests extension beyond the jugular foramen rather than a strictly confined Vernet pattern."
   },
   {
     id: "collet-sicard", name: "Jugular foramen and hypoglossal canal", eponym: "Collet–Sicard syndrome", zone: "skull-base", side: "unilateral", prior: 5,
-    w: {palate: 3, dysphagia: 2, hoarseness: 3, xi: 3, xii: 3, dysarthria: 1}, ex: ["horner", "weak:c"],
+    w: {palate: 3, dysphagia: 2, hoarseness: 3, xi: 3, xii: 3, gag: 2, dysarthria: 1}, ex: ["horner", "weak:c"],
     causes: "Skull-base tumour/metastasis, fracture, infection or upper cervical vascular pathology.",
     investigation: "Contrast MRI skull base and upper neck; CT bone windows and vascular imaging according to suspected cause.",
     pearl: "Adding XII palsy to a IX–XI pattern implicates the neighbouring hypoglossal canal or adjacent extracranial lower nerves. A focal side is more informative than the eponym alone. Associated Horner syndrome suggests sympathetic involvement and shifts the description toward Villaret, often in the upper carotid or retroparotid space."
   },
   {
     id: "villaret", name: "Retroparotid and upper carotid space", eponym: "Villaret syndrome", zone: "extracranial", side: "unilateral", prior: 5,
-    w: {palate: 3, dysphagia: 2, hoarseness: 3, xi: 3, xii: 3, horner: 3, dysarthria: 1}, ex: ["weak:c", "dcml:c"],
+    w: {palate: 3, dysphagia: 2, hoarseness: 3, xi: 3, xii: 3, horner: 3, gag: 2, dysarthria: 1}, ex: ["weak:c", "dcml:c"],
     causes: "Skull-base/upper neck tumour, carotid dissection, trauma or deep neck infection.",
     investigation: "Contrast MRI skull base and upper neck; urgent CTA/MRA for acute painful onset or suspected carotid dissection.",
     pearl: "Lower cranial palsies IX–XII plus ipsilateral Horner link the nerves to the adjacent sympathetic pathway in the retroparotid or upper carotid space. Map palate, voice, shoulder and tongue separately. Acute neck pain is an important clue to dissection; slow progression raises concern for an infiltrating mass."
   },
   {
     id: "tapia", name: "Extracranial X and XII", eponym: "Tapia syndrome", zone: "extracranial", side: "unilateral", prior: 4,
-    w: {hoarseness: 3, xii: 3, dysphagia: 2, dysarthria: 1}, ex: ["xi", "palate", "weak:c"],
+    w: {hoarseness: 3, xii: 3, dysphagia: 2, dysarthria: 1}, ex: ["xi", "palate", "gag", "weak:c"],
     causes: "Compression or stretch around intubation/neck positioning, trauma or a local upper neck lesion.",
     investigation: "Laryngoscopy to document vocal-fold palsy; MRI brain/skull base/neck if the cause is uncertain, with swallowing assessment.",
     pearl: "The usual peripheral Tapia pattern pairs ipsilateral tongue weakness with vocal-fold paralysis, often after airway instrumentation or prolonged positioning. Palatal movement is usually preserved because the pharyngeal vagal branches are spared. New postoperative dysphonia plus tongue deviation should prompt examination of both nerves and assessment for aspiration."
   },
   {
     id: "isolated-xii", name: "Hypoglossal canal or extracranial XII", eponym: "Isolated hypoglossal neuropathy", zone: "skull-base", side: "unilateral", prior: 5,
-    w: {xii: 3, dysarthria: 1, dysphagia: 1}, ex: ["weak:c", "dcml:c", "palate", "xi"],
+    w: {xii: 3, dysarthria: 1, dysphagia: 1}, ex: ["weak:c", "dcml:c", "palate", "gag", "xi"],
     causes: "Skull-base malignancy, trauma, surgery, carotid dissection or inflammatory neuropathy.",
     investigation: "Contrast MRI following XII from medulla to upper neck; CT of the hypoglossal canal and CTA/MRA if indicated.",
     pearl: "An LMN XII lesion produces ipsilateral tongue wasting and weakness; protrusion deviates toward the weak side. Search for adjacent lower cranial palsies and opposite limb signs before calling it isolated. Persistent unexplained XII palsy requires investigation of the full nerve course, especially the skull base."
   },
   {
     id: "recurrent-laryngeal", name: "Recurrent laryngeal nerve", eponym: "Distal vagal branch", zone: "extracranial", side: "unilateral", prior: 6,
-    w: {hoarseness: 3, dysphagia: 1}, ex: ["palate", "xi", "xii", "weak:c"],
+    w: {hoarseness: 3, dysphagia: 1}, ex: ["palate", "gag", "xi", "xii", "weak:c"],
     causes: "Thyroid/neck or thoracic surgery, malignancy, aortic pathology, trauma or idiopathic neuropathy.",
     investigation: "Laryngoscopy first; image the vagal/recurrent laryngeal course through the neck and relevant thorax if unexplained. Stridor requires urgent airway assessment.",
     pearl: "Hoarseness alone does not establish a nerve lesion: confirm vocal-fold immobility. A recurrent laryngeal lesion should spare palatal elevation. The left nerve loops under the aortic arch and the right under the subclavian artery, so an unexplained left vocal-fold palsy may originate within the chest."
@@ -754,19 +754,58 @@ const RULES = [
   { title: 'Sudden loss in one eye over 50: ask about the jaw', text: 'Jaw claudication, scalp tenderness and new headache suggest giant cell arteritis, which can take the other eye within days. Check ESR and CRP the same day and start high-dose steroids when suspicion is high rather than waiting for biopsy.' }
 ];
 
-const SITES = [...SITES_A, ...SITES_B, ...SITES_C, ...SITES_D];
+/* 3.2: consciousness and coma. */
+const SITES_E = [
+  {
+    id: "aras-coma", name: "Pontomesencephalic tegmentum (reticular activating system)", eponym: "Brainstem coma", zone: "midbrain-tegmentum", side: "midline", prior: 5,
+    w: {consciousness: 3, fixedMidPupils: 3, posturingExtensor: 2, dollsAbsent: 2, ophthalmoplegia: 1, iii: 1, vascular: 1}, ex: ["asterixis", "lockedIn"],
+    causes: "Basilar artery thrombosis or top-of-basilar embolism, brainstem haemorrhage, or compression from herniation or a posterior fossa mass.",
+    investigation: "Secure the airway, then emergency CT with CT angiography of the posterior circulation: basilar occlusion can be treated by thrombectomy. Check the glucose and consider toxins at the same time.",
+    pearl: "Coma needs damage to both hemispheres or to the reticular activating system in the upper pons and midbrain. Fixed mid-position pupils, extensor posturing and absent oculocephalic responses point to the brainstem; reactive pupils with intact brainstem reflexes favour a toxic or metabolic cause. Basilar thrombosis can fluctuate before coma sets in."
+  },
+  {
+    id: "pontine-haemorrhage", name: "Central pons", eponym: "Pontine haemorrhage", zone: "pons-dorsal", side: "midline", prior: 4,
+    w: {consciousness: 3, pinpointPupils: 3, quadriparesis: 2, dollsAbsent: 2, posturingExtensor: 1, "gaze:b": 1, vascular: 1}, ex: ["asterixis", "lockedIn"],
+    causes: "Hypertensive haemorrhage into the pons; less often basilar infarction or a vascular malformation. Opioid toxicity mimics the pupils.",
+    investigation: "Emergency CT and airway protection. Give naloxone if opioid toxicity is possible.",
+    pearl: "Coma with pinpoint pupils, absent horizontal eye movements and weakness of all four limbs suggests the pons: descending sympathetic fibres are cut while the parasympathetic supply is spared. Opioids produce the same pupils, so check the history and the response to naloxone. Use a magnifier: the light reaction is tiny but present."
+  },
+  {
+    id: "locked-in", name: "Both halves of the ventral pons", eponym: "Locked-in syndrome", zone: "pons-ventral", side: "midline", prior: 3,
+    w: {lockedIn: 3, quadriparesis: 3, dysarthria: 1, dysphagia: 1, "umn7:b": 1, "gaze:b": 1, vascular: 1}, ex: ["consciousness"],
+    causes: "Basilar artery occlusion is commonest; also pontine haemorrhage, osmotic demyelination and trauma.",
+    investigation: "Emergency CT with CT angiography for basilar occlusion. Establish a yes/no code with vertical eye movements or blinks.",
+    pearl: "The patient is awake and aware but cannot move or speak; vertical eye movements and blinking survive because the midbrain is spared. It is easily mistaken for coma, so ask every apparently unresponsive patient to look up and down. Hearing and understanding are intact: talk to the patient, not about them."
+  },
+  {
+    id: "paramedian-thalamic", name: "Both paramedian thalami", eponym: "Artery of Percheron infarction", zone: "deep", side: "bilateral", prior: 3,
+    w: {consciousness: 3, upgaze: 2, iii: 1, posturingFlexor: 1, vascular: 1}, ex: [],
+    causes: "Occlusion of the artery of Percheron, a variant single artery supplying both paramedian thalami and sometimes the rostral midbrain; also top-of-basilar embolism.",
+    investigation: "MRI with diffusion imaging, which shows the bilateral paramedian thalamic infarcts that early CT often misses; CT angiography of the posterior circulation.",
+    pearl: "Sudden drowsiness or coma with a vertical gaze palsy and memory disturbance points to the paramedian thalami, part of the arousal network. Early CT is often normal, so the picture is easily mistaken for a toxic or metabolic coma. As patients wake, amnesia and gaze problems often remain."
+  },
+  {
+    id: "metabolic-encephalopathy", name: "Both hemispheres, diffusely", eponym: "Toxic or metabolic encephalopathy", zone: "diffuse", side: "bilateral", prior: 8,
+    w: {consciousness: 3, asterixis: 2, posturingFlexor: 1}, ex: ["fixedMidPupils", "lockedIn"],
+    causes: "Hypoglycaemia, drugs and alcohol, sepsis, liver or kidney failure, hyponatraemia, hypercapnia, hypothermia and the post-ictal state.",
+    investigation: "Check a capillary glucose immediately, then blood gases, sodium, calcium, renal and liver function, ammonia, toxicology and cultures. Image the brain if the cause is unclear or there are focal signs; an EEG excludes non-convulsive status.",
+    pearl: "Reduced consciousness with preserved pupillary reactions and brainstem reflexes points to a diffuse, usually toxic or metabolic, cause; asterixis or multifocal myoclonus supports it. Hypoglycaemia can mimic a focal stroke, so check the glucose in every drowsy patient first."
+  }
+];
+
+const SITES = [...SITES_A, ...SITES_B, ...SITES_C, ...SITES_D, ...SITES_E];
 
 /* Practice topics; every site belongs to exactly one. */
 const TOPICS = [
-  {id: 'brainstem', name: 'Brainstem', sites: ['weber','claude','benedikt','nothnagel','parinaud','nuclear-iii','millard-gubler','raymond','foville','facial-colliculus','ino','one-and-half','aica','lateral-midpons','wallenberg','dejerine','avellis','jackson']},
+  {id: 'brainstem', name: 'Brainstem', sites: ['weber','claude','benedikt','nothnagel','parinaud','nuclear-iii','millard-gubler','raymond','foville','facial-colliculus','ino','one-and-half','aica','lateral-midpons','wallenberg','dejerine','avellis','jackson','aras-coma','pontine-haemorrhage','locked-in']},
   {id: 'eyes', name: 'Eye movements & orbit', sites: ['compressive-iii','microvascular-iii','uncal','trochlear','microvascular-vi','raised-icp-vi','gradenigo','cavernous','sof','orbital-apex','tolosa-hunt','thyroid-eye','isolated-horner']},
   {id: 'vision', name: 'Vision & smell', sites: ['optic-nerve','junctional','chiasm','retrochiasmal','olfactory','foster-kennedy','gca','pituitary-apoplexy','cortical-blindness']},
   {id: 'face', name: 'Face & ear', sites: ['cpa','iam','bells','proximal-facial','ramsay-hunt','tympanic-facial','mastoid-facial','stylomastoid','supranuclear-vii','trigeminal-ganglion','foramen-ovale','numb-chin','isolated-v2']},
   {id: 'balance', name: 'Vertigo & nystagmus', sites: ['vestibular-neuritis','labyrinthitis','cerebellar','vestibulocerebellum','upbeat-brainstem','foramen-magnum']},
   {id: 'lower', name: 'Lower cranial nerves', sites: ['pseudobulbar','bulbar','vernet','collet-sicard','villaret','tapia','isolated-xii','recurrent-laryngeal']},
-  {id: 'cortex', name: 'Cortex & deep', sites: ['mca-dominant','mca-nondominant','broca','wernicke-aphasia','gerstmann','aca','frontal-eye-field','lacunar-motor','thalamic-sensory','subthalamic']},
+  {id: 'cortex', name: 'Cortex & deep', sites: ['mca-dominant','mca-nondominant','broca','wernicke-aphasia','gerstmann','aca','frontal-eye-field','lacunar-motor','thalamic-sensory','subthalamic','paramedian-thalamic']},
   {id: 'cord', name: 'Spinal cord', sites: ['brown-sequard','anterior-cord','posterior-cord','central-cord','syrinx','transverse-cord','cauda-equina']},
-  {id: 'diffuse', name: 'Diffuse & neuromuscular', sites: ['myasthenia','miller-fisher','wernicke','bilateral-lmn-vii']}
+  {id: 'diffuse', name: 'Diffuse & neuromuscular', sites: ['myasthenia','miller-fisher','wernicke','bilateral-lmn-vii','metabolic-encephalopathy']}
 ];
 
 const GROUPS = [
@@ -779,7 +818,8 @@ const GROUPS = [
   {id:'tracts',name:'Long tracts & coordination',nerve:'↕',hint:'Motor sensory cerebellar reflexes'},
   {id:'cortex',name:'Cortex & deep structures',nerve:'Cx',hint:'Cerebral hemisphere language neglect capsule thalamus'},
   {id:'cord',name:'Spinal cord',nerve:'C–S',hint:'Myelopathy cauda equina level sphincter'},
-  {id:'context',name:'Clinical context',nerve:'＋',hint:'Consciousness pressure headache risk'}
+  {id:'coma',name:'Consciousness & coma',nerve:'GCS',hint:'Level of consciousness pupils posturing brainstem reflexes coma'},
+  {id:'context',name:'Clinical context',nerve:'＋',hint:'Pressure headache risk'}
 ];
 
 /*
@@ -942,6 +982,9 @@ const FINDINGS = [
   {id:"palate",group:"bulbar",name:"Palatal weakness",sided:"Palatal weakness on the {side}",both:"Bilateral palatal weakness",hint:"Weak elevation; uvula may deviate away from the weak side",
     test:"Ask the patient to say “ah” and watch the soft palate: the weak side fails to rise and the uvula is pulled towards the normal side.",
     syn:"uvula soft palate gag vagus"},
+  {id:"gag",group:"bulbar",name:"Reduced gag reflex",sided:"Reduced gag reflex on the {side}",both:"Absent gag reflex on both sides",hint:"Weak or absent response when one side of the pharynx is touched: afferent IX, efferent X. Asymmetry matters more than absence",
+    test:"Explain first, then touch each side of the back of the pharynx in turn with a tongue depressor, asking whether it feels the same (IX) and watching the palate and pharynx contract (X). Many healthy people have a weak gag, so value asymmetry; do it only when it will change management.",
+    syn:"gag pharyngeal reflex glossopharyngeal vagus"},
   {id:"dysphagia",group:"bulbar",label:"Dysphagia",hint:"Difficulty swallowing",
     test:"Ask about coughing or choking with fluids and nasal regurgitation. Only screen with water if the patient is alert and it is safe to do so.",
     syn:"swallowing choking aspiration"},
@@ -1041,9 +1084,30 @@ const FINDINGS = [
   {id:"saddle",group:"cord",label:"Saddle anaesthesia",hint:"Reduced sensation over the perineum, buttocks and inner thighs",
     test:"With consent and a chaperone, test pinprick over the perineum, buttocks and back of the thighs (S2–S5) and assess anal tone.",
     syn:"perianal numbness cauda equina"},
-  {id:"consciousness",group:"context",label:"Reduced consciousness",hint:"Drowsiness, stupor or coma",
+  {id:"consciousness",group:"coma",label:"Reduced consciousness",hint:"Drowsiness, stupor or coma",
     test:"Score the Glasgow Coma Scale by its components and repeat it frequently.",
-    syn:"gcs drowsy coma confused"},
+    syn:"gcs drowsy coma confused unconscious unresponsive stupor obtunded"},
+  {id:"lockedIn",group:"coma",label:"Awake but unable to move or speak",hint:"Eyes open and tracking, answering with vertical eye movements or blinks, with quadriplegia and anarthria",
+    test:"Ask an apparently unresponsive patient to look up, look down and blink on command; vertical eye movements to command show awareness.",
+    syn:"locked in pseudocoma unresponsive"},
+  {id:"pinpointPupils",group:"coma",label:"Pinpoint pupils",hint:"Both pupils 1 mm or less, still reacting under a magnifier",
+    test:"In dim light, shine a bright torch into each eye and watch through a magnifying lens or the ophthalmoscope for a small light reaction.",
+    syn:"miosis pontine opioid small pupils"},
+  {id:"fixedMidPupils",group:"coma",label:"Fixed mid-position pupils",hint:"Both pupils 4–6 mm and unreactive to light",
+    test:"In a dim room, shine a bright light into each eye in turn. Mid-position pupils that do not react point to the midbrain once drugs are excluded.",
+    syn:"unreactive pupils midbrain coma"},
+  {id:"posturingFlexor",group:"coma",label:"Flexor (decorticate) posturing",hint:"Arms flex and legs extend in response to pain: damage above the red nucleus, in the hemispheres or thalami, or a metabolic coma",
+    test:"Apply central pain, such as supraorbital or trapezius pressure, and watch the arms: flexion at the elbows and wrists with extended legs is flexor posturing.",
+    syn:"decorticate abnormal flexion gcs motor"},
+  {id:"posturingExtensor",group:"coma",label:"Extensor (decerebrate) posturing",hint:"Arms extend and rotate inwards in response to pain: usually midbrain or upper pontine damage",
+    test:"Apply central pain and watch the arms: extension and internal rotation at the elbows, with extended legs, is extensor posturing.",
+    syn:"decerebrate extension gcs motor"},
+  {id:"dollsAbsent",group:"coma",label:"Absent oculocephalic responses",hint:"In coma, the eyes move with the head instead of staying fixed in space",
+    test:"Only once the cervical spine is cleared: hold the lids open and turn the head briskly side to side and up and down. Normally the eyes move opposite to the head; loss suggests brainstem damage or sedative drugs.",
+    syn:"dolls eyes doll's vestibulo ocular brainstem reflexes coma"},
+  {id:"asterixis",group:"coma",label:"Asterixis or multifocal myoclonus",hint:"Flapping tremor of the outstretched hands, or scattered jerks",
+    test:"Ask the patient to hold the arms out with wrists extended and fingers spread, and watch for brief lapses of posture; note any irregular jerks.",
+    syn:"flap hepatic metabolic myoclonus"},
   {id:"papilloedema",group:"context",label:"Headache with papilloedema",hint:"Optic disc swelling from raised intracranial pressure",
     test:"Fundoscopy for blurred, elevated disc margins, haemorrhages and absent venous pulsation (supportive only). Ask ophthalmology to confirm if unsure.",
     syn:"disc swelling raised pressure icp fundus"},
@@ -1103,7 +1167,13 @@ const PRESETS = [
   {id:"lacunar",name:"Pure motor stroke",site:"lacunar-motor",note:"No cortical signs",findings:{weak:'L',umn7:'L',dysarthria:'P',vascular:'P',neglect:'N',homonymous:'N',spinothalamic:'N'}},
   {id:"thalamic",name:"Pure sensory stroke",site:"thalamic-sensory",note:"Face and body, same side",findings:{spinothalamic:'R',dcml:'R',v2:'R',v3:'R',weak:'N'}},
   {id:"cortical-blindness",name:"Cortical blindness",site:"cortical-blindness",note:"Blind, pupils normal",findings:{homonymous:'B',rapd:'N',pupil:'N'}},
-  {id:"hemiballismus",name:"Hemiballismus",site:"subthalamic",note:"Flinging movements",findings:{ballism:'L',vascular:'P'}}
+  {id:"hemiballismus",name:"Hemiballismus",site:"subthalamic",note:"Flinging movements",findings:{ballism:'L',vascular:'P'}},
+  {id:"vernet",name:"Vernet",site:"vernet",note:"IX, X and XI together",findings:{palate:'R',gag:'R',hoarseness:'P',dysphagia:'P',xi:'R',xii:'N',horner:'N'}},
+  {id:"brainstem-coma",name:"Basilar coma",site:"aras-coma",note:"Fixed pupils, extensor posturing",findings:{consciousness:'P',fixedMidPupils:'P',posturingExtensor:'P',dollsAbsent:'P',vascular:'P'}},
+  {id:"pontine-haemorrhage",name:"Pontine haemorrhage",site:"pontine-haemorrhage",note:"Pinpoint pupils in coma",findings:{consciousness:'P',pinpointPupils:'P',quadriparesis:'P',dollsAbsent:'P',gaze:'B'}},
+  {id:"locked-in",name:"Locked-in",site:"locked-in",note:"Awake, cannot move",findings:{lockedIn:'P',quadriparesis:'P',dysarthria:'P',umn7:'B',consciousness:'N'}},
+  {id:"percheron",name:"Artery of Percheron",site:"paramedian-thalamic",note:"Drowsy with upgaze palsy",findings:{consciousness:'P',upgaze:'P',vascular:'P',fixedMidPupils:'N'}},
+  {id:"metabolic",name:"Metabolic coma",site:"metabolic-encephalopathy",note:"Pupils still react",findings:{consciousness:'P',asterixis:'P',fixedMidPupils:'N',dollsAbsent:'N',weak:'N'}}
 ];
 
 const ZONES = [
@@ -1117,7 +1187,7 @@ const ZONES = [
   ['cord-lateral','Hemicord','cord'],['cord-transverse','Transverse','cord'],['cauda','Cauda equina','cord'],
   ['subarachnoid','Subarachnoid','outside'],['cpa','CP angle / IAM','outside'],['petrous','Petrous bone','outside'],
   ['cavernous','Cavernous sinus','outside'],['orbit','Orbit / SOF','outside'],['skull-base','Skull base','outside'],
-  ['extracranial','Extracranial','outside'],['cerebellum','Cerebellum','outside'],['diffuse','NMJ / diffuse','outside']
+  ['extracranial','Extracranial','outside'],['cerebellum','Cerebellum','outside'],['diffuse','Diffuse or systemic','outside']
 ].map(([id,name,level])=>({id,name,level}));
 
 const FINDING_BY_ID = new Map(FINDINGS.map(f=>[f.id,f]));

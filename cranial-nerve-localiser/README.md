@@ -5,6 +5,21 @@ the anatomical sites that best explain them, shows the involved brainstem
 structures, and lets you practise on generated cases. It is a teaching aid, not
 a diagnostic tool.
 
+## What is in 3.2
+
+- **Consciousness and coma.** A new area groups reduced consciousness with
+  locked-in state, pinpoint and fixed mid-position pupils, flexor and extensor
+  posturing, absent oculocephalic responses and asterixis. Five sites use them:
+  brainstem (reticular activating system) coma, pontine haemorrhage, locked-in
+  syndrome, artery of Percheron infarction and toxic or metabolic
+  encephalopathy. The midbrain and mid-pons sections now show the reticular
+  formation.
+- **Gag reflex.** A reduced gag can be marked on the right, left or both sides.
+  It supports lower cranial nerve lesions (IX and X) on that side and is linked
+  to nucleus ambiguus in the medulla section.
+- Six new classic cases (Vernet, basilar coma, pontine haemorrhage, locked-in,
+  Percheron and metabolic coma): 93 sites, 98 findings and 47 cases in all.
+
 ## What is in 3.1
 
 - **Atlas-style sections.** Nuclei are drawn as grey matter and tracts with a
@@ -85,7 +100,7 @@ sets the version and app id from `android/version.json` in the binary manifest, 
 v2, which is enough for the app's minSdk of 26. To check a build independently:
 
 ```sh
-pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-3.1.0.apk
+pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-3.2.0.apk
 ```
 
 ### Application id and signing

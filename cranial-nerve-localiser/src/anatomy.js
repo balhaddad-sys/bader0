@@ -89,7 +89,7 @@ const STRUCTURES = {
   stt: {name:'Spinothalamic tract', short:'STT', does:'Pain and temperature from the opposite body, which crossed in the spinal cord.', lesion:'Pain and temperature loss over the opposite limbs and trunk.', findings:['spinothalamic:c']},
   sp5: {name:'Spinal trigeminal nucleus and tract', short:'Sp V', does:'Pain and temperature from the same side of the face.', lesion:'Loss of facial pain and temperature on the lesion side, often with touch spared.', findings:['dissociatedFace','corneal']},
   symp: {name:'Descending sympathetic fibres', short:'Symp', does:'Uncrossed hypothalamospinal fibres for pupil dilation, lid tone and facial sweating.', lesion:'Horner syndrome on the lesion side.', findings:['horner']},
-  na: {name:'Nucleus ambiguus', short:'NA', does:'Motor nucleus for the palate, pharynx and larynx, through IX and X.', lesion:'Palatal and vocal fold weakness on the lesion side, with dysphagia and hoarseness.', findings:['palate','dysphagia','hoarseness']},
+  na: {name:'Nucleus ambiguus', short:'NA', does:'Motor nucleus for the palate, pharynx and larynx, through IX and X.', lesion:'Palatal and vocal fold weakness on the lesion side, with dysphagia and hoarseness.', findings:['palate','gag','dysphagia','hoarseness']},
   xii: {name:'Hypoglossal nucleus and fascicle', short:'XII', does:'Supplies the same side of the tongue; the fibres leave between the pyramid and the olive.', lesion:'Tongue weakness and wasting, deviating towards the lesion.', findings:['xii']},
   dmx: {name:'Dorsal motor nucleus of X', short:'DMX', does:'Parasympathetic output to the heart, lungs and gut.', lesion:'No reliable bedside sign.', findings:[]},
   nts: {name:'Nucleus of the solitary tract', short:'NTS', does:'Receives taste and visceral sensation from VII, IX and X.', lesion:'Taste loss on the lesion side, rarely noticed at the bedside.', findings:['taste']},
@@ -112,6 +112,7 @@ const STRUCTURES = {
   alst: {name:'Spinothalamic tract', short:'STT', does:'Pain and temperature from the opposite side, crossed within a segment or two of entry.', lesion:'Pain and temperature loss on the opposite side, starting a segment or two below the lesion.', findings:['spinothalamic:c']},
   ah: {name:'Anterior horn', short:'AH', does:'Lower motor neurons for the muscles of this segment.', lesion:'Wasting, fasciculation and areflexia at the level of the lesion.', findings:['lmnArms']},
   awc: {name:'Anterior white commissure', short:'AWC', does:'Where pain and temperature fibres cross, just in front of the central canal.', lesion:'Bilateral, cape-like pain and temperature loss at the level of the lesion, as in syringomyelia.', findings:['capeLoss']},
+  rf: {name:'Reticular activating system', short:'RF', does:'Paramedian reticular formation projecting through the thalamus to keep the cortex awake.', lesion:'Drowsiness or coma, usually with eye movement or pupil signs from neighbouring nuclei.', findings:['consciousness']},
   tectum: {name:'Tectum and pretectal area', short:'SC', does:'Superior colliculi, posterior commissure and pretectal nuclei for vertical gaze and the pupillary light reflex.', lesion:'Parinaud syndrome: upgaze palsy, light–near dissociation, convergence–retraction nystagmus, lid retraction.', findings:['upgaze','lightNear','convergenceRetraction','lidRetraction']}
 };
 
@@ -133,9 +134,10 @@ const SECTIONS = [
       mlf: '<ellipse cx="139" cy="144" rx="3.5" ry="6"/>',
       ml: '<ellipse cx="103" cy="104" rx="17" ry="5" transform="rotate(-58 103 104)"/>',
       stt: '<ellipse cx="85" cy="128" rx="7" ry="6"/>',
-      tectum: '<ellipse cx="133" cy="183" rx="19" ry="10"/>'
+      tectum: '<ellipse cx="133" cy="183" rx="19" ry="10"/>',
+      rf: '<ellipse cx="124" cy="132" rx="8" ry="7"/>'
     },
-    labels: {cst:[[106,42,'middle']], sn:[[110,64.5,'middle']], rn:[[140,104.5,'middle']], iii:[[151,148.5,'middle']], mlf:[[133,146,'end']], ml:[[103,106.5,'middle']], stt:[[85,130.5,'middle']], tectum:[[133,185.5,'middle']]},
+    labels: {cst:[[106,42,'middle']], sn:[[110,64.5,'middle']], rn:[[140,104.5,'middle']], iii:[[151,148.5,'middle']], mlf:[[133,146,'end']], ml:[[103,106.5,'middle']], stt:[[85,130.5,'middle']], tectum:[[133,185.5,'middle']], rf:[[124,134.5,'middle']]},
     zones: {
       'midbrain-ventral': 'M160 64C156 52 148 40 136 32C122 22 102 20 88 28C78 36 78 58 92 72C108 84 136 84 160 82Z',
       'midbrain-tegmentum': 'M160 82C136 84 108 84 92 72C72 80 66 112 76 136C100 152 132 158 160 156Z',
@@ -155,9 +157,10 @@ const SECTIONS = [
       stt: '<ellipse cx="98" cy="128" rx="7" ry="6"/>',
       symp: '<ellipse cx="113" cy="137" rx="4" ry="4"/>',
       mlf: '<ellipse cx="153" cy="160" rx="3.5" ry="6"/>',
-      scp: '<ellipse cx="120" cy="174" rx="12" ry="8" transform="rotate(25 120 174)"/>'
+      scp: '<ellipse cx="120" cy="174" rx="12" ry="8" transform="rotate(25 120 174)"/>',
+      rf: '<ellipse cx="136" cy="146" rx="7" ry="6"/>'
     },
-    labels: {cst:[[114,75.5,'middle']], mcp:[[52,92,'middle']], vsens:[[92,150.5,'middle']], vmot:[[112,152.5,'middle']], ml:[[130,124.5,'middle']], stt:[[98,130.5,'middle']], symp:[[107,139.5,'end']], mlf:[[153,151,'middle']], scp:[[120,176.5,'middle']]},
+    labels: {cst:[[114,75.5,'middle']], mcp:[[52,92,'middle']], vsens:[[92,150.5,'middle']], vmot:[[112,152.5,'middle']], ml:[[130,124.5,'middle']], stt:[[98,130.5,'middle']], symp:[[107,139.5,'end']], mlf:[[153,151,'middle']], scp:[[120,176.5,'middle']], rf:[[136,148.5,'middle']]},
     zones: {
       'pons-ventral': 'M160 29C140 18 110 15 88 21C88 60 92 96 104 128L160 128Z',
       'pons-lateral': 'M88 21C60 30 36 54 30 84C26 112 36 136 56 150C72 161 94 168 108 176C108 158 110 140 118 128L104 128C92 96 88 60 88 21Z',
@@ -247,7 +250,7 @@ const STRUCTURE_STYLE = {
   vii:['nucleus','VII nucleus'], coch:['nucleus','Cochlear n.'], vsens:['nucleus','Sensory V'], vmot:['nucleus','Motor V'],
   scp:['tract','Sup. peduncle'], iii:['nucleus','III nucleus'], rn:['nucleus','Red nucleus'], sn:['nucleus','S. nigra'],
   tectum:['nucleus','Sup. colliculus'], lcst:['tract','Lat. CST'], dc:['tract','Dorsal columns'], alst:['tract','Spinothalamic'],
-  ah:['nucleus','Anterior horn'], awc:['tract','Commissure']
+  ah:['nucleus','Anterior horn'], awc:['tract','Commissure'], rf:['nucleus','Reticular form.']
 };
 for(const [id,[kind,tag]] of Object.entries(STRUCTURE_STYLE))Object.assign(STRUCTURES[id],{kind,tag});
 /* The fourth ventricle sits behind the pons and medulla; the tissue outline hides its front half. */
