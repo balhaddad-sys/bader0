@@ -1,7 +1,16 @@
-# NeuroLocalize 1.2.0
+# NeuroLocalize 1.3.0
 
 Offline neurological-localization study app (Android WebView shell + HTML/JS content).
-This folder holds the unpacked 1.1.0 APK, the 1.2.0 enhancements and a reproducible build.
+This folder holds the unpacked 1.1.0 APK, the 1.2 and 1.3 enhancements and a reproducible build.
+
+## What's new in 1.3.0
+- **10 more diagrams** (35 total): weakness flowchart · time course and mechanism · stretch reflex arc ·
+  eye muscles and nerves · pupillary light reflex · cavernous sinus · sensory nerves of the hand ·
+  dermatome landmarks · nerves of the leg (with the foot-drop table) · conus vs cauda equina.
+- **2 new lessons** (17 total): Pupils and eye movements · Nerves of the leg.
+- **Rapid drills**: 6 quick-fire decks (roots, visual fields, aphasias, eye muscles, brainstem
+  syndromes, arm and leg nerves) with instant feedback, an answer review and saved best scores.
+- **17 more recall cards** (83 total).
 
 ## What's new in 1.2.0
 - **14 new diagrams** (25 total), generated from `tools/diagrams.py`:
@@ -22,7 +31,7 @@ This folder holds the unpacked 1.1.0 APK, the 1.2.0 enhancements and a reproduci
 - `web/` – app assets (packaged as `assets/` in the APK)
 - `base/` – original native shell: manifest, dex, resources (the build sets the app ID and version)
 - `tools/diagrams.py` – diagram generator · `tools/build_apk.py` + `tools/signer/` – packaging/signing
-- `dist/NeuroLocalize-1.2.0.apk` – built, v2-signed APK
+- `dist/NeuroLocalize-1.3.0.apk` – built, v2-signed APK
 
 ## Build
 ```

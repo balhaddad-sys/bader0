@@ -674,11 +674,396 @@ def body_patterns():
     return s
 
 
+
+# ---------------------------------------------------------------- 1.3 diagrams
+
+def flow_box(s, cx, y, w, h, heading, lines, color):
+    s.rect(cx - w / 2, y, w, h, fill=WHITE, stroke=color)
+    s.text(cx - w / 2 + 14, y + 24, heading, 16, color)
+    s.text(cx - w / 2 + 14, y + 46, lines, 13)
+
+
+def weakness_flow():
+    s = Svg('A first pass through weakness', 'Two questions split the neuraxis before you name a region.', h=640)
+    s.rect(280, 86, 160, 34, fill=INK, rx=17)
+    s.text(360, 108, 'Weakness', 15, WHITE, 'middle', weight='700')
+    s.path('M360 120L360 140', INK, 3, arrow=INK)
+    s.rect(200, 144, 320, 40, fill=WHITE, stroke=INK, rx=20)
+    s.text(360, 170, 'Upper motor neuron signs?', 16, INK, 'middle')
+    s.path('M260 184C240 204 200 206 190 222', TEAL, 3, arrow=TEAL)
+    s.path('M460 184C480 204 520 206 530 222', GOLD, 3, arrow=GOLD)
+    s.text(206, 204, 'yes', 13, TEAL, 'end')
+    s.text(514, 204, 'no', 13, GOLD)
+    for cx, q, color in ((190, 'Face weak as well?', TEAL), (530, 'Sensory loss too?', GOLD)):
+        s.rect(cx - 125, 226, 250, 38, fill=WHITE, stroke=color, rx=19)
+        s.text(cx, 251, q, 15, color, 'middle')
+    # left results
+    s.path('M190 264L190 290', TEAL, 3, arrow=TEAL)
+    s.text(198, 282, 'yes', 12, TEAL)
+    flow_box(s, 190, 294, 288, 82, 'Brain or brainstem', ['Cortical signs → cortex', 'Crossed cranial signs → brainstem'], TEAL)
+    s.path('M65 245L36 245L36 438L44 438', TEAL, 3, arrow=TEAL)
+    s.text(42, 236, 'no', 12, TEAL)
+    flow_box(s, 190, 398, 288, 82, 'Spinal cord most likely', ['Seek a sensory level; leg-only', 'weakness can be parasagittal'], TEAL)
+    # right results
+    s.path('M530 264L530 290', GOLD, 3, arrow=GOLD)
+    s.text(538, 282, 'yes', 12, GOLD)
+    flow_box(s, 530, 294, 288, 82, 'Root, plexus or nerve', ['Strip → root · one nerve → mono-', 'neuropathy · distal → polyneuropathy'], GOLD)
+    s.path('M655 245L684 245L684 438L676 438', GOLD, 3, arrow=GOLD)
+    s.text(678, 236, 'no', 12, GOLD, 'end')
+    flow_box(s, 530, 398, 288, 82, 'Junction, muscle or motor neuron', ['Fatigable → junction · proximal →', 'muscle · fasciculation → motor neuron'], GOLD)
+    s.note(500, 'Both kinds of sign together?', ['LMN signs at a level with UMN signs below suggest the cord;',
+                                                 'widespread mixed signs raise motor neuron disease.'], h=90)
+    return s
+
+
+def time_course():
+    s = Svg('The time course hints at mechanism', 'How a deficit evolves suggests a process; location still comes first.', h=600)
+    panels = [(30, 92, 'Sudden', 'seconds to minutes', ['Vascular events, seizures,', 'trauma'], 'sudden', RED),
+              (368, 92, 'Acute to subacute', 'hours to weeks', ['Inflammatory, infectious,', 'toxic-metabolic, demyelinating'], 'subacute', GOLD),
+              (30, 316, 'Chronic progressive', 'months to years', ['Degenerative, neoplastic,', 'genetic'], 'chronic', BLUE),
+              (368, 316, 'Episodic or relapsing', 'attacks with recovery', ['Migraine, seizures, transient', 'ischemia, relapsing inflammation'], 'episodic', TEAL)]
+    for x, y, title, span, lines, kind, color in panels:
+        s.rect(x, y, 322, 210, fill=WHITE, stroke=LINE)
+        s.text(x + 16, y + 28, title, 17, color)
+        s.text(x + 16, y + 48, span, 12, MUTED)
+        gx, gy, gw, gh = x + 16, y + 62, 290, 78
+        s.path(f'M{gx} {gy}L{gx} {gy + gh}L{gx + gw} {gy + gh}', GREY, 1.5)
+        b = gy + gh
+        d = {'sudden': f'M{gx} {b - 2}L{gx + 60} {b - 2}L{gx + 66} {gy + 8}L{gx + gw} {gy + 12}',
+             'subacute': f'M{gx} {b - 2}L{gx + 40} {b - 2}C{gx + 110} {b - 4} {gx + 140} {gy + 10} {gx + 200} {gy + 10}L{gx + gw} {gy + 14}',
+             'chronic': f'M{gx} {b - 2}C{gx + 120} {b - 8} {gx + 220} {gy + 40} {gx + gw} {gy + 8}',
+             'episodic': f'M{gx} {b - 2}L{gx + 30} {b - 2}L{gx + 40} {gy + 14}L{gx + 70} {b - 4}L{gx + 120} {b - 2}L{gx + 130} {gy + 6}L{gx + 165} {b - 8}L{gx + 210} {b - 6}L{gx + 220} {gy + 10}L{gx + 260} {b - 14}L{gx + gw} {b - 12}'}[kind]
+        s.path(d, color, 3.5)
+        s.text(gx + gw, b + 14, 'time →', 11, MUTED, 'end')
+        s.text(x + 16, y + 176, lines, 14, INK)
+    s.text(40, 556, 'Typical tendencies only: many conditions break these rules.', 14, GOLD)
+    return s
+
+
+def reflex_arc():
+    s = Svg('The stretch reflex arc', 'Where a lesion sits decides whether reflexes fall or rise.', h=620)
+    k = 90 / 150
+    cx, cy = 480, 210
+    s.ellipse(cx, cy, 90, 76, fill=PALE, stroke=INK, sw=2.5)
+    s.add(f'<path d="{GREY_MATTER}" fill="{GREY}" transform="translate({cx} {cy}) scale({k:.4f}) translate(-327 -264)"/>')
+    s.text(cx - 20, 124, 'spinal cord (dorsal up)', 11, MUTED, 'end')
+    s.ellipse(372, 168, 16, 11, fill=SAND, stroke=GOLD, sw=2)
+    s.text(372, 146, 'dorsal root ganglion', 11, GOLD, 'middle')
+    s.rect(50, 266, 180, 62, fill=SAND, rx=28)
+    s.ellipse(140, 297, 34, 10, fill=WHITE, stroke=GOLD, sw=2)
+    s.text(140, 350, 'muscle with spindle', 12, INK, 'middle')
+    s.path('M166 292C230 220 300 172 356 168', GOLD, 4)
+    s.path('M388 168C440 166 458 196 460 230', GOLD, 4, arrow=GOLD)
+    s.circle(462, 238, 8, fill=TEAL)
+    s.path('M454 244C400 290 310 300 236 300', TEAL, 4, arrow=TEAL)
+    s.path('M500 92L500 140L470 228', BLUE, 3, dash='7 5', arrow=BLUE)
+    s.text(580, 150, ['descending', '(upper motor', 'neuron) control'], 12, BLUE)
+    s.text(250, 200, 'sensory fiber', 12, GOLD)
+    s.text(300, 318, 'motor fiber', 12, TEAL)
+    for n, x, y in ((1, 290, 178), (2, 462, 262), (3, 270, 298), (4, 494, 150)):
+        s.badge(x, y, n, r=11, size=12)
+    rows = [(1, 'Sensory fiber or ganglion', 'reflex reduced or lost'), (2, 'Anterior horn or motor root', 'reduced, with wasting'),
+            (3, 'Peripheral nerve', 'reduced in its territory'), (4, 'Descending pathway', 'brisk, may spread')]
+    for i, (n, a, b) in enumerate(rows):
+        y = 378 + i * 34
+        s.badge(46, y, n, r=11, size=12)
+        s.text(66, y + 5, a, 15, INK)
+        s.text(330, y + 5, b, 14, BLUE if n == 4 else GOLD)
+    pills = ['Biceps C5–C6', 'Brachioradialis C6', 'Triceps C7', 'Knee L3–L4', 'Ankle S1']
+    x = 30
+    for p in pills:
+        w = 14 + len(p) * 7.6
+        s.rect(x, 528, w, 30, fill=WHITE, stroke=TEAL, rx=15)
+        s.text(x + w / 2, 548, p, 13, TEAL, 'middle')
+        x += w + 8
+    return s
+
+
+def eye_muscles():
+    s = Svg('Six eye muscles, three nerves', "The right eye as you face the patient: abduction points to your left.", h=620)
+    cx, cy = 210, 300
+    s.circle(cx, cy, 66, fill=WHITE, stroke=INK, sw=2.5)
+    s.circle(cx, cy, 24, fill=INK)
+    arrows = [('LR', 'VI', -1, 0, BLUE), ('MR', 'III', 1, 0, TEAL), ('SR', 'III', -1, -1, TEAL),
+              ('IR', 'III', -1, 1, TEAL), ('IO', 'III', 1, -1, TEAL), ('SO', 'IV', 1, 1, GOLD)]
+    for m, n, dx, dy, color in arrows:
+        x1, y1 = cx + dx * 80, cy + dy * 80
+        x2, y2 = cx + dx * 116, cy + dy * (130 if dy else 0)
+        if dy:
+            s.path(f'M{x1} {cy}L{x2} {cy}L{x2} {y2}', color, 4, arrow=color)
+            tx, ty = x2 + (14 if dx > 0 else -14), y2 + (6 if dy > 0 else 4)
+        else:
+            s.path(f'M{x1} {cy}L{x2} {cy}', color, 4, arrow=color)
+            tx, ty = x2 + (10 if dx > 0 else -10), cy + 22
+        s.text(tx, ty, f'{m} ({n})', 15, color, 'start' if dx > 0 else 'end', weight='700')
+    s.text(cx - 116, cy + 160, 'abduction', 12, MUTED, 'middle')
+    s.text(cx + 116, cy + 160, 'adduction', 12, MUTED, 'middle')
+    s.text(cx, 128, 'LR6 · SO4 · the rest III', 15, INK, 'middle')
+    cards = [(TEAL, 'Third nerve (III)', ['Eye down and out, ptosis;', 'pupil may be large']),
+             (GOLD, 'Fourth nerve (IV)', ['Vertical diplopia worse looking', 'down and away; head tilts away']),
+             (BLUE, 'Sixth nerve (VI)', ['Horizontal diplopia worse', 'looking toward the weak side'])]
+    for i, (color, head, lines) in enumerate(cards):
+        s.card(426, 96 + i * 132, 264, 116, head, lines, color=color, size=14)
+    s.note(500, 'Test each vertical muscle where it works best.', ['Elevation and depression in abduction test SR and IR;',
+                                                               'in adduction they test IO and SO.'], h=86)
+    return s
+
+
+def pupil_reflex():
+    s = Svg('The pupillary light reflex', 'Light in one eye constricts both pupils through a bilateral relay.', h=640)
+    s.rect(130, 282, 460, 112, fill=PALE, rx=12)
+    s.text(146, 302, 'MIDBRAIN', 11, MUTED, weight='700')
+    for x, lab in ((230, 'Left eye'), (490, 'Right eye')):
+        s.circle(x, 130, 32, fill=WHITE, stroke=INK, sw=2.5)
+        s.circle(x, 112, 9, fill=INK)
+        s.text(x, 84, lab, 12, MUTED, 'middle')
+    s.path('M230 162L360 216', GOLD, 4)
+    s.path('M490 162L360 216', GOLD, 4)
+    s.path('M360 216L300 262L330 312', GOLD, 4, arrow=GOLD)
+    s.path('M360 216L420 262L390 312', GOLD, 4, arrow=GOLD)
+    s.text(400, 222, 'chiasm', 11, MUTED)
+    for x in (330, 390):
+        s.circle(x, 320, 10, fill=GREY)
+    s.text(316, 324, 'pretectal nuclei', 11, INK, 'end')
+    for a, b in ((330, 336), (330, 384), (390, 336), (390, 384)):
+        s.path(f'M{a} 330L{b} 368', GOLD, 2)
+    for x in (336, 384):
+        s.circle(x, 374, 9, fill=TEAL)
+    s.text(360, 412, 'Edinger–Westphal nuclei', 11, TEAL, 'middle')
+    s.path('M328 378C250 400 168 330 172 200', TEAL, 4)
+    s.path('M392 378C470 400 552 330 548 200', TEAL, 4)
+    for x in (172, 548):
+        s.circle(x, 196, 7, fill=TEAL)
+    s.path('M174 188L210 150', TEAL, 3, arrow=TEAL)
+    s.path('M546 188L510 150', TEAL, 3, arrow=TEAL)
+    s.text(150, 218, ['ciliary', 'ganglion'], 11, TEAL, 'end')
+    s.text(570, 218, ['ciliary', 'ganglion'], 11, TEAL)
+    s.text(108, 300, ['III nerve', '(parasym-', 'pathetic)'], 11, TEAL, 'middle')
+    s.path('M40 440L70 440', GOLD, 4)
+    s.text(78, 445, 'afferent: optic nerve and tract', 13, MUTED)
+    s.path('M340 440L370 440', TEAL, 4)
+    s.text(378, 445, 'efferent: III nerve to the pupil', 13, MUTED)
+    s.card(30, 466, 322, 120, 'Afferent defect', ['e.g. optic nerve: pupils equal at', 'rest; swinging light makes the', 'affected side seem to dilate'], color=GOLD, size=14)
+    s.card(368, 466, 322, 120, 'Efferent defect', ['e.g. third nerve: affected pupil', 'larger and sluggish whichever', 'eye is lit'], color=TEAL, size=14)
+    return s
+
+
+def cavernous_sinus():
+    s = Svg('Inside the cavernous sinus', 'A coronal schematic: several cranial nerves share one small space.', h=600)
+    s.rect(290, 300, 140, 74, fill=BLUE_PALE, stroke=GREY, rx=10)
+    s.text(360, 342, 'sphenoid sinus', 12, BLUE, 'middle')
+    s.ellipse(360, 248, 52, 36, fill=SAND, stroke=GOLD, sw=2)
+    s.text(360, 253, 'pituitary', 12, INK, 'middle')
+    for side in (-1, 1):
+        cx = 360 + side * 130
+        s.path(f'M{cx - 70} 180C{cx - 70} 150 {cx + 70} 150 {cx + 70} 180L{cx + 70} 296C{cx + 70} 330 {cx - 70} 330 {cx - 70} 296Z',
+               GREY, 2, fill=PALE)
+        ica = cx - side * 22
+        s.circle(ica, 230, 24, fill=RED_PALE, stroke=RED, sw=2.5)
+        s.circle(ica + side * 40, 262, 9, fill=BLUE)
+        wall = cx + side * 58
+        for i, (lab, color) in enumerate((('III', TEAL), ('IV', GOLD), ('V1', INK), ('V2', INK))):
+            s.circle(wall, 186 + i * 32, 10, fill=color)
+            if side < 0:
+                s.path(f'M{wall - 12} {186 + i * 32}L{110} {186 + i * 32}', LINE, 1.5)
+                s.text(100, 191 + i * 32, lab, 14, color, 'end', weight='700')
+        if side < 0:
+            s.text(ica, 235, 'ICA', 11, RED, 'middle', weight='700')
+            s.path(f'M{ica - 40} 268L110 330', LINE, 1.5)
+            s.text(100, 335, 'VI', 14, BLUE, 'end', weight='700')
+    s.text(40, 404, 'lateral wall: III, IV, V1, V2 · free in the sinus: VI beside the carotid (ICA)', 13, MUTED)
+    s.card(30, 420, 322, 130, 'A combination localizes', ['Several of III, IV, V1, V2 and', 'VI on one side, sometimes with', 'Horner, suggests the sinus or', 'nearby orbital apex.'], color=TEAL, size=14)
+    s.card(368, 420, 322, 130, 'VI can be first', ['The abducens nerve lies beside', 'the carotid, so an isolated VI', 'palsy can be an early sign.'], color=BLUE, size=14)
+    return s
+
+
+def hand_shapes(x0, y0, thumb_left):
+    """Return dicts of SVG shape strings for a schematic hand (fingers listed thumb-side first)."""
+    order = [('index', 110), ('middle', 122), ('ring', 112), ('little', 92)]
+    xs = [x0 + 4, x0 + 36, x0 + 68, x0 + 100] if thumb_left else [x0 + 100, x0 + 68, x0 + 36, x0 + 4]
+    fingers = {name: (x, y0 - h, 28, h + 14) for (name, h), x in zip(order, xs)}
+    if thumb_left:
+        thumb = f'<rect x="{x0 - 30}" y="{y0 + 30}" width="30" height="88" rx="14" transform="rotate(-28 {x0 - 15} {y0 + 112})"/>'
+    else:
+        thumb = f'<rect x="{x0 + 132}" y="{y0 + 30}" width="30" height="88" rx="14" transform="rotate(28 {x0 + 147} {y0 + 112})"/>'
+    return fingers, thumb, (x0, y0, 132, 150)
+
+
+def hand_nerves():
+    s = Svg('Sensory nerves of the hand', 'Right hand. Median (teal), ulnar (gold) and radial (blue) territories.', h=640)
+    TM, GL, BL = TINT[TEAL], TINT[GOLD], TINT[BLUE]
+    for view, x0, thumb_left in (('PALM', 110, True), ('BACK OF HAND', 470, False)):
+        y0 = 250
+        fingers, thumb, (px, py, pw, ph) = hand_shapes(x0, y0, thumb_left)
+        s.text(x0 + 66, 106, view, 13, MUTED, 'middle', weight='700')
+        def frect(r, fill, extra=''):
+            x, y, w, h = r
+            s.add(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="13" fill="{fill}"{extra}/>')
+        ring = fingers['ring']
+        mid_x = ring[0] + 14
+        # palm halves
+        cid = s.clip(f'<rect x="{px}" y="{py}" width="{pw}" height="{ph}" rx="22"/>')
+        radial_side = (px, mid_x) if thumb_left else (mid_x, px + pw)
+        ulnar_side = (mid_x, px + pw) if thumb_left else (px, mid_x)
+        rad_fill = TM if view == 'PALM' else BL
+        s.add(f'<g clip-path="url(#{cid})"><rect x="{radial_side[0]}" y="{py}" width="{radial_side[1] - radial_side[0]}" height="{ph}" fill="{rad_fill}"/>'
+              f'<rect x="{ulnar_side[0]}" y="{py}" width="{ulnar_side[1] - ulnar_side[0]}" height="{ph}" fill="{GL}"/></g>')
+        # thumb
+        s.add(thumb.replace('<rect', f'<rect fill="{rad_fill}"'))
+        for name, r in fingers.items():
+            if name == 'little':
+                frect(r, GL)
+            elif name == 'ring':
+                rc = s.clip(f'<rect x="{r[0]}" y="{r[1]}" width="{r[2]}" height="{r[3]}" rx="13"/>')
+                rx0 = r[0] if thumb_left else r[0] + 14
+                ux0 = r[0] + 14 if thumb_left else r[0]
+                if view == 'PALM':
+                    s.add(f'<g clip-path="url(#{rc})"><rect x="{rx0}" y="{r[1]}" width="14" height="{r[3]}" fill="{TM}"/><rect x="{ux0}" y="{r[1]}" width="14" height="{r[3]}" fill="{GL}"/></g>')
+                else:
+                    s.add(f'<g clip-path="url(#{rc})"><rect x="{rx0}" y="{r[1]}" width="14" height="{r[3]}" fill="{BL}"/><rect x="{rx0}" y="{r[1]}" width="14" height="38" fill="{TM}"/><rect x="{ux0}" y="{r[1]}" width="14" height="{r[3]}" fill="{GL}"/></g>')
+            else:
+                if view == 'PALM':
+                    frect(r, TM)
+                else:
+                    frect(r, BL)
+                    rc = s.clip(f'<rect x="{r[0]}" y="{r[1]}" width="{r[2]}" height="{r[3]}" rx="13"/>')
+                    s.add(f'<rect x="{r[0]}" y="{r[1]}" width="{r[2]}" height="38" fill="{TM}" clip-path="url(#{rc})"/>')
+        # outlines
+        outline = ''.join(f'<rect x="{r[0]}" y="{r[1]}" width="{r[2]}" height="{r[3]}" rx="13"/>' for r in fingers.values())
+        outline += f'<rect x="{px}" y="{py}" width="{pw}" height="{ph}" rx="22"/>' + thumb
+        s.add(f'<g fill="none" stroke="{INK}" stroke-width="2">{outline}</g>')
+        s.text(x0 + 66, 432, 'thumb ' + ('←' if thumb_left else '→'), 12, MUTED, 'middle')
+    for i, (color, head, line) in enumerate(((TEAL, 'Median', 'palm side of thumb to radial ring finger; dorsal fingertips'),
+                                             (GOLD, 'Ulnar', 'little finger and ulnar half of ring finger, both sides'),
+                                             (BLUE, 'Radial', 'back of the radial hand, especially the first web space'))):
+        y = 462 + i * 34
+        s.rect(40, y, 22, 22, fill=TINT[color], stroke=color, sw=1.5, rx=5)
+        s.text(74, y + 16, head, 15, INK)
+        s.text(150, y + 16, line, 13, MUTED)
+    s.text(40, 586, 'A split ring finger points to a nerve, not a C8 root. Borders vary.', 13, GOLD)
+    return s
+
+
+def dermatome_landmarks():
+    s = Svg('Dermatome landmarks', 'Standard sensory key points, front view. Labels on the right side of the body.', h=680)
+    parts = ('<circle cx="220" cy="118" r="26"/><rect x="182" y="150" width="76" height="152" rx="16"/>'
+             '<rect x="152" y="156" width="26" height="114" rx="12"/><rect x="146" y="266" width="24" height="108" rx="11"/>'
+             '<ellipse cx="156" cy="392" rx="16" ry="22"/>'
+             '<rect x="262" y="156" width="26" height="114" rx="12"/><rect x="270" y="266" width="24" height="108" rx="11"/>'
+             '<ellipse cx="284" cy="392" rx="16" ry="22"/>'
+             '<rect x="186" y="298" width="32" height="140" rx="14"/><rect x="186" y="434" width="28" height="124" rx="12"/>'
+             '<rect x="222" y="298" width="32" height="140" rx="14"/><rect x="226" y="434" width="28" height="124" rx="12"/>'
+             '<ellipse cx="196" cy="572" rx="22" ry="12"/><ellipse cx="244" cy="572" rx="22" ry="12"/>')
+    s.add(f'<g fill="{WHITE}" stroke="{INK}" stroke-width="2">{parts}</g>')
+    s.text(220, 640, "patient's right ← → left", 11, MUTED, 'middle')
+    pts = [('C5', 150, 262, 'Lateral side of the elbow crease'), ('C6', 141, 402, 'Thumb'),
+           ('C7', 156, 414, 'Middle finger'), ('C8', 170, 404, 'Little finger'),
+           ('T1', 176, 262, 'Medial side of the elbow crease'), ('T4', 204, 192, 'Nipple line'),
+           ('T10', 220, 258, 'Umbilicus'), ('L1', 202, 306, 'Groin (inguinal region)'),
+           ('L2', 202, 362, 'Front of the mid-thigh'), ('L3', 216, 428, 'Medial knee'),
+           ('L4', 210, 548, 'Medial ankle (malleolus)'), ('L5', 196, 568, 'Top of the foot'),
+           ('S1', 176, 574, 'Outer heel')]
+    labx = {'C5': 110, 'C6': 110, 'C7': 110, 'C8': 110, 'T1': 110, 'T4': 120, 'T10': 120, 'L1': 120, 'L2': 120,
+            'L3': 120, 'L4': 120, 'L5': 120, 'S1': 120}
+    laby = {'C5': 250, 'C6': 398, 'C7': 426, 'C8': 454, 'T1': 284, 'T4': 186, 'T10': 222, 'L1': 318, 'L2': 362,
+            'L3': 476, 'L4': 520, 'L5': 594, 'S1': 620}
+    for root, x, y, _ in pts:
+        color = TEAL if root.startswith('C') else (BLUE if root.startswith('T') else GOLD)
+        lx, ly = labx[root], laby[root]
+        s.path(f'M{x} {y}L{lx + 6} {ly - 4}', LINE, 1.2)
+        s.circle(x, y, 5, fill=color, stroke=WHITE, sw=1.5)
+        s.text(lx, ly, root, 12, color, 'end', weight='700')
+    for i, (root, _, _, where) in enumerate(pts):
+        y = 98 + i * 38
+        color = TEAL if root.startswith('C') else (BLUE if root.startswith('T') else GOLD)
+        s.rect(372, y, 318, 32, fill=WHITE if i % 2 == 0 else PALE, rx=8)
+        s.rect(380, y + 5, 46, 22, fill=color, rx=11)
+        s.text(403, y + 21, root, 12, WHITE, 'middle', weight='700')
+        s.text(440, y + 21, where, 14, INK)
+    s.text(372, 612, 'Neighboring dermatomes overlap a lot.', 13, GOLD)
+    return s
+
+
+def lumbosacral():
+    s = Svg('Nerves of the leg', 'Lumbosacral roots, their main nerves, and the foot-drop question.', h=660)
+    for x, lab in ((70, 'ROOTS'), (230, 'MAIN NERVES'), (440, 'SCIATIC BRANCHES')):
+        s.text(x, 98, lab, 12, MUTED, 'middle' if x == 70 else 'start', weight='700')
+    roots = {'L2': 124, 'L3': 160, 'L4': 196, 'L5': 232, 'S1': 268, 'S2': 304, 'S3': 340}
+    nerves = {'Femoral': (124, TEAL, ['L2', 'L3', 'L4'], 'knee extension, knee reflex'),
+              'Obturator': (190, BLUE, ['L2', 'L3', 'L4'], 'hip adduction, medial thigh'),
+              'Superior gluteal': (256, GOLD, ['L4', 'L5', 'S1'], 'hip abduction'),
+              'Sciatic': (322, INK, ['L4', 'L5', 'S1', 'S2', 'S3'], '')}
+    for name, (y, color, rs, _) in nerves.items():
+        for r in rs:
+            s.path(f'M90 {roots[r]}C150 {roots[r]} 160 {y} 214 {y}', color, 2.5, extra=' opacity=".8"')
+    for r, y in roots.items():
+        s.rect(50, y - 14, 40, 28, fill=INK, rx=14)
+        s.text(70, y + 5, r, 13, WHITE, 'middle', weight='700')
+    for name, (y, color, rs, fn) in nerves.items():
+        s.circle(222, y, 9, fill=color)
+        s.text(238, y + 5, name, 15, INK)
+        if fn:
+            s.text(238, y + 23, fn, 12, MUTED)
+    branches = {'Tibial': (300, 'plantar flexion, inversion, sole'), 'Common fibular': (376, 'dorsiflexion, eversion, dorsum')}
+    for name, (y, fn) in branches.items():
+        s.path(f'M300 322C360 322 380 {y} 432 {y}', INK, 2.5)
+        s.circle(440, y, 8, fill=INK)
+        s.text(456, y + 5, name, 15, INK)
+        s.text(456, y + 23, fn, 12, MUTED)
+    s.text(238, 346, 'L4–S3', 12, MUTED)
+    # foot drop table
+    y0 = 420
+    s.rect(30, y0, 660, 182, fill=WHITE, stroke=GOLD)
+    s.text(46, y0 + 28, 'Foot drop: L5 root or common fibular nerve?', 17, GOLD)
+    s.text(380, y0 + 56, 'L5 ROOT', 12, TEAL, weight='700')
+    s.text(530, y0 + 56, 'FIBULAR NERVE', 12, BLUE, weight='700')
+    rows = [('Ankle dorsiflexion', 'Weak', 'Weak'), ('Foot inversion (tibial nerve)', 'Often weak', 'Spared'),
+            ('Hip abduction (superior gluteal)', 'Often weak', 'Spared'), ('Back or radiating leg pain', 'Common', 'Uncommon')]
+    for i, (a, b, c) in enumerate(rows):
+        y = y0 + 84 + i * 26
+        s.text(46, y, a, 14, INK)
+        s.text(380, y, b, 14, TEAL)
+        s.text(530, y, c, 14, BLUE)
+    return s
+
+
+def conus_cauda():
+    s = Svg('Conus medullaris or cauda equina?', 'The cord ends near L1–L2; below it only roots descend.', h=620)
+    for i, lab in enumerate(['T11', 'T12', 'L1', 'L2', 'L3', 'L4', 'L5', 'S']):
+        y = 96 + i * 52
+        s.rect(40, y, 56, 42, fill=WHITE, stroke=GREY, rx=8)
+        s.text(68, y + 26, lab, 12, MUTED, 'middle')
+    s.path('M128 90L128 210C128 228 136 236 140 246C144 236 152 228 152 210L152 90Z', INK, 2, fill=TEAL_PALE)
+    for dx in (-10, -4, 2, 8, 14):
+        s.path(f'M{140 + dx * .3} 244C{140 + dx} 300 {140 + dx * 1.6} 380 {140 + dx * 2} 500', GOLD, 2)
+    s.text(162, 240, 'conus', 12, TEAL)
+    s.text(162, 360, ['cauda', 'equina'], 12, GOLD)
+    x0, xa, xb = 236, 386, 546
+    s.text(xa, 100, 'CONUS', 12, TEAL, weight='700')
+    s.text(xb, 100, 'CAUDA EQUINA', 12, GOLD, weight='700')
+    rows = [('Onset', ['Often sudden,', 'bilateral'], ['Often gradual,', 'asymmetric']),
+            ('Pain', ['Less prominent'], ['Radicular pain', 'prominent']),
+            ('Saddle numbness', ['Early, symmetric'], ['Asymmetric']),
+            ('Bladder, bowel', ['Early'], ['Often later']),
+            ('Reflexes', ['Ankle lost; knee', 'often kept'], ['Knee and ankle', 'may be reduced']),
+            ('Motor signs', ['May mix UMN', 'and LMN'], ['LMN only'])]
+    for i, (a, b, c) in enumerate(rows):
+        y = 112 + i * 62
+        s.rect(226, y, 464, 56, fill=WHITE if i % 2 == 0 else PALE, rx=8)
+        s.text(x0, y + 32, a, 14, INK, weight='700')
+        for x, lines, color in ((xa, b, TEAL), (xb, c, GOLD)):
+            s.text(x, y + (33 if len(lines) == 1 else 23), lines, 14, color)
+    s.text(40, 556, ['New saddle numbness or sphincter change needs urgent assessment;', 'real lesions often overlap both patterns.'], 13, GOLD)
+    return s
+
 DIAGRAMS = {
     'umn-lmn': umn_lmn, 'facial': facial, 'field-defects': field_defects, 'brainstem-rule': brainstem_rule,
     'cord-syndromes': cord_syndromes, 'sensory-pathways': sensory_pathways, 'root-signatures': root_signatures,
     'brachial-plexus': brachial_plexus, 'nmj-compare': nmj_compare, 'aphasia-tree': aphasia_tree,
     'gaze-circuit': gaze_circuit, 'horner': horner, 'vascular': vascular, 'body-patterns': body_patterns,
+    'weakness-flow': weakness_flow, 'time-course': time_course, 'reflex-arc': reflex_arc, 'eye-muscles': eye_muscles,
+    'pupil-reflex': pupil_reflex, 'cavernous-sinus': cavernous_sinus, 'hand-nerves': hand_nerves,
+    'dermatome-landmarks': dermatome_landmarks, 'lumbosacral': lumbosacral, 'conus-cauda': conus_cauda,
 }
 
 if __name__ == '__main__':

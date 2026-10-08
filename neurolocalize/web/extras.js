@@ -23,7 +23,76 @@ window.NL_EXTRAS = {
   {id:'x18',topicId:'cortex',front:'Fluent speech, good comprehension, poor repetition: which aphasia?',back:'Conduction aphasia.',sourceIds:['cx-conduction','cs-aphasia']},
   {id:'x19',topicId:'cortex',front:'Which arterial territory classically gives contralateral leg-predominant weakness?',back:'The anterior cerebral artery, which supplies the medial frontal and parietal cortex where the leg is represented.',sourceIds:['cs-cerebral','s-cortex']},
   {id:'x20',topicId:'brainstem',front:'Where do second-order sympathetic fibers to the eye travel?',back:'From the upper thoracic cord, near the lung apex, up to the superior cervical ganglion.',sourceIds:['cx-horner']},
-  {id:'x21',topicId:'nerves',front:'What does a stocking-and-glove sensory pattern suggest?',back:'A length-dependent polyneuropathy, which affects the longest nerves first.',sourceIds:['s-poly','s-numbness']}
+  {id:'x21',topicId:'nerves',front:'What does a stocking-and-glove sensory pattern suggest?',back:'A length-dependent polyneuropathy, which affects the longest nerves first.',sourceIds:['s-poly','s-numbness']},
+  {id:'y01',topicId:'eyes',front:'What does a relative afferent pupillary defect indicate?',back:'Reduced light input from one eye, usually from optic nerve disease or extensive retinal disease on that side.',sourceIds:['cx-tract-pupil','cs-optic']},
+  {id:'y02',topicId:'eyes',front:'Which extraocular muscles are not supplied by the third nerve?',back:'The lateral rectus (VI) and the superior oblique (IV).',sourceIds:['rw-eye-movement','cs-third']},
+  {id:'y03',topicId:'eyes',front:'Which muscle depresses the eye most effectively in adduction?',back:'The superior oblique, supplied by the fourth nerve.',sourceIds:['cx-fourth','rw-eye-movement']},
+  {id:'y04',topicId:'eyes',front:'Which cranial nerve lies within the cavernous sinus beside the carotid artery?',back:'The abducens nerve (VI); III, IV, V1 and V2 run in the lateral wall.',sourceIds:['cx-cavernous','cs-sixth']},
+  {id:'y05',topicId:'eyes',front:'Why does light in one eye constrict both pupils?',back:'Pretectal neurons project to both Edinger–Westphal nuclei, which drive both pupil constrictors.',sourceIds:['cx-tract-pupil']},
+  {id:'y06',topicId:'eyes',front:'A large, poorly reactive pupil with ptosis and an eye that rests down and out suggests what?',back:'A third nerve palsy.',sourceIds:['cs-third']},
+  {id:'y07',topicId:'leg',front:'In foot drop, what does weak foot inversion suggest?',back:'An L5 root lesion rather than a common fibular neuropathy, because inversion uses L5 through the tibial nerve.',sourceIds:['cs-fibular','px-deep-fibular']},
+  {id:'y08',topicId:'leg',front:'Which nerve adducts the hip?',back:'The obturator nerve (L2–L4).',sourceIds:['px-obturator']},
+  {id:'y09',topicId:'leg',front:'Which nerve extends the knee and carries the knee reflex?',back:'The femoral nerve (L2–L4); its saphenous branch supplies the medial leg.',sourceIds:['px-femoral']},
+  {id:'y10',topicId:'roots',front:'Which dermatome includes the umbilicus?',back:'T10.',sourceIds:['s-dermatomes']},
+  {id:'y11',topicId:'roots',front:'Which dermatome includes the nipple line?',back:'T4.',sourceIds:['s-dermatomes']},
+  {id:'y12',topicId:'roots',front:'Which root supplies sensation to the middle finger?',back:'C7.',sourceIds:['s-dermatomes','s-roots']},
+  {id:'y13',topicId:'nerves',front:'Sensory loss that splits the ring finger suggests what?',back:'A nerve lesion (ulnar or median) rather than a C8 root lesion, which tends to involve the whole finger.',sourceIds:['cs-ulnar','cs-carpal']},
+  {id:'y14',topicId:'cord',front:'How does pain usually differ between conus and cauda equina lesions?',back:'Radicular pain is typically prominent in cauda equina lesions and less prominent in conus lesions.',sourceIds:['cs-cauda']},
+  {id:'y15',topicId:'motor',front:'Reflexes are brisk rather than reduced. Where is the lesion relative to the reflex arc?',back:'Above it, in the descending upper motor neuron pathways; damage within the arc reduces reflexes.',sourceIds:['cs-reflexes','s-weakness']},
+  {id:'y16',topicId:'approach',front:'What does a sudden onset over seconds to minutes tend to suggest?',back:'A vascular event, seizure or trauma, though localization remains the first step.',sourceIds:['s-approach']},
+  {id:'y17',topicId:'approach',front:'What does slow progression over months to years tend to suggest?',back:'A degenerative, neoplastic or genetic process.',sourceIds:['s-approach']}
+ ],
+ topics: [
+  {id:'eyes',after:'cranial',drill:'eyes',title:'Pupils and eye movements',kicker:'EYES',description:'Use pupils, gaze and double vision to place a lesion.',icon:'eye',level:'Intermediate',minutes:6,summary:'Separate an afferent from an efferent pupil problem, then ask whether a movement deficit fits a nerve, a nucleus or a gaze pathway.',sections:[
+   {heading:'1 · Pupils: afferent or efferent?',text:'Light in either eye normally constricts both pupils. An afferent defect, such as optic nerve disease, reduces the response to light in the affected eye and shows up with the swinging light test. An efferent defect affects one pupil whichever eye is lit.',bullets:['Relative afferent pupillary defect: optic nerve or extensive retinal disease on that side','Large, poorly reactive pupil with ptosis or limited eye movement: third nerve','Small pupil with mild ptosis: the sympathetic (Horner) pathway']},
+   {heading:'2 · Which muscle, which nerve?',text:'The lateral rectus is supplied by VI and the superior oblique by IV; III supplies the other extraocular muscles, the eyelid elevator and the pupil constrictor. Map double vision to the direction in which the images separate most.',bullets:['Horizontal diplopia worse looking to one side: a horizontal muscle acting in that direction','Vertical diplopia worse looking down and away from the affected eye: superior oblique (IV)']},
+   {heading:'3 · Nerve, nucleus or gaze pathway?',text:'A single nerve palsy limits one eye. Nuclear and supranuclear lesions disturb coordinated movement: an abducens nucleus lesion causes a horizontal gaze palsy and an MLF lesion causes internuclear ophthalmoplegia. Several cranial nerves together on one side suggest the cavernous sinus or orbital apex.'}],
+   pearls:['Ask which eye, which direction and whether the pupil is involved.','A gaze palsy moving both eyes points above the cranial nerve.'],
+   pitfall:'Fatigable, variable weakness of eye movement that fits no single nerve should raise a neuromuscular junction disorder; the pupils are spared there.',
+   sourceIds:['cx-tract-pupil','cs-third','cs-sixth','cx-fourth','cx-cavernous','rw-eye-movement']},
+  {id:'leg',after:'plexus',drill:'nerves',title:'Nerves of the leg',kicker:'LUMBOSACRAL',description:'Separate a root, plexus and single nerve in the leg.',icon:'network',level:'Intermediate',minutes:6,summary:'Use muscles that share a root but not a nerve to tell an L5 radiculopathy from a fibular neuropathy, and learn the femoral and obturator territories.',sections:[
+   {heading:'1 · Map the main nerves',text:'The femoral nerve (L2–L4) extends the knee and carries the knee reflex; its saphenous branch supplies the medial leg. The obturator nerve (L2–L4) adducts the hip. The sciatic nerve divides into the tibial nerve, for plantar flexion and inversion, and the common fibular nerve, for dorsiflexion and eversion.'},
+   {heading:'2 · Foot drop: root or nerve?',text:'Both an L5 radiculopathy and a common fibular neuropathy weaken ankle dorsiflexion. Muscles that share L5 but use other nerves separate them.',bullets:['Weak foot inversion (tibial nerve) favors L5','Weak hip abduction (superior gluteal nerve) favors L5','Sensory change limited to the lateral leg and dorsum of the foot fits the fibular nerve']},
+   {heading:'3 · When the plexus is the answer',text:'A lumbosacral plexopathy affects muscles across several nerves and roots in one leg, often with pain. Thigh weakness involving both femoral and obturator territories without features of a single root should prompt plexus thinking.'}],
+   pearls:['Test inversion and hip abduction in every foot drop.','Weak hip adduction alongside weak knee extension points beyond the femoral nerve, to the L3–L4 roots or the plexus.'],
+   pitfall:'A sciatic nerve lesion can mimic a fibular neuropathy because the fibular fibers are often affected more; look carefully at tibial-supplied muscles.',
+   sourceIds:['px-lumbosacral','px-femoral','px-obturator','cs-fibular','px-deep-fibular','cs-roots']}
+ ],
+ drills: [
+  {id:'roots',title:'Root signatures',description:'Reflexes, movements and dermatome points.',diagram:'root-signatures',prompt:'Which root best matches this?',items:[
+   ['Biceps reflex','C5–C6'],['Brachioradialis reflex','C6'],['Triceps reflex','C7'],['Knee reflex','L3–L4'],['Ankle reflex','S1'],
+   ['Shoulder abduction','C5'],['Wrist extension','C6'],['Finger flexion and small hand muscles','C8'],['Great-toe extension','L5'],
+   ['Sensation over the thumb','C6'],['Sensation over the middle finger','C7'],['Sensation over the little finger','C8'],
+   ['Sensation at the umbilicus','T10'],['Sensation at the nipple line','T4'],['Sensation at the medial ankle','L4'],['Sensation at the outer heel','S1']]},
+  {id:'fields',title:'Visual field defects',description:'Match the field loss to the lesion.',diagram:'field-defects',prompt:'Where is the lesion most likely?',items:[
+   ['Loss of vision in one eye only','Optic nerve'],['Central scotoma in one eye with a relative afferent pupillary defect','Optic nerve'],
+   ['Bitemporal hemianopia','Optic chiasm'],['Incongruous contralateral homonymous hemianopia','Optic tract'],
+   ['Contralateral homonymous superior quadrantanopia','Temporal lobe (Meyer loop)'],['Contralateral homonymous inferior quadrantanopia','Parietal optic radiation'],
+   ['Congruous contralateral hemianopia with macular sparing','Occipital cortex']]},
+  {id:'aphasia',title:'Aphasia types',description:'Fluency, comprehension, repetition.',diagram:'aphasia-tree',prompt:'Which aphasia fits best?',items:[
+   ['Nonfluent; comprehends; cannot repeat','Broca aphasia'],['Nonfluent; comprehends; repeats well','Transcortical motor aphasia'],
+   ['Nonfluent; poor comprehension; cannot repeat','Global aphasia'],['Nonfluent; poor comprehension; repeats well','Mixed transcortical aphasia'],
+   ['Fluent; comprehends; cannot repeat','Conduction aphasia'],['Fluent; comprehends; repeats; word-finding pauses','Anomic aphasia'],
+   ['Fluent; poor comprehension; cannot repeat','Wernicke aphasia'],['Fluent; poor comprehension; repeats well','Transcortical sensory aphasia']]},
+  {id:'eyes',title:'Eye muscles',description:'Actions, best test positions and nerves.',diagram:'eye-muscles',prompt:'Which muscle is this?',items:[
+   ['Abducts the eye','Lateral rectus (VI)'],['Adducts the eye','Medial rectus (III)'],['Depresses the eye best in adduction','Superior oblique (IV)'],
+   ['Elevates the eye best in adduction','Inferior oblique (III)'],['Elevates the eye best in abduction','Superior rectus (III)'],['Depresses the eye best in abduction','Inferior rectus (III)']]},
+  {id:'brainstem',title:'Brainstem syndromes',description:'Level and medial or lateral.',diagram:'brainstem-rule',prompt:'Where is the lesion most likely?',items:[
+   ['Same-side third nerve palsy with opposite arm and leg weakness','Medial midbrain'],
+   ['Same-side abducens palsy with opposite hemiparesis','Medial pons'],
+   ['Same-side tongue weakness, opposite hemiparesis and opposite vibration loss','Medial medulla'],
+   ['Same-side facial pain loss and Horner syndrome, opposite body pain loss, hoarseness','Lateral medulla'],
+   ['Same-side facial weakness, hearing loss and limb ataxia with opposite body pain loss','Lateral pons']]},
+  {id:'nerves',title:'Arm and leg nerves',description:'Name the nerve from the deficit.',diagram:'lumbosacral',prompt:'Which nerve is most likely affected?',items:[
+   ['Wrist drop with numbness over the back of the first web space','Radial nerve'],
+   ['Weak thumb abduction with numb index fingertip','Median nerve'],
+   ['Weak finger spreading, numb little finger and split ring finger','Ulnar nerve'],
+   ['Weak deltoid with a numb patch over the lateral shoulder','Axillary nerve'],
+   ['Weak elbow flexion with numb lateral forearm','Musculocutaneous nerve'],
+   ['Foot drop and weak eversion with inversion spared','Common fibular nerve'],
+   ['Weak knee extension and absent knee reflex with hip adduction spared','Femoral nerve'],
+   ['Weak hip adduction with medial thigh numbness','Obturator nerve'],
+   ['Weak plantar flexion with numbness of the sole','Tibial nerve']]}
  ],
  finder: {
   levels: [
