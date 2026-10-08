@@ -1,7 +1,18 @@
-# NeuroLocalize 1.6.0
+# NeuroLocalize 1.7.0
 
 Offline neurological-localization study app (Android WebView shell + HTML/JS content).
 This folder holds the unpacked 1.1.0 APK, the 1.2 and 1.3 enhancements and a reproducible build.
+
+## What's new in 1.7.0
+- **Exam mode**: build a mock paper (10, 20 or 40 questions; untimed, 90 s or 60 s per question;
+  difficulty; any mix of regions). Answer freely, flag questions, jump with a question palette, and
+  submit with a warning for unanswered and flagged items. The timer runs on the clock, survives
+  closing the app and auto-submits at zero. Results show score, time, breakdowns by region and
+  question type, a review of every question (missed and flagged first) and one-tap practice of the
+  missed cases. Past exams are kept as history with your best score.
+- **Study mode**: a guided 25-minute focus session for one region: read the lesson, study a figure,
+  reason through five cases, review the region's recall cards and run its drill. Steps tick off
+  automatically as you complete them, then it suggests an exam on that region.
 
 ## What's new in 1.6.0
 - **Deep dive in every lesson** (17): a bedside examination sequence, a "tell them apart" comparison
@@ -57,7 +68,7 @@ This folder holds the unpacked 1.1.0 APK, the 1.2 and 1.3 enhancements and a rep
 - `web/` – app assets (packaged as `assets/` in the APK)
 - `base/` – original native shell: manifest, dex, resources (the build sets the app ID and version)
 - `tools/diagrams.py` – diagram generator · `tools/build_apk.py` + `tools/signer/` – packaging/signing
-- `dist/NeuroLocalize-1.6.0.apk` – built, v2-signed APK
+- `dist/NeuroLocalize-1.7.0.apk` – built, v2-signed APK
 
 ## Build
 ```
