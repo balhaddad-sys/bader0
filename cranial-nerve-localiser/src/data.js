@@ -27,9 +27,9 @@ const SITES_A = [
   {id:'raymond',name:'Ventral medial caudal pons',eponym:'Raymond syndrome',zone:'pons-ventral',side:'ipsilateral',prior:5,w:{vi:3,contraWeak:3,vascular:1,dysarthria:1},ex:['lmn7','gaze'],causes:'Paramedian pontine infarction, haemorrhage or focal mass.',investigation:'Urgent stroke assessment, MRI brain with diffusion and posterior circulation vascular imaging.',pearl:'An abducens fascicular palsy with opposite limb weakness points to the ventromedial pons. Relative facial sparing separates the classic Raymond pattern from neighbouring VII involvement in Millard–Gubler. Test each eye and conjugate gaze: an isolated lateral rectus deficit is different from a sixth nerve nuclear gaze palsy.'},
   {id:'foville',name:'Dorsomedial caudal pons with motor tract extension',eponym:'Foville syndrome',zone:'pons-dorsal',side:'ipsilateral',prior:5,w:{gaze:3,lmn7:3,contraWeak:3,ino:1,dcml:1,ipsiAtaxia:1,vascular:1,dysarthria:1},ex:[],causes:'Pontine infarction or haemorrhage; less often demyelination or tumour.',investigation:'Urgent brain and posterior circulation imaging; MRI diffusion sequences define dorsal and ventral extension.',pearl:'Ipsilateral horizontal gaze palsy and whole-face weakness identify adjacent pontine structures; opposite hemiparesis indicates extension to the corticospinal tract. A gaze palsy affects both eyes looking towards the lesion. Examine for INO and sensory loss to map how far the lesion extends beyond the classic triad.'},
   {id:'facial-colliculus',name:'Facial colliculus',eponym:'Dorsal pontine VI nucleus–VII fascicle syndrome',zone:'pons-dorsal',side:'ipsilateral',prior:5,w:{gaze:3,lmn7:3,corneal:1,ino:1,vascular:1},ex:['contraWeak'],causes:'Small dorsal pontine infarction, demyelination or tumour.',investigation:'MRI brain with thin dorsal pontine and diffusion sequences; acute vascular assessment for sudden symptoms.',pearl:'The facial colliculus is formed by VII fibres looping around the VI nucleus, not by the facial nucleus itself. Damage produces an ipsilateral conjugate gaze palsy and LMN facial weakness. Limb power may be preserved if the ventral corticospinal tract is spared; additional INO suggests nearby MLF involvement.'},
-  {id:'ino',name:'Medial longitudinal fasciculus',eponym:'Internuclear ophthalmoplegia',zone:'pons-dorsal',side:'ipsilateral',prior:8,w:{ino:3,vascular:1},ex:['pupil','ptosis','gaze'],causes:'Brainstem infarction, multiple sclerosis or another focal inflammatory lesion.',investigation:'MRI brain with diffusion and thin pontine and midbrain sequences; assess for demyelinating disease according to age and clinical context.',pearl:'Name the side by the eye that cannot adduct normally: that is the injured MLF side. Look for slowed adducting saccades and abducting nystagmus in the fellow eye. Convergence may be preserved but is not an absolute discriminator. INO can arise in the pons or midbrain; the map uses the common pontine region.'},
+  {id:'ino',name:'Medial longitudinal fasciculus',eponym:'Internuclear ophthalmoplegia',zone:'pons-dorsal',side:'ipsilateral',prior:8,w:{ino:3,skew:1,vascular:1},ex:['pupil','ptosis','gaze'],causes:'Brainstem infarction, multiple sclerosis or another focal inflammatory lesion.',investigation:'MRI brain with diffusion and thin pontine and midbrain sequences; assess for demyelinating disease according to age and clinical context.',pearl:'Name the side by the eye that cannot adduct normally: that is the injured MLF side. Look for slowed adducting saccades and abducting nystagmus in the fellow eye. Convergence may be preserved but is not an absolute discriminator. INO can arise in the pons or midbrain; the map uses the common pontine region.'},
   {id:'one-and-half',name:'Pontine gaze centre and adjacent MLF',eponym:'One-and-a-half syndrome',zone:'pons-dorsal',side:'ipsilateral',prior:6,w:{gaze:3,ino:3,lmn7:1,vascular:1},ex:['pupil'],causes:'Pontine infarction, demyelination, haemorrhage or focal mass.',investigation:'MRI brain with diffusion and thin dorsal pontine sections; acute posterior circulation stroke assessment when appropriate.',pearl:'A gaze palsy towards the lesion plus ipsilateral INO leaves only the opposite eye’s abduction available in horizontal gaze. The lesion involves the PPRF or VI nucleus and the adjacent MLF. Add an ipsilateral LMN VII palsy and the pattern is often called eight-and-a-half syndrome.'},
-  {id:'aica',name:'Lateral caudal pons',eponym:'AICA territory syndrome',zone:'pons-lateral',side:'ipsilateral',prior:7,w:{lmn7:3,hearing:3,vertigo:1,ipsiAtaxia:2,spinothalamic:2,dissociatedFace:2,horner:1,corneal:1,tinnitus:1,vascular:1,gaitAtaxia:1},ex:[],causes:'Anterior inferior cerebellar artery or basilar artery ischaemia; less often haemorrhage.',investigation:'Emergency stroke pathway, posterior circulation CTA/MRA and MRI diffusion imaging; assess hearing as well as vestibular and facial signs.',pearl:'New hearing loss with an acute vestibular syndrome is a valuable vascular clue because AICA commonly supplies the inner ear. Add whole-face weakness, limb ataxia and crossed sensory findings to localise the lateral caudal pons. A peripheral-appearing vestibular deficit does not exclude an AICA stroke.'},
+  {id:'aica',name:'Lateral caudal pons',eponym:'AICA territory syndrome',zone:'pons-lateral',side:'ipsilateral',prior:7,w:{lmn7:3,hearing:3,vertigo:1,ipsiAtaxia:2,spinothalamic:2,dissociatedFace:2,horner:1,corneal:1,tinnitus:1,headImpulse:1,skew:1,vascular:1,gaitAtaxia:1},ex:[],causes:'Anterior inferior cerebellar artery or basilar artery ischaemia; less often haemorrhage.',investigation:'Emergency stroke pathway, posterior circulation CTA/MRA and MRI diffusion imaging; assess hearing as well as vestibular and facial signs.',pearl:'New hearing loss with an acute vestibular syndrome is a valuable vascular clue because AICA commonly supplies the inner ear. Add whole-face weakness, limb ataxia and crossed sensory findings to localise the lateral caudal pons. A peripheral-appearing vestibular deficit does not exclude an AICA stroke.'},
   {id:'lateral-midpons',name:'Lateral mid-pons',eponym:'Trigeminal–cerebellar pontine syndrome',zone:'pons-lateral',side:'ipsilateral',prior:4,w:{v1:2,v2:2,v3:2,vmotor:3,corneal:2,ipsiAtaxia:3,spinothalamic:2,dissociatedFace:1,horner:1,vertigo:1,vascular:1},ex:['iii','xii'],causes:'Lateral pontine infarction, demyelination or intrinsic tumour.',investigation:'MRI brain with diffusion and thin pontine sections; posterior circulation vascular imaging if acute.',pearl:'Trigeminal sensory and motor findings with ipsilateral cerebellar dysfunction suggest the lateral mid-pons, where V enters beside cerebellar connections. Opposite body pain and temperature loss strengthens a brainstem localisation. Distinguish sensory loss across all modalities from a selective pain–temperature deficit to refine which trigeminal structures are involved.'},
   {id:'cpa',name:'Cerebellopontine angle',eponym:'CPA syndrome',zone:'cpa',side:'ipsilateral',prior:7,w:{hearing:3,tinnitus:2,lmn7:2,corneal:2,v1:2,v2:1,v3:1,ipsiAtaxia:2,gaitAtaxia:1,vertigo:1,vi:1},ex:['iii'],causes:'Vestibular schwannoma, meningioma, epidermoid or another CPA mass.',investigation:'Audiometry and contrast MRI brain with dedicated internal auditory canal and CPA sequences; diffusion imaging helps identify an epidermoid.',pearl:'Progressive unilateral hearing symptoms followed by V or VII findings suggest a growing CPA lesion. Corneal sensation and limb coordination help identify spread beyond the internal auditory canal. Hearing loss alone is not specific for a mass, and substantial facial weakness may indicate a different lesion or more extensive disease.'},
   {id:'iam',name:'Internal auditory meatus',eponym:'VII–VIII canal syndrome',zone:'cpa',side:'ipsilateral',prior:7,w:{hearing:3,tinnitus:2,lmn7:2,vertigo:1,taste:1,tearing:1,hyperacusis:1},ex:['v1','v2','v3','ipsiAtaxia','contraWeak'],causes:'Intracanalicular vestibular schwannoma, facial nerve schwannoma, inflammation or temporal bone trauma.',investigation:'Audiometry, facial nerve assessment and MRI with dedicated internal auditory canal sequences; CT temporal bone for trauma or bony disease.',pearl:'VII and VIII travel together through the internal auditory canal. A confined lesion can combine hearing or vestibular symptoms with facial dysfunction while sparing trigeminal sensation and limb coordination. Those additional findings suggest extension into the CPA or another site, though not every canal lesion affects both nerves.'}
@@ -101,7 +101,7 @@ const SITES_B = [
   },
   {
     id: "wallenberg", name: "Lateral medulla", eponym: "Wallenberg syndrome", zone: "medulla-lateral", side: "ipsilateral", prior: 9,
-    w: {palate: 2, dysphagia: 3, hoarseness: 3, dissociatedFace: 3, spinothalamic: 3, horner: 2, ipsiAtaxia: 2, vertigo: 1, gaitAtaxia: 1, hiccups: 1, dysarthria: 1, vascular: 1}, ex: ["dcml", "xii"],
+    w: {palate: 2, dysphagia: 3, hoarseness: 3, dissociatedFace: 3, spinothalamic: 3, horner: 2, ipsiAtaxia: 2, vertigo: 1, skew: 1, gaitAtaxia: 1, hiccups: 1, dysarthria: 1, vascular: 1}, ex: ["dcml", "xii"],
     causes: "Vertebral or PICA territory infarction, including vertebral dissection; less often demyelination or tumour.",
     investigation: "Urgent stroke pathway with MRI diffusion and head/neck vascular imaging; assess swallowing before oral intake.",
     pearl: "Crossed pain/temperature loss, bulbar weakness, ipsilateral Horner and ataxia form the lateral medullary pattern. The face loses pain/temperature on the lesion side while the body loses them opposite. Marked limb weakness is atypical of a pure lateral lesion but can occur with extension into corticospinal fibres."
@@ -347,174 +347,345 @@ const RULES = [
   { title: 'Follow the branches down the facial canal', text: 'Reduced tearing suggests involvement at or proximal to the greater petrosal branch near the geniculate ganglion. Hyperacusis places the lesion proximal to stapedius; anterior tongue taste loss places it proximal to chorda tympani. A lesion after the stylomastoid foramen is chiefly motor. These clinical branch tests are imperfect.' },
   { title: 'Remember Kernohan’s notch', text: 'A mass with uncal herniation can push the opposite cerebral peduncle against the tentorial edge, producing weakness on the same side as the mass. Ipsilateral III palsy and ipsilateral hemiparesis with impaired consciousness can therefore be a false-localising emergency.' },
   { title: 'A numb chin deserves an explanation', text: 'Chin/lower-lip sensory loss maps to the mental or inferior alveolar nerve, a V3 branch. Dental injury or infection is possible, but persistent unexplained numbness can reveal mandibular, skull-base or leptomeningeal malignancy. Examine the mouth and investigate the whole course when no local cause is clear.' },
-  { title: 'A pattern can be diffuse rather than focal', text: 'Variable, fatigable ocular/bulbar weakness with preserved pupils, sensation and reflexes favours myasthenia. Ophthalmoplegia with gait ataxia and areflexia suggests Miller Fisher syndrome. Bilateral or multifocal findings should prompt a diffuse differential instead of forcing every sign into one focal lesion.' }
+  { title: 'A pattern can be diffuse rather than focal', text: 'Variable, fatigable ocular/bulbar weakness with preserved pupils, sensation and reflexes favours myasthenia. Ophthalmoplegia with gait ataxia and areflexia suggests Miller Fisher syndrome. Bilateral or multifocal findings should prompt a diffuse differential instead of forcing every sign into one focal lesion.' },
+  { title: 'In acute vertigo, a normal head impulse is a warning', text: 'With continuous vertigo and spontaneous nystagmus, an abnormal head impulse, unidirectional horizontal nystagmus and no skew favour vestibular neuritis. A normal head impulse, direction-changing or vertical nystagmus, skew deviation, new hearing loss or inability to stand point to a stroke. HINTS does not apply without spontaneous nystagmus.' },
+  { title: 'Sudden loss in one eye over 50: ask about the jaw', text: 'Jaw claudication, scalp tenderness and new headache suggest giant cell arteritis, which can take the other eye within days. Check ESR and CRP the same day and start high-dose steroids when suspicion is high rather than waiting for biopsy.' }
 ];
 
-/* Decorative sagittal atlas schematic. Highlights denote a level, never a point lesion. */
-function anatomyArt(zoneId = '', idPrefix = 'atlas') {
-  const prefix = String(idPrefix).replace(/[^a-zA-Z0-9_-]/g, '') || 'atlas';
-  const level = zoneId === 'hemisphere' ? 'hemisphere' : zoneId === 'optic' ? 'optic'
-    : String(zoneId).startsWith('midbrain-') ? 'midbrain'
-    : String(zoneId).startsWith('pons-') ? 'pons'
-    : String(zoneId).startsWith('medulla-') ? 'medulla'
-    : ['subarachnoid','cpa','petrous','cavernous','orbit','skull-base','extracranial','diffuse'].includes(zoneId) ? 'peripheral' : '';
-  const active = part => level === part;
-  const fill = part => active(part) ? 'var(--atlas-highlight, #a89bf5)' : 'currentColor';
-  const opacity = part => active(part) ? '.3' : '.035';
-  const stroke = part => active(part) ? 'var(--atlas-highlight, #a89bf5)' : 'currentColor';
-  const hemisphere = 'M40 91C26 82 22 64 29 46C35 25 57 15 79 13C100 8 128 12 147 21C169 30 182 47 183 64C186 79 177 92 162 99C151 104 138 99 129 91C120 83 114 82 104 87C90 94 80 106 64 104C53 103 49 95 40 91Z';
-  const midbrain = 'M119 86C123 88 130 92 138 98L134 113C128 117 118 115 112 109C115 101 116 93 119 86Z';
-  const pons = 'M112 108C99 108 94 115 98 125C103 135 117 140 128 135L134 113C127 117 118 115 112 108Z';
-  const medulla = 'M111 135C115 146 119 154 126 164L137 159C132 150 130 142 128 135C122 138 116 137 111 135Z';
-  return `<svg class="anatomy-art" viewBox="0 0 220 190" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" fill="none">
-    <defs>
-      <pattern id="${prefix}-hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(-28)"><path d="M0 0V4" stroke="currentColor" stroke-width=".55" opacity=".15"/></pattern>
-      <clipPath id="${prefix}-cortex"><path d="${hemisphere}"/></clipPath>
-      <clipPath id="${prefix}-cerebellum"><path d="M145 101C160 96 174 102 181 113C190 128 181 144 166 149C157 153 148 150 140 144L134 128Z"/></clipPath>
-    </defs>
-    <g stroke="currentColor" stroke-width=".65" opacity=".14">
-      <path d="M18 29H203M18 158H203M44 8V180M176 8V180" stroke-dasharray="2 5"/>
-      <path d="M20 20H29M24.5 15.5V24.5M194 170H203M198.5 165.5V174.5"/>
-      <path d="M195 48V146M191 48H199M191 80H199M191 113H199M191 146H199"/>
-    </g>
-    <g stroke-linecap="round" stroke-linejoin="round">
-      <path d="${hemisphere}" fill="${fill('hemisphere')}" fill-opacity="${opacity('hemisphere')}" stroke="${stroke('hemisphere')}" stroke-opacity="${active('hemisphere') ? '.95' : '.68'}" stroke-width="1.35"/>
-      <path d="${hemisphere}" fill="url(#${prefix}-hatch)"/>
-      <g clip-path="url(#${prefix}-cortex)" stroke="currentColor" stroke-width=".9" opacity=".43">
-        <path d="M36 77C44 68 38 58 47 51C57 45 55 32 66 29C75 27 78 18 91 19M30 60C37 61 40 55 41 47C42 35 49 33 54 29"/>
-        <path d="M43 89C47 80 57 80 57 68C57 58 70 61 72 49C73 39 89 44 90 30C91 25 99 21 109 22"/>
-        <path d="M58 98C60 84 74 90 80 79C85 70 79 62 90 56C98 51 96 39 106 38C118 36 119 23 129 24"/>
-        <path d="M79 101C79 93 87 91 92 86M35 78C41 77 45 77 49 82M56 38C62 39 66 44 72 43M62 73C66 77 73 77 80 74"/>
-        <path d="M112 30C112 32 115 36 121 39C129 44 121 52 130 55C140 59 136 70 145 74C154 78 147 86 158 90"/>
-        <path d="M135 29C132 37 139 40 145 44C152 49 146 59 156 61C166 65 161 76 170 78M155 36C151 39 155 42 161 46C169 52 161 54 169 60C177 65 176 72 173 77"/>
-        <path d="M111 55C106 59 110 65 116 67C126 70 128 80 141 81M122 47C116 50 115 55 120 58M139 63C141 60 146 58 151 58M148 90C148 86 147 81 142 77"/>
-      </g>
-      <path d="M63 78C66 63 79 52 96 50C111 48 122 57 129 69C120 64 110 60 99 61C87 62 78 69 75 81" stroke="currentColor" stroke-width="1.4" opacity=".65"/>
-      <path d="M74 82C85 73 94 70 105 72C113 73 117 78 121 86M88 73C94 79 101 82 109 82" stroke="currentColor" opacity=".5"/>
-      <path d="M94 62C91 63 88 68 91 73C95 78 107 80 112 75C116 70 109 64 104 63Z" fill="currentColor" fill-opacity=".05" stroke="currentColor" stroke-width=".8" opacity=".6"/>
-      <path d="M145 101C160 96 174 102 181 113C190 128 181 144 166 149C157 153 148 150 140 144L134 128Z" fill="currentColor" fill-opacity=".045" stroke="currentColor" stroke-width="1.15" opacity=".65"/>
-      <g clip-path="url(#${prefix}-cerebellum)" stroke="currentColor" stroke-width=".75" opacity=".4">
-        <path d="M139 108C154 102 172 109 181 118M138 112C154 106 173 114 184 122M137 116C153 111 172 119 186 127M136 120C152 115 171 125 185 131M136 125C151 120 166 130 182 136M138 130C151 125 164 136 178 140M140 135C151 131 160 141 171 145M144 140C152 138 160 145 165 150"/>
-        <path d="M140 127C148 124 155 118 158 108M149 124C158 125 166 122 173 118M150 127C158 134 160 140 160 149" stroke-width="1.2"/>
-      </g>
-      <path d="${midbrain}" fill="${fill('midbrain')}" fill-opacity="${opacity('midbrain')}" stroke="${stroke('midbrain')}" stroke-width="${active('midbrain') ? '1.6' : '1'}" stroke-opacity="${active('midbrain') ? '.95' : '.65'}"/>
-      <path d="${pons}" fill="${fill('pons')}" fill-opacity="${opacity('pons')}" stroke="${stroke('pons')}" stroke-width="${active('pons') ? '1.6' : '1'}" stroke-opacity="${active('pons') ? '.95' : '.65'}"/>
-      <path d="${medulla}" fill="${fill('medulla')}" fill-opacity="${opacity('medulla')}" stroke="${stroke('medulla')}" stroke-width="${active('medulla') ? '1.6' : '1'}" stroke-opacity="${active('medulla') ? '.95' : '.65'}"/>
-      <path d="M126 164C130 170 132 177 133 182M137 159C140 167 142 174 143 182" stroke="currentColor" stroke-width="1.2" opacity=".55"/>
-      <g stroke="currentColor" stroke-width=".65" opacity=".32">
-        <path d="M119 95L132 102M118 99L131 106M117 103L130 110M100 116C110 120 120 122 131 120M100 120C111 125 122 127 130 124M104 126C114 130 121 131 128 129M116 141L129 142M118 146L131 147M121 152L133 152M125 158L135 157"/>
-        <path d="M127 93C126 111 119 123 123 136C125 146 131 157 135 171"/>
-      </g>
-      <g stroke="${stroke('peripheral')}" stroke-width="${active('peripheral') ? '1.25' : '.85'}" opacity="${active('peripheral') ? '.8' : '.45'}">
-        <path d="M115 102C101 106 92 110 78 108C65 107 56 112 44 112M103 115C87 116 84 125 66 125L37 126M105 122C88 127 93 141 74 142L48 143M113 136C103 139 103 151 89 155L67 162M122 151C114 155 113 167 99 174"/>
-        <path d="M67 125L53 119M75 142L64 150M89 155L79 149M102 172L92 164M79 108L67 101" stroke-width=".7"/>
-      </g>
-      <g fill="${stroke('peripheral')}" opacity="${active('peripheral') ? '.85' : '.4'}">
-        <circle cx="44" cy="112" r="1.7"/><circle cx="37" cy="126" r="1.7"/><circle cx="48" cy="143" r="1.7"/><circle cx="67" cy="162" r="1.7"/><circle cx="99" cy="174" r="1.7"/>
-      </g>
-      <g stroke="${stroke('optic')}" stroke-width="${active('optic') ? '1.75' : '1.1'}" opacity="${active('optic') ? '.95' : '.55'}">
-        <path d="M98 83C90 89 85 94 76 94C63 94 61 91 52 94L37 100M92 86C88 96 78 97 71 100C61 104 51 103 42 105"/>
-        <ellipse cx="32" cy="101" rx="6" ry="4.7" transform="rotate(-15 32 101)"/>
-      </g>
-    </g>
-  </svg>`;
-}
+const SITES_C = [
+  {
+    id: "olfactory", name: "Olfactory nerve, bulb or tract", eponym: "Isolated anosmia", zone: "frontal", side: "ipsilateral", prior: 7,
+    w: {anosmia: 3}, ex: [],
+    causes: "Sinonasal disease and post-viral loss are commonest; head injury can shear olfactory filaments at the cribriform plate. Neurodegenerative disease and anterior fossa masses are less common.",
+    investigation: "Nasal examination or endoscopy first; MRI of the olfactory bulbs and anterior cranial fossa when loss is unilateral, unexplained or accompanied by other neurological signs.",
+    pearl: "Test each nostril separately with a familiar, non-irritant odour: ammonia stimulates trigeminal endings and can be detected despite anosmia. Unilateral loss is more localising than bilateral loss, which is usually nasal or post-viral. Reduced smell can precede Parkinson’s disease by years."
+  },
+  {
+    id: "foster-kennedy", name: "Olfactory groove and optic nerve", eponym: "Foster Kennedy syndrome", zone: "frontal", side: "ipsilateral", prior: 3,
+    w: {anosmia: 3, monocular: 2, papilloedema: 2, rapd: 1}, ex: ["bitemporal", "homonymous"],
+    causes: "Olfactory groove or sphenoid wing meningioma, frontal glioma or another anterior cranial fossa mass.",
+    investigation: "Contrast MRI brain with attention to the anterior cranial fossa and optic canals; acuity, colour vision, fields and fundoscopy of both eyes.",
+    pearl: "Optic atrophy in one eye with disc swelling in the other, plus anosmia on the side of the atrophy, suggests a frontal mass compressing one optic nerve while raising intracranial pressure. Smell is rarely tested, so the clue is often missed. Sequential ischaemic optic neuropathy (pseudo-Foster Kennedy) is more common than the true syndrome."
+  },
+  {
+    id: "gca", name: "Arteritic ischaemic optic neuropathy", eponym: "Giant cell arteritis", zone: "optic", side: "ipsilateral", prior: 6,
+    w: {monocular: 3, gcaSymptoms: 3, rapd: 2}, ex: ["bitemporal", "homonymous"],
+    causes: "Giant cell arteritis occluding the short posterior ciliary arteries, usually in people over 50.",
+    investigation: "Same-day ESR, CRP and platelet count with emergency ophthalmology review. Start high-dose glucocorticoids without waiting for temporal artery ultrasound or biopsy when suspicion is high.",
+    pearl: "Sudden painless monocular loss with jaw claudication or scalp tenderness in an older patient is giant cell arteritis until proven otherwise: the fellow eye can be lost within days. A chalky-white swollen disc supports arteritic ischaemia. Normal inflammatory markers make arteritis less likely but do not exclude it, and transient visual loss or diplopia may come first."
+  },
+  {
+    id: "pituitary-apoplexy", name: "Sella and suprasellar region", eponym: "Pituitary apoplexy", zone: "optic", side: "midline", prior: 4,
+    w: {bitemporal: 3, iii: 2, vi: 2, ptosis: 1, iv: 1, ophthalmoplegia: 1, monocular: 1, thunderclap: 1, consciousness: 1}, ex: ["homonymous"],
+    causes: "Haemorrhage or infarction of a pituitary adenoma, often previously unknown; anticoagulation, surgery and pregnancy are recognised precipitants.",
+    investigation: "Emergency assessment, urgent pituitary MRI (CT if MRI is unavailable) and immediate cortisol and pituitary hormone testing. Steroid cover should not be delayed in an unwell patient.",
+    pearl: "Sudden headache with visual field loss or ophthalmoplegia suggests pituitary apoplexy: the expanding gland compresses the chiasm above and the cavernous sinuses on either side, where III is the nerve most often affected. Acute adrenal insufficiency can be life-threatening and is easily overlooked behind the neuro-ophthalmic signs."
+  },
+  {
+    id: "vestibular-neuritis", name: "Vestibular nerve", eponym: "Vestibular neuritis", zone: "petrous", side: "ipsilateral", prior: 8,
+    w: {headImpulse: 3, vertigo: 1, gaitAtaxia: 1}, ex: ["skew", "centralNystagmus", "hearing", "ipsiAtaxia", "contraWeak", "dysarthria"],
+    causes: "Presumed viral or inflammatory vestibular neuropathy, usually of the superior vestibular nerve.",
+    investigation: "Bedside HINTS examination by a trained clinician, hearing assessment and a full neurological examination. Any central sign, new hearing loss or inability to stand needs urgent stroke assessment and MRI with diffusion imaging.",
+    pearl: "Acute continuous vertigo with unidirectional horizontal nystagmus, an abnormal head impulse towards the affected side and no skew is the reassuring peripheral pattern. HINTS applies only to that acute vestibular syndrome: without spontaneous nystagmus a normal head impulse is expected, not reassuring. Most patients can still walk, though unsteadily."
+  },
+  {
+    id: "labyrinthitis", name: "Labyrinth: vestibular and cochlear end-organs", eponym: "Labyrinthitis", zone: "petrous", side: "ipsilateral", prior: 6,
+    w: {headImpulse: 3, hearing: 3, vertigo: 1, tinnitus: 1, otitis: 1}, ex: ["skew", "centralNystagmus", "ipsiAtaxia", "contraWeak", "lmn7"],
+    causes: "Viral or bacterial labyrinthitis, including spread from otitis media. Labyrinthine infarction from AICA occlusion can look identical.",
+    investigation: "Otoscopy and audiometry; urgent MRI with diffusion and posterior circulation imaging when vascular risk, central signs or other cranial nerve signs are present.",
+    pearl: "Vertigo with new sensorineural hearing loss points to the inner ear, but labyrinthine ischaemia can herald an AICA stroke because the labyrinthine artery usually arises from AICA, so a peripheral-looking head impulse does not exclude it. Adding sudden hearing loss to HINTS (“HINTS plus”) catches more of these strokes."
+  },
+  {
+    id: "cerebellar", name: "Inferior cerebellum or vestibular nuclei", eponym: "Central acute vestibular syndrome", zone: "cerebellum", side: "ipsilateral", prior: 6,
+    w: {centralNystagmus: 3, gaitAtaxia: 3, skew: 2, ipsiAtaxia: 2, vertigo: 1, dysarthria: 1, vascular: 1}, ex: ["headImpulse"],
+    causes: "Posterior circulation infarction, often PICA territory; cerebellar haemorrhage, demyelination or a posterior fossa mass.",
+    investigation: "Emergency stroke pathway with MRI diffusion imaging and CTA or MRA of the posterior circulation. Early MRI can miss small infarcts, so repeat it if suspicion persists. A swollen cerebellum can cause hydrocephalus and needs neurosurgical vigilance.",
+    pearl: "In acute continuous vertigo with nystagmus, a normal head impulse is a warning sign, as are direction-changing nystagmus, skew deviation and inability to stand unaided. An inferior cerebellar stroke can cause vertigo with no limb ataxia at all. In trained hands HINTS can be more sensitive than MRI in the first 48 hours."
+  }
+];
+
+const SITES = [...SITES_A, ...SITES_B, ...SITES_C];
+
+/* Practice topics; every site belongs to exactly one. */
+const TOPICS = [
+  {id: 'brainstem', name: 'Brainstem', sites: ['weber','claude','benedikt','nothnagel','parinaud','nuclear-iii','millard-gubler','raymond','foville','facial-colliculus','ino','one-and-half','aica','lateral-midpons','wallenberg','dejerine','avellis','jackson']},
+  {id: 'eyes', name: 'Eye movements & orbit', sites: ['compressive-iii','microvascular-iii','uncal','trochlear','microvascular-vi','raised-icp-vi','gradenigo','cavernous','sof','orbital-apex','tolosa-hunt','thyroid-eye','isolated-horner']},
+  {id: 'vision', name: 'Vision & smell', sites: ['optic-nerve','junctional','chiasm','retrochiasmal','olfactory','foster-kennedy','gca','pituitary-apoplexy']},
+  {id: 'face', name: 'Face, ear & balance', sites: ['cpa','iam','bells','proximal-facial','ramsay-hunt','tympanic-facial','mastoid-facial','stylomastoid','supranuclear-vii','trigeminal-ganglion','foramen-ovale','numb-chin','isolated-v2','vestibular-neuritis','labyrinthitis','cerebellar']},
+  {id: 'lower', name: 'Lower cranial nerves', sites: ['pseudobulbar','bulbar','vernet','collet-sicard','villaret','tapia','isolated-xii','recurrent-laryngeal']},
+  {id: 'diffuse', name: 'Diffuse & neuromuscular', sites: ['myasthenia','miller-fisher','wernicke','bilateral-lmn-vii']}
+];
 
 const GROUPS = [
-  {id:'vision',name:'Vision',nerve:'II',hint:'Optic nerve, fields, visual pathways'},
+  {id:'vision',name:'Vision & smell',nerve:'I, II',hint:'Olfactory optic nerve fields visual pathways'},
   {id:'eyes',name:'Eye movements & pupils',nerve:'III, IV, VI',hint:'Oculomotor trochlear abducens'},
   {id:'face',name:'Facial sensation & movement',nerve:'V, VII',hint:'Trigeminal facial'},
-  {id:'hearing',name:'Hearing & balance',nerve:'VIII',hint:'Vestibulocochlear auditory'},
+  {id:'hearing',name:'Hearing & balance',nerve:'VIII',hint:'Vestibulocochlear auditory vestibular HINTS'},
   {id:'bulbar',name:'Bulbar function',nerve:'IX–XII',hint:'Glossopharyngeal vagus accessory hypoglossal'},
   {id:'tracts',name:'Long tracts & coordination',nerve:'↕',hint:'Motor sensory cerebellar reflexes'},
   {id:'context',name:'Clinical context',nerve:'＋',hint:'Consciousness pressure headache risk'}
 ];
+
+/*
+ * Findings. Labels use {s} for the selected side of cranial signs, {o} for the opposite
+ * side and {S} for the capitalised selected side. `soft` marks a less specific finding,
+ * `test` is the bedside technique and `syn` holds extra search terms.
+ */
 const FINDINGS = [
-  ['monocular','vision','Monocular visual loss on the {s}','Loss of vision in one eye'],
-  ['rapd','vision','RAPD on the {s}','Relative afferent pupillary defect'],
-  ['junctional','vision','Superotemporal field loss in the {o} eye','Junctional scotoma: fellow-eye defect accompanying selected-side optic neuropathy'],
-  ['bitemporal','vision','Bitemporal field loss','Temporal visual hemifield loss in both eyes'],
-  ['homonymous','vision','{S} homonymous field loss','Same side of the visual field lost in both eyes'],
-  ['ptosis','eyes','Ptosis on the {s}','Drooping upper eyelid'],
-  ['iii','eyes','III ophthalmoplegia on the {s}','Oculomotor-pattern weakness: adduction, elevation and depression'],
-  ['pupil','eyes','Dilated pupil on the {s}','Mydriasis with impaired light response'],
-  ['bilateralPtosis','eyes','Bilateral ptosis','Drooping of both upper eyelids'],
-  ['iv','eyes','IV-pattern diplopia on the {s}','Trochlear-pattern vertical or torsional diplopia, worse down and in'],
-  ['vi','eyes','Abduction deficit on the {s}','Abducens VI: impaired outward movement of the selected eye'],
-  ['bilateralVi','eyes','Bilateral VI palsy','Abduction deficit of both eyes'],
-  ['ophthalmoplegia','eyes','Bilateral ophthalmoplegia','Weak eye movements on both sides'],
-  ['gaze','eyes','Conjugate gaze palsy to the {s}','Both eyes cannot look towards the selected side'],
-  ['ino','eyes','INO on the {s}','Internuclear ophthalmoplegia: impaired adduction of the selected eye'],
-  ['upgaze','eyes','Upgaze palsy','Impaired conjugate upward gaze'],
-  ['lightNear','eyes','Light–near dissociation','Pupils constrict better for near than to light'],
-  ['convergenceRetraction','eyes','Convergence–retraction nystagmus','Convergence and globe retraction on attempted upgaze'],
-  ['lidRetraction','eyes','Lid retraction','Abnormally elevated upper lid'],
-  ['proptosis','eyes','Proptosis','Forward displacement of the globe'],
-  ['painfulEye','eyes','Painful ophthalmoplegia','Eye movement weakness accompanied by pain'],
-  ['fatigability','eyes','Fatigability','Weakness worsens with sustained activity and improves with rest'],
-  ['horner','eyes','Horner syndrome on the {s}','Miosis, mild ptosis, with or without anhidrosis'],
-  ['v1','face','V1 numbness on the {s}','Ophthalmic division: forehead and cornea'],
-  ['v2','face','V2 numbness on the {s}','Maxillary division: cheek and upper lip'],
-  ['v3','face','V3 numbness on the {s}','Broad mandibular division sensory loss'],
-  ['chin','face','Numb chin / lower lip on the {s}','Sensory loss restricted to the mental or inferior alveolar nerve territory'],
-  ['corneal','face','Reduced corneal reflex on the {s}','V1 afferent or VII efferent dysfunction; assess both limbs'],
-  ['vmotor','face','V motor weakness on the {s}','Weak mastication or jaw deviation toward the weak side'],
-  ['dissociatedFace','face','Facial pain/temperature loss on the {s}; touch spared','Dissociated trigeminal sensory loss'],
-  ['retroOrbital','face','Retro-orbital pain on the {s}','Deep pain behind the eye'],
-  ['lmn7','face','LMN VII weakness on the {s}','Lower motor neuron facial weakness involving upper and lower face'],
-  ['umn7','face','UMN VII weakness on the {s}','Predominantly lower-face weakness; relative forehead sparing'],
-  ['bilateral7','face','Bilateral VII weakness','Bilateral lower motor neuron facial weakness'],
-  ['hyperacusis','face','Hyperacusis on the {s}','Increased sound sensitivity from stapedius weakness'],
-  ['taste','face','Anterior two-thirds taste loss','Taste loss on the {s} side of the tongue'],
-  ['tearing','face','Reduced tearing on the {s}','Reduced lacrimation'],
-  ['vesicles','face','Ear vesicles on the {s}','Vesicular eruption on pinna or in ear canal'],
-  ['parotid','face','Parotid mass on the {s}','Mass near the extracranial facial nerve'],
-  ['hearing','hearing','Hearing loss on the {s}','Sensorineural hearing loss for VIII localisation; confirm hearing type'],
-  ['tinnitus','hearing','Tinnitus on the {s}','Sound perception without an external source'],
-  ['vertigo','hearing','Vertigo','Illusory motion or spinning',true],
-  ['otitis','hearing','Otitis on the {s}','Middle ear infection or discharge'],
-  ['palate','bulbar','Palatal weakness on the {s}','Weak elevation; uvula may deviate away from the weak side'],
-  ['dysphagia','bulbar','Dysphagia','Difficulty swallowing'],
-  ['hoarseness','bulbar','Hoarseness','Dysphonia or suspected vocal fold weakness'],
-  ['dysarthria','bulbar','Dysarthria','Impaired articulation',true],
-  ['xi','bulbar','SCM / trapezius weakness on the {s}','Spinal accessory XI: shoulder shrug and head turn'],
-  ['xii','bulbar','Tongue deviates to the {s} (LMN XII)','Wasting or fasciculations support a lower motor neuron pattern'],
-  ['jawJerk','bulbar','Brisk jaw jerk','Exaggerated jaw reflex; interpret with other bilateral corticobulbar signs'],
-  ['lability','bulbar','Emotional lability','Involuntary or disproportionate laughing or crying'],
-  ['hiccups','bulbar','Persistent hiccups','Nonspecific; may accompany a medullary lesion',true],
-  ['contraWeak','tracts','Hemiparesis on the {o}','Limb weakness opposite to the cranial nerve signs'],
-  ['ipsiWeak','tracts','Hemiparesis on the {s}','Limb weakness on the same side as cranial nerve signs'],
-  ['dcml','tracts','DCML loss on the {o}','Loss of vibration and joint position sense opposite cranial signs'],
-  ['spinothalamic','tracts','Body pain/temperature loss on the {o}','Spinothalamic sensory loss opposite cranial signs'],
-  ['ipsiAtaxia','tracts','Limb ataxia on the {s}','Ipsilateral limb dysmetria independent of weakness'],
-  ['contraAtaxia','tracts','Ataxia / tremor on the {o}','Contralateral limb dysmetria or tremor'],
-  ['gaitAtaxia','tracts','Gait ataxia','Unsteady stance or gait'],
-  ['areflexia','tracts','Areflexia','Reduced or absent tendon reflexes'],
-  ['consciousness','context','Reduced consciousness','Drowsiness, stupor or coma'],
-  ['papilloedema','context','Headache with papilloedema','Optic disc swelling from raised intracranial pressure'],
-  ['thunderclap','context','Sudden severe headache','Thunderclap headache',true],
-  ['vascular','context','Vascular risk factors','Diabetes, hypertension, smoking or other vascular risk',true]
-].map(([id,group,label,hint,soft=false])=>({id,group,label,hint,soft}));
+  {id:'anosmia',group:'vision',label:'Reduced smell on the {s}',hint:'Hyposmia or anosmia when the {s} nostril is tested alone',
+    test:'Occlude one nostril and, with the eyes closed, offer a familiar non-irritant odour such as coffee, peppermint or soap to the other; repeat on the other side. Avoid ammonia, which stimulates trigeminal endings.',
+    syn:'smell olfactory anosmia hyposmia odour nose'},
+  {id:'monocular',group:'vision',label:'Monocular visual loss on the {s}',hint:'Loss of vision in one eye',
+    test:'Test acuity in each eye separately with a chart and pinhole, then confirm the loss is monocular by covering each eye in turn.',
+    syn:'blind blindness acuity blurred sight eye'},
+  {id:'rapd',group:'vision',label:'RAPD on the {s}',hint:'Relative afferent pupillary defect',
+    test:'Swinging-flashlight test in a dim room: move the light briskly between the eyes, pausing two to three seconds on each. The affected pupil dilates as the light swings onto it.',
+    syn:'marcus gunn afferent pupil swinging flashlight'},
+  {id:'junctional',group:'vision',label:'Superotemporal field loss in the {o} eye',hint:'Junctional scotoma: fellow-eye defect accompanying selected-side optic neuropathy',
+    test:'Test the fields of each eye separately, looking specifically at the upper temporal quadrant of the eye opposite the visual loss. Confirm with formal perimetry.',
+    syn:'scotoma wilbrand field quadrant'},
+  {id:'bitemporal',group:'vision',label:'Bitemporal field loss',hint:'Temporal visual hemifield loss in both eyes',
+    test:'Confront each eye separately; a red target moved across the vertical meridian may show early temporal desaturation. Confirm with formal perimetry.',
+    syn:'hemianopia hemianopsia chiasm tunnel peripheral field pituitary'},
+  {id:'homonymous',group:'vision',label:'{S} homonymous field loss',hint:'Same side of the visual field lost in both eyes',
+    test:'Confront each eye separately: a homonymous defect involves the same side of the field in both eyes. Formal perimetry shows its congruity.',
+    syn:'hemianopia hemianopsia quadrantanopia field cut occipital'},
+
+  {id:'ptosis',group:'eyes',label:'Ptosis on the {s}',hint:'Drooping upper eyelid',
+    test:'Compare the upper lid margins with the pupils in primary gaze, then check whether the ptosis worsens on sustained upgaze and whether the pupil is involved.',
+    syn:'droopy drooping eyelid lid droop'},
+  {id:'iii',group:'eyes',label:'III ophthalmoplegia on the {s}',hint:'Oculomotor-pattern weakness: adduction, elevation and depression',
+    test:'Keep the head still and follow a target through an H pattern, testing adduction, elevation and depression. A complete palsy leaves the eye resting down and out.',
+    syn:'oculomotor third nerve down and out double vision diplopia'},
+  {id:'pupil',group:'eyes',label:'Dilated pupil on the {s}',hint:'Mydriasis with impaired light response',
+    test:'Compare pupil size in bright and dim light, then test direct and consensual light responses. Anisocoria greater in bright light points to the larger pupil.',
+    syn:'mydriasis blown fixed dilated anisocoria'},
+  {id:'bilateralPtosis',group:'eyes',label:'Bilateral ptosis',hint:'Drooping of both upper eyelids',
+    test:'Compare both lid margins in primary gaze and after 30 to 60 seconds of sustained upgaze.',
+    syn:'droopy eyelids both sides'},
+  {id:'iv',group:'eyes',label:'IV-pattern diplopia on the {s}',hint:'Trochlear-pattern vertical or torsional diplopia, worse down and in',
+    test:'Ask about vertical diplopia when looking down and towards the nose, then use the three-step test: which eye is higher, in which horizontal gaze, and with which head tilt.',
+    syn:'trochlear fourth superior oblique vertical double vision head tilt'},
+  {id:'vi',group:'eyes',label:'Abduction deficit on the {s}',hint:'Abducens VI: impaired outward movement of the selected eye',
+    test:'Follow a target horizontally and look for incomplete abduction, with horizontal diplopia worse at distance and towards the weak side.',
+    syn:'abducens sixth lateral rectus double vision diplopia'},
+  {id:'bilateralVi',group:'eyes',label:'Bilateral VI palsy',hint:'Abduction deficit of both eyes',
+    test:'Test abduction in each eye separately; neither reaches the outer canthus.',
+    syn:'abducens sixth both eyes'},
+  {id:'ophthalmoplegia',group:'eyes',label:'Bilateral ophthalmoplegia',hint:'Weak eye movements on both sides',
+    test:'Test pursuit and saccades in every direction for each eye, noting whether the deficit follows a single nerve, both sides or no nerve pattern.',
+    syn:'external ophthalmoplegia eye movements weak'},
+  {id:'gaze',group:'eyes',label:'Conjugate gaze palsy to the {s}',hint:'Both eyes cannot look towards the selected side',
+    test:'Ask the patient to look to each side, then test the oculocephalic (doll’s eye) response. A VI nuclear palsy is not overcome by it; a supranuclear gaze palsy often is.',
+    syn:'horizontal gaze palsy pprf doll'},
+  {id:'ino',group:'eyes',label:'INO on the {s}',hint:'Internuclear ophthalmoplegia: impaired adduction of the selected eye',
+    test:'Test fast horizontal saccades: the adducting eye on the lesion side is slow or falls short, often with nystagmus of the abducting fellow eye.',
+    syn:'internuclear mlf adduction multiple sclerosis'},
+  {id:'upgaze',group:'eyes',label:'Upgaze palsy',hint:'Impaired conjugate upward gaze',
+    test:'Test vertical pursuit and saccades, then the oculocephalic response: improvement with head movement suggests a supranuclear cause.',
+    syn:'vertical gaze looking up'},
+  {id:'lightNear',group:'eyes',label:'Light–near dissociation',hint:'Pupils constrict better for near than to light',
+    test:'Compare constriction to a bright light with constriction while converging on a near target held about 15 cm away.',
+    syn:'argyll robertson pupil near reaction'},
+  {id:'convergenceRetraction',group:'eyes',label:'Convergence–retraction nystagmus',hint:'Convergence and globe retraction on attempted upgaze',
+    test:'Ask for a quick upward look, or rotate an optokinetic drum or tape downwards. Watch for the eyes converging and retracting into the orbits.',
+    syn:'nystagmus retraction parinaud optokinetic'},
+  {id:'lidRetraction',group:'eyes',label:'Lid retraction',hint:'Abnormally elevated upper lid',
+    test:'Look for white sclera above the cornea in primary gaze. Lid lag on slow downgaze favours thyroid eye disease.',
+    syn:'collier sign stare sclera show'},
+  {id:'proptosis',group:'eyes',label:'Proptosis',hint:'Forward displacement of the globe',
+    test:'Stand behind the seated patient and look down over the brow to compare how far each globe protrudes; measure with an exophthalmometer if available.',
+    syn:'exophthalmos bulging eye'},
+  {id:'painfulEye',group:'eyes',label:'Painful ophthalmoplegia',hint:'Eye movement weakness accompanied by pain',
+    test:'Ask where the pain is and whether it preceded the diplopia, then examine eye movements and look for chemosis, redness or orbital congestion.',
+    syn:'eye pain diplopia orbital'},
+  {id:'fatigability',group:'eyes',label:'Fatigability',hint:'Weakness worsens with sustained activity and improves with rest',
+    test:'Ask for sustained upgaze for 60 seconds and watch for increasing ptosis or diplopia. An ice pack on the lid for two minutes may improve myasthenic ptosis.',
+    syn:'myasthenia fatigue variable fluctuating weakness ice pack'},
+  {id:'horner',group:'eyes',label:'Horner syndrome on the {s}',hint:'Miosis, mild ptosis, with or without anhidrosis',
+    test:'Compare pupils in light and dim light: anisocoria greater in the dark, with dilation lag of the smaller pupil. Look for mild ptosis and a slightly raised lower lid.',
+    syn:'miosis small pupil sympathetic anhidrosis'},
+
+  {id:'v1',group:'face',label:'V1 numbness on the {s}',hint:'Ophthalmic division: forehead and cornea',
+    test:'Compare light touch and pinprick on the forehead and front of the scalp with the other side.',
+    syn:'ophthalmic trigeminal forehead numb sensation'},
+  {id:'v2',group:'face',label:'V2 numbness on the {s}',hint:'Maxillary division: cheek and upper lip',
+    test:'Compare light touch and pinprick over the cheek and upper lip, and ask about the upper gum and teeth.',
+    syn:'maxillary trigeminal cheek numb sensation'},
+  {id:'v3',group:'face',label:'V3 numbness on the {s}',hint:'Broad mandibular division sensory loss',
+    test:'Compare light touch and pinprick over the lower lip, chin and lower cheek. The angle of the jaw is supplied by C2–C3, not V.',
+    syn:'mandibular trigeminal jaw numb sensation'},
+  {id:'chin',group:'face',label:'Numb chin / lower lip on the {s}',hint:'Sensory loss restricted to the mental or inferior alveolar nerve territory',
+    test:'Map light touch and pinprick across the chin and lower lip, then compare with the rest of the V3 territory.',
+    syn:'mental nerve lip numbness'},
+  {id:'corneal',group:'face',label:'Reduced corneal reflex on the {s}',hint:'V1 afferent or VII efferent dysfunction; assess both limbs',
+    test:'Approach from the side and touch the edge of the cornea, not the sclera, with a wisp of cotton. Watch both eyes blink and ask whether the touch was felt.',
+    syn:'blink reflex cornea'},
+  {id:'vmotor',group:'face',label:'V motor weakness on the {s}',hint:'Weak mastication or jaw deviation toward the weak side',
+    test:'Feel both masseters as the patient clenches, then ask them to open the mouth against resistance and watch for deviation towards the weak side.',
+    syn:'masseter pterygoid chewing jaw deviation'},
+  {id:'dissociatedFace',group:'face',label:'Facial pain/temperature loss on the {s}; touch spared',hint:'Dissociated trigeminal sensory loss',
+    test:'Compare pinprick and a cold tuning fork with light touch on each side of the face. Loss of pain and temperature with preserved touch suggests the spinal trigeminal pathway.',
+    syn:'face numb pain temperature spinal trigeminal'},
+  {id:'retroOrbital',group:'face',label:'Retro-orbital pain on the {s}',hint:'Deep pain behind the eye',
+    test:'Ask about deep pain behind the eye and its relationship to eye movement; feel for periorbital tenderness.',
+    syn:'eye pain headache behind eye'},
+  {id:'lmn7',group:'face',label:'LMN VII weakness on the {s}',hint:'Lower motor neuron facial weakness involving upper and lower face',
+    test:'Ask the patient to raise the eyebrows, screw the eyes shut, show the teeth and puff out the cheeks. In a lower motor neuron lesion the forehead is weak too.',
+    syn:'facial palsy bell droop weakness'},
+  {id:'umn7',group:'face',label:'UMN VII weakness on the {s}',hint:'Predominantly lower-face weakness; relative forehead sparing',
+    test:'Compare forehead wrinkling and eye closure with the smile. Relative sparing of the forehead favours an upper motor neuron lesion.',
+    syn:'facial droop stroke central forehead sparing'},
+  {id:'bilateral7',group:'face',label:'Bilateral VII weakness',hint:'Bilateral lower motor neuron facial weakness',
+    test:'Test forehead, eye closure and lip strength directly on both sides; symmetrical weakness is easy to miss by inspection alone.',
+    syn:'facial diplegia both sides'},
+  {id:'hyperacusis',group:'face',label:'Hyperacusis on the {s}',hint:'Increased sound sensitivity from stapedius weakness',
+    test:'Ask whether ordinary sounds are uncomfortably loud in one ear; the stapedial reflex on audiometry confirms it.',
+    syn:'loud sounds stapedius'},
+  {id:'taste',group:'face',label:'Taste loss on the {s}, front of tongue',hint:'Anterior two-thirds taste loss on the {s} side of the tongue',
+    test:'Dab a sweet or salty solution on each side of the protruded front of the tongue and have the patient point to the answer before withdrawing it.',
+    syn:'taste chorda tympani tongue anterior two thirds'},
+  {id:'tearing',group:'face',label:'Reduced tearing on the {s}',hint:'Reduced lacrimation',
+    test:'Ask about a dry eye; a Schirmer test compares tear production, although poor blinking can cause reflex watering.',
+    syn:'lacrimation dry eye tears schirmer'},
+  {id:'vesicles',group:'face',label:'Ear vesicles on the {s}',hint:'Vesicular eruption on pinna or in ear canal',
+    test:'Inspect the pinna and ear canal with an otoscope, and the palate with a torch, for vesicles or crusts.',
+    syn:'zoster shingles rash blisters'},
+  {id:'parotid',group:'face',label:'Parotid mass on the {s}',hint:'Mass near the extracranial facial nerve',
+    test:'Inspect and palpate in front of and below the ear, and inside the mouth where indicated.',
+    syn:'parotid lump gland swelling'},
+
+  {id:'hearing',group:'hearing',label:'Hearing loss on the {s}',hint:'Sensorineural hearing loss for VIII localisation; confirm hearing type',
+    test:'Whisper numbers at arm’s length while masking the other ear, then use a 512 Hz fork: in sensorineural loss Weber lateralises to the better ear and Rinne stays positive.',
+    syn:'deaf deafness hearing ear weber rinne'},
+  {id:'tinnitus',group:'hearing',label:'Tinnitus on the {s}',hint:'Sound perception without an external source',
+    test:'Ask about the side, character and whether it is pulsatile, and examine both ears.',
+    syn:'ringing ear noise'},
+  {id:'vertigo',group:'hearing',label:'Vertigo',hint:'Illusory motion or spinning',soft:true,
+    test:'Establish the timing, triggers and whether it is continuous, then look for spontaneous and gaze-evoked nystagmus.',
+    syn:'dizziness dizzy spinning giddy'},
+  {id:'headImpulse',group:'hearing',label:'Abnormal head impulse to the {s}',hint:'Corrective catch-up saccade after a rapid head turn towards the {s}: a peripheral vestibular sign',
+    test:'With the patient fixing on your nose, turn the head quickly through 10–20° to each side. A catch-up saccade back to your nose after turning to one side marks loss on that side.',
+    syn:'hit head thrust halmagyi vestibular hints'},
+  {id:'centralNystagmus',group:'hearing',label:'Direction-changing or vertical nystagmus',hint:'Gaze-evoked nystagmus that reverses direction, or purely vertical or torsional nystagmus: a central sign',
+    test:'Observe the eyes in the primary position and 30° to each side. Nystagmus that changes direction with gaze, or is purely vertical or torsional, is central.',
+    syn:'nystagmus central direction changing vertical hints'},
+  {id:'skew',group:'hearing',label:'Skew deviation',hint:'Vertical misalignment on alternate cover testing: a central otolith-pathway sign',
+    test:'Alternate cover test: cover each eye in turn while the patient fixes on your nose. A vertical correcting movement of the uncovered eye indicates skew.',
+    syn:'vertical misalignment cover test hints'},
+  {id:'otitis',group:'hearing',label:'Otitis on the {s}',hint:'Middle ear infection or discharge',
+    test:'Inspect the canal and tympanic membrane with an otoscope; note discharge, perforation or mastoid tenderness.',
+    syn:'ear infection discharge mastoid'},
+
+  {id:'palate',group:'bulbar',label:'Palatal weakness on the {s}',hint:'Weak elevation; uvula may deviate away from the weak side',
+    test:'Ask the patient to say “ah” and watch the soft palate: the weak side fails to rise and the uvula is pulled towards the normal side.',
+    syn:'uvula soft palate gag vagus'},
+  {id:'dysphagia',group:'bulbar',label:'Dysphagia',hint:'Difficulty swallowing',
+    test:'Ask about coughing or choking with fluids and nasal regurgitation. Only screen with water if the patient is alert and it is safe to do so.',
+    syn:'swallowing choking aspiration'},
+  {id:'hoarseness',group:'bulbar',label:'Hoarseness',hint:'Dysphonia or suspected vocal fold weakness',
+    test:'Listen to the voice and a voluntary cough: a weak, breathy “bovine” cough suggests vocal fold palsy. Laryngoscopy confirms it.',
+    syn:'voice dysphonia hoarse vocal cord'},
+  {id:'dysarthria',group:'bulbar',label:'Dysarthria',hint:'Impaired articulation',soft:true,
+    test:'Ask the patient to repeat “pa-pa-pa”, “ta-ta-ta” and “ka-ka-ka” and a short sentence, noting slurred, nasal, strained or ataxic speech.',
+    syn:'slurred speech articulation'},
+  {id:'xi',group:'bulbar',label:'SCM / trapezius weakness on the {s}',hint:'Spinal accessory XI: shoulder shrug and head turn',
+    test:'Ask the patient to shrug against resistance (trapezius) and turn the head against your hand (each SCM turns the head to the opposite side).',
+    syn:'accessory shrug shoulder sternocleidomastoid'},
+  {id:'xii',group:'bulbar',label:'Tongue deviates to the {s} (LMN XII)',hint:'Wasting or fasciculations support a lower motor neuron pattern',
+    test:'Look at the tongue resting in the mouth for wasting and fasciculation, then ask the patient to stick it out and push it into each cheek.',
+    syn:'tongue deviation hypoglossal fasciculation wasting'},
+  {id:'jawJerk',group:'bulbar',label:'Brisk jaw jerk',hint:'Exaggerated jaw reflex; interpret with other bilateral corticobulbar signs',
+    test:'With the mouth slightly open, rest a finger on the chin and tap it downwards. A brisk jerk suggests bilateral upper motor neuron disease above the pons.',
+    syn:'jaw reflex pseudobulbar'},
+  {id:'lability',group:'bulbar',label:'Emotional lability',hint:'Involuntary or disproportionate laughing or crying',
+    test:'Ask the patient and family about sudden laughing or crying out of keeping with mood.',
+    syn:'pseudobulbar affect crying laughing'},
+  {id:'hiccups',group:'bulbar',label:'Persistent hiccups',hint:'Nonspecific; may accompany a medullary lesion',soft:true,
+    test:'Ask about persistent or intractable hiccups.',
+    syn:'singultus'},
+
+  {id:'contraWeak',group:'tracts',label:'Hemiparesis on the {o}',hint:'Limb weakness opposite to the cranial nerve signs',
+    test:'Look for pronator drift and compare power, tone and reflexes in both arms and legs.',
+    syn:'weakness hemiplegia crossed corticospinal limb'},
+  {id:'ipsiWeak',group:'tracts',label:'Hemiparesis on the {s}',hint:'Limb weakness on the same side as cranial nerve signs',
+    test:'Look for pronator drift and compare power, tone and reflexes in both arms and legs.',
+    syn:'weakness hemiplegia limb'},
+  {id:'dcml',group:'tracts',label:'DCML loss on the {o}',hint:'Loss of vibration and joint position sense opposite cranial signs',
+    test:'Test vibration with a 128 Hz fork at the toes and fingers and joint position at the great toe; add Romberg testing if safe.',
+    syn:'vibration proprioception joint position dorsal column medial lemniscus'},
+  {id:'spinothalamic',group:'tracts',label:'Body pain/temperature loss on the {o}',hint:'Spinothalamic sensory loss opposite cranial signs',
+    test:'Compare pinprick and a cold tuning fork over the limbs and trunk on both sides.',
+    syn:'pain temperature numbness body sensory'},
+  {id:'ipsiAtaxia',group:'tracts',label:'Limb ataxia on the {s}',hint:'Ipsilateral limb dysmetria independent of weakness',
+    test:'Finger–nose and heel–shin testing on each side with rapid alternating movements, making sure weakness does not explain the clumsiness.',
+    syn:'dysmetria cerebellar coordination clumsy intention'},
+  {id:'contraAtaxia',group:'tracts',label:'Ataxia / tremor on the {o}',hint:'Contralateral limb dysmetria or tremor',
+    test:'Finger–nose and heel–shin testing, watching for tremor at rest, with posture and on movement.',
+    syn:'tremor dysmetria rubral'},
+  {id:'gaitAtaxia',group:'tracts',label:'Gait ataxia',hint:'Unsteady stance or gait',
+    test:'Watch the normal gait and tandem walking, and note whether the patient can stand or walk unaided.',
+    syn:'unsteady walking balance falls'},
+  {id:'areflexia',group:'tracts',label:'Areflexia',hint:'Reduced or absent tendon reflexes',
+    test:'Test biceps, triceps, supinator, knee and ankle reflexes, using reinforcement before calling them absent.',
+    syn:'reflexes absent hyporeflexia'},
+
+  {id:'consciousness',group:'context',label:'Reduced consciousness',hint:'Drowsiness, stupor or coma',
+    test:'Score the Glasgow Coma Scale by its components and repeat it frequently.',
+    syn:'gcs drowsy coma confused'},
+  {id:'papilloedema',group:'context',label:'Headache with papilloedema',hint:'Optic disc swelling from raised intracranial pressure',
+    test:'Fundoscopy for blurred, elevated disc margins, haemorrhages and absent venous pulsation (supportive only). Ask ophthalmology to confirm if unsure.',
+    syn:'disc swelling raised pressure icp fundus'},
+  {id:'thunderclap',group:'context',label:'Sudden severe headache',hint:'Thunderclap headache',soft:true,
+    test:'Ask whether the headache reached its maximum within about a minute.',
+    syn:'headache sudden worst subarachnoid'},
+  {id:'gcaSymptoms',group:'context',label:'Jaw claudication or scalp tenderness',hint:'Giant cell arteritis features, usually over 50: new headache, pain on chewing, scalp tenderness',
+    test:'Ask about pain in the jaw on chewing, scalp tenderness, new headache and shoulder or hip girdle stiffness; feel the temporal arteries for tenderness or a reduced pulse.',
+    syn:'giant cell arteritis temporal headache polymyalgia'},
+  {id:'vascular',group:'context',label:'Vascular risk factors',hint:'Diabetes, hypertension, smoking or other vascular risk',soft:true,
+    test:'Ask about diabetes, hypertension, smoking, hyperlipidaemia, atrial fibrillation and previous stroke.',
+    syn:'diabetes hypertension smoking risk'}
+].map(f=>({soft:false,syn:'',...f}));
+
+/* Classic cases. `site` is the localisation the case is built to demonstrate. */
 const PRESETS = [
-  {id:'wallenberg',name:'Wallenberg',present:['horner','dissociatedFace','spinothalamic','ipsiAtaxia','palate','dysphagia','hoarseness','vertigo','hiccups'],absent:['contraWeak','xii','lmn7','hearing']},
-  {id:'weber',name:'Weber',present:['iii','ptosis','contraWeak','vascular'],absent:['contraAtaxia','lmn7','xii']},
-  {id:'pcomm',name:'PComm aneurysm',present:['iii','ptosis','pupil','painfulEye','retroOrbital','thunderclap'],absent:['fatigability','contraWeak']},
-  {id:'diabetic',name:'Pupil-sparing diabetic III',present:['iii','ptosis','vascular'],absent:['pupil','v1','v2','vi','contraWeak','fatigability']},
-  {id:'cavernous',name:'Cavernous sinus',present:['iii','iv','vi','v1','v2','horner','ptosis','painfulEye'],absent:['v3','vmotor','monocular','rapd','lmn7','contraWeak']},
-  {id:'cpa',name:'CPA',present:['hearing','tinnitus','lmn7','v1','corneal','ipsiAtaxia'],absent:['iii','contraWeak']},
-  {id:'facial-canal',name:'Facial canal segment',present:['lmn7','hyperacusis','taste'],absent:['tearing','vesicles','hearing','parotid']},
-  {id:'medial-medulla',name:'Medial medulla',present:['xii','contraWeak','dcml','dysarthria','vascular'],absent:['palate','horner','spinothalamic']},
-  {id:'ino',name:'INO',present:['ino'],absent:['pupil','ptosis','gaze']},
-  {id:'one-and-half',name:'One-and-a-half',present:['gaze','ino'],absent:['pupil','lmn7']},
-  {id:'parinaud',name:'Parinaud',present:['upgaze','lightNear','convergenceRetraction','lidRetraction'],absent:['fatigability']},
-  {id:'villaret',name:'Villaret',present:['palate','dysphagia','hoarseness','xi','xii','horner'],absent:['contraWeak','dcml','spinothalamic']},
-  {id:'miller-fisher',name:'Miller Fisher',present:['ophthalmoplegia','gaitAtaxia','areflexia'],absent:['fatigability','consciousness','contraWeak']}
+  {id:'wallenberg',name:'Wallenberg',site:'wallenberg',note:'Crossed sensory signs',present:['horner','dissociatedFace','spinothalamic','ipsiAtaxia','palate','dysphagia','hoarseness','vertigo','hiccups'],absent:['contraWeak','xii','lmn7','hearing']},
+  {id:'medial-medulla',name:'Medial medulla',site:'dejerine',note:'Tongue + long tracts',present:['xii','contraWeak','dcml','dysarthria','vascular'],absent:['palate','horner','spinothalamic']},
+  {id:'weber',name:'Weber',site:'weber',note:'III palsy + weakness',present:['iii','ptosis','contraWeak','vascular'],absent:['contraAtaxia','lmn7','xii']},
+  {id:'parinaud',name:'Parinaud',site:'parinaud',note:'Dorsal midbrain signs',present:['upgaze','lightNear','convergenceRetraction','lidRetraction'],absent:['fatigability']},
+  {id:'millard-gubler',name:'Millard–Gubler',site:'millard-gubler',note:'VI + VII + weakness',present:['lmn7','vi','contraWeak'],absent:['gaze','hearing']},
+  {id:'ino',name:'INO',site:'ino',note:'An adduction deficit',present:['ino'],absent:['pupil','ptosis','gaze']},
+  {id:'one-and-half',name:'One-and-a-half',site:'one-and-half',note:'Gaze palsy + INO',present:['gaze','ino'],absent:['pupil','lmn7']},
+  {id:'pcomm',name:'PComm aneurysm',site:'compressive-iii',note:'Pupil-involving III',present:['iii','ptosis','pupil','painfulEye','retroOrbital','thunderclap'],absent:['fatigability','contraWeak']},
+  {id:'diabetic',name:'Pupil-sparing diabetic III',site:'microvascular-iii',note:'Pupil-sparing III',present:['iii','ptosis','vascular'],absent:['pupil','v1','v2','vi','contraWeak','fatigability']},
+  {id:'cavernous',name:'Cavernous sinus',site:'cavernous',note:'Multiple ocular motor nerves',present:['iii','iv','vi','v1','v2','horner','ptosis','painfulEye'],absent:['v3','vmotor','monocular','rapd','lmn7','contraWeak']},
+  {id:'gradenigo',name:'Gradenigo',site:'gradenigo',note:'Ear + VI + deep facial pain',present:['vi','otitis','retroOrbital'],absent:['gaze','papilloedema','contraWeak']},
+  {id:'false-vi',name:'Raised pressure',site:'raised-icp-vi',note:'A false-localising sign',present:['papilloedema','bilateralVi'],absent:['gaze','contraWeak','iii']},
+  {id:'gca',name:'Giant cell arteritis',site:'gca',note:'Sudden loss in one eye',present:['monocular','rapd','gcaSymptoms'],absent:['homonymous','bitemporal','retroOrbital']},
+  {id:'apoplexy',name:'Pituitary apoplexy',site:'pituitary-apoplexy',note:'Headache, fields and III',present:['thunderclap','bitemporal','iii','ptosis'],absent:['contraWeak','homonymous']},
+  {id:'foster-kennedy',name:'Foster Kennedy',site:'foster-kennedy',note:'Smell + one optic nerve',present:['anosmia','monocular','rapd','papilloedema'],absent:['homonymous','bitemporal']},
+  {id:'cpa',name:'CPA',site:'cpa',note:'Hearing + facial signs',present:['hearing','tinnitus','lmn7','v1','corneal','ipsiAtaxia'],absent:['iii','contraWeak']},
+  {id:'facial-canal',name:'Facial canal segment',site:'tympanic-facial',note:'Segmental VII palsy',present:['lmn7','hyperacusis','taste'],absent:['tearing','vesicles','hearing','parotid']},
+  {id:'ramsay-hunt',name:'Ramsay Hunt',site:'ramsay-hunt',note:'VII palsy + vesicles',present:['lmn7','vesicles','hearing','taste','hyperacusis'],absent:['contraWeak','parotid']},
+  {id:'central-face',name:'Central facial palsy',site:'supranuclear-vii',note:'Forehead sparing',present:['umn7','ipsiWeak','dysarthria'],absent:['lmn7','hyperacusis','taste']},
+  {id:'neuritis',name:'Vestibular neuritis',site:'vestibular-neuritis',note:'Peripheral HINTS',present:['vertigo','headImpulse','gaitAtaxia'],absent:['skew','centralNystagmus','hearing','ipsiAtaxia','dysarthria']},
+  {id:'central-avs',name:'Stroke mimicking neuritis',site:'cerebellar',note:'Central HINTS',present:['vertigo','centralNystagmus','skew','gaitAtaxia','vascular'],absent:['headImpulse','hearing','contraWeak']},
+  {id:'villaret',name:'Villaret',site:'villaret',note:'Lower nerves + Horner',present:['palate','dysphagia','hoarseness','xi','xii','horner'],absent:['contraWeak','dcml','spinothalamic']},
+  {id:'myasthenia',name:'Myasthenia',site:'myasthenia',note:'Fatigable, pupils spared',present:['fatigability','ptosis','ophthalmoplegia','dysarthria'],absent:['pupil','areflexia','v1']},
+  {id:'miller-fisher',name:'Miller Fisher',site:'miller-fisher',note:'Eyes, gait and reflexes',present:['ophthalmoplegia','gaitAtaxia','areflexia'],absent:['fatigability','consciousness','contraWeak']}
 ];
+
 const ZONES = [
-  ['hemisphere','Hemisphere','above'],['optic','Optic pathway','above'],
+  ['hemisphere','Hemisphere','above'],['frontal','Anterior fossa','above'],['optic','Optic pathway','above'],
   ['midbrain-dorsal','Dorsal','midbrain'],['midbrain-tegmentum','Tegmentum','midbrain'],['midbrain-ventral','Ventral','midbrain'],
   ['pons-dorsal','Dorsal','pons'],['pons-lateral','Lateral','pons'],['pons-ventral','Ventral','pons'],
   ['medulla-lateral','Lateral','medulla'],['medulla-medial','Medial','medulla'],
-  ['subarachnoid','Subarachnoid','outside'],['cpa','CP angle / IAM','outside'],['petrous','Petrous bone','outside'],['cavernous','Cavernous sinus','outside'],
-  ['orbit','Orbit / SOF','outside'],['skull-base','Skull base','outside'],['extracranial','Extracranial','outside'],['diffuse','NMJ / diffuse','outside']
+  ['subarachnoid','Subarachnoid','outside'],['cpa','CP angle / IAM','outside'],['petrous','Petrous bone','outside'],
+  ['cavernous','Cavernous sinus','outside'],['orbit','Orbit / SOF','outside'],['skull-base','Skull base','outside'],
+  ['extracranial','Extracranial','outside'],['cerebellum','Cerebellum','outside'],['diffuse','NMJ / diffuse','outside']
 ].map(([id,name,level])=>({id,name,level}));
+
+const FINDING_BY_ID = new Map(FINDINGS.map(f=>[f.id,f]));
+const SITE_BY_ID = new Map(SITES.map(s=>[s.id,s]));
+const ZONE_BY_ID = new Map(ZONES.map(z=>[z.id,z]));
+const TOPIC_BY_SITE = new Map(TOPICS.flatMap(t=>t.sites.map(id=>[id,t.id])));
