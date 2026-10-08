@@ -11,7 +11,7 @@ VERSION_NAME, VERSION_CODE = '1.8.0', 9
 FIXED_TIME = (2026, 10, 8, 12, 0, 0)
 
 
-OLD_PACKAGE, PACKAGE = 'org.neurolocalize.academy', 'com.neurolocalize.app'
+OLD_PACKAGE, PACKAGE = 'org.neurolocalize.academy', 'com.neurolocalize.study'
 
 
 def read_pool(buf):

@@ -89,7 +89,7 @@ python3 tools/build_apk.py --apksig apksig-2.3.0.jar   # from Maven Central: com
 A signing key is created in `signing/` (git-ignored) on first build. Keep it: future updates must
 be signed with the same key.
 
-The application ID is `com.neurolocalize.app` (1.1.0 used `org.neurolocalize.academy`). The build
+The application ID is `com.neurolocalize.study` (1.2.0–1.8.0 builds before this used `com.neurolocalize.app`; 1.1.0 used `org.neurolocalize.academy`). The build
 renames the manifest package and writes the activity's full class name, the same way
 `aapt2 --rename-manifest-package` does, so the compiled code keeps its original Java package.
 Because the ID changed, 1.2.0 installs as a separate app next to 1.1.0, and study progress from
