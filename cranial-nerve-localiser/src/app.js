@@ -439,7 +439,7 @@ function renderReference(){
   $('rule-table').innerHTML=RULE_OF_FOUR.map(r=>`<tr><th scope="row">${esc(r.level)}</th><td>${esc(r.nerves)}</td><td>${esc(r.medial)}</td><td>${esc(r.lateral)}</td></tr>`).join('');
   $('rules-grid').innerHTML=RULES.map((r,i)=>`<article class="rule"><span class="rule-number">${String(i+1).padStart(2,'0')}</span><div><h3>${esc(r.title)}</h3><p>${esc(r.text)}</p></div></article>`).join('');
   const sources=[['Cranial nerve examination · Merck Manual','https://www.merckmanuals.com/professional/neurologic-disorders/neurologic-examination/how-to-assess-the-cranial-nerves'],['Neuroanatomy · University of Utah','https://neurologicexam.med.utah.edu/adult/html/cranialnerve_anatomy.html'],['Rule of 4 · Practical Neurology','https://pn.bmj.com/content/11/3/167'],['Modern management of III palsy · Eye','https://pmc.ncbi.nlm.nih.gov/articles/PMC8727561/'],['Adult strabismus guidance · AAO','https://www.aaojournal.org/article/S0161-6420%2824%2900013-7/fulltext'],['Kernohan phenomenon · Systematic review','https://pmc.ncbi.nlm.nih.gov/articles/PMC9452377/'],['Numb chin syndrome · Case series','https://pmc.ncbi.nlm.nih.gov/articles/PMC6217713/'],['HINTS in the acute vestibular syndrome · Stroke','https://pubmed.ncbi.nlm.nih.gov/19762709/'],['Pituitary apoplexy · UK guideline','https://doi.org/10.1111/j.1365-2265.2010.03913.x'],['Giant cell arteritis · BSR guideline','https://ueaeprints.uea.ac.uk/id/eprint/73817/']];
-  $('source-links').innerHTML=sources.map(([name,url])=>`<a href="${url}" target="_self" rel="noopener noreferrer">${name}</a>`).join('');
+  $('source-links').innerHTML=sources.map(([name,url])=>`<a href="${url}" target="_blank" rel="noopener noreferrer">${name}</a>`).join('');
   renderSectionViewer('reference');
 }
 function renderCases(){
@@ -459,6 +459,8 @@ function init(){
   renderCases();
   initMap();renderReference();renderFindings();renderResults();save();
   $('atlas-count').textContent=SITES.length;$('case-count').textContent=PRESETS.length;
+  // On the website, offer the Android app; inside the Android shell the page is served from appassets.
+  $('apk-link').hidden=location.protocol!=='https:'||location.hostname==='appassets.androidplatform.net';
   document.addEventListener('click',event=>{
     const structure=event.target.closest('[data-structure]');
     if(structure&&structure.closest('.section-viewer')){focusStructure(structure.closest('.section-viewer').dataset.viewer,structure.dataset.structure);return;}

@@ -243,3 +243,5 @@ body:has(#finding-search:focus) .dock{display:none}
 .practice-card,.practice-feedback{animation:rise .3s ease-out both}
 @media print{.section-legend{display:none}}
 @media(min-width:960px){.single-category .group-content>.chips{grid-template-columns:minmax(0,1fr)}.single-category .finding{align-items:center;min-height:52px}.single-category .finding .state-mark{margin-top:0}}
+
+.apk-link{display:block;margin-top:8px;font-weight:700}

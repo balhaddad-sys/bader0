@@ -103,6 +103,23 @@ Every later release must keep this app id and be signed with the 2.0 keystore,
 or Android will refuse to update it in place. Keep the keystore safe and out of
 git.
 
+## Website (Vercel)
+
+`vercel.json` builds the static site with `node tools/build_web.mjs`, which
+inlines `src/` into `web/index.html` (byte-identical to the APK's page) and
+copies the newest APK from `releases/` so visitors can download the Android
+app from the footer. No dependencies are installed.
+
+To deploy, import the GitHub repository at https://vercel.com/new and set
+**Root Directory** to `cranial-nerve-localiser` (Framework preset: Other; leave
+the build settings empty so `vercel.json` applies). The repository root holds a
+different project, and its `vercel.json` is not valid JSON, so the root
+directory must point here. Vercel deploys the default branch to production and
+every other branch as a preview; to put this branch in production, merge it or
+set it as the Production Branch under Settings → Git.
+
+With the CLI instead: `cd cranial-nerve-localiser && npx vercel --prod`.
+
 ## The Android shell
 
 The wrapper loads `assets/atlas.html` into a WebView. It blocks every
