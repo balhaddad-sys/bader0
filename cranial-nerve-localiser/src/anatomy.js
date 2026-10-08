@@ -2,6 +2,9 @@
 function anatomyArt(zoneId = '', idPrefix = 'atlas') {
   const prefix = String(idPrefix).replace(/[^a-zA-Z0-9_-]/g, '') || 'atlas';
   const level = ['hemisphere','optic','frontal','cerebellum'].includes(zoneId) ? zoneId
+    : ['frontal-lobe','parietal','temporal','occipital','deep'].includes(zoneId) ? 'hemisphere'
+    : String(zoneId).startsWith('cord-') || zoneId === 'cauda' ? 'cord'
+    : zoneId === 'foramen-magnum' ? 'medulla'
     : String(zoneId).startsWith('midbrain-') ? 'midbrain'
     : String(zoneId).startsWith('pons-') ? 'pons'
     : String(zoneId).startsWith('medulla-') ? 'medulla'
@@ -48,7 +51,7 @@ function anatomyArt(zoneId = '', idPrefix = 'atlas') {
       <path d="${midbrain}" fill="${fill('midbrain')}" fill-opacity="${opacity('midbrain')}" stroke="${stroke('midbrain')}" stroke-width="${active('midbrain') ? '1.6' : '1'}" stroke-opacity="${active('midbrain') ? '.95' : '.65'}"/>
       <path d="${pons}" fill="${fill('pons')}" fill-opacity="${opacity('pons')}" stroke="${stroke('pons')}" stroke-width="${active('pons') ? '1.6' : '1'}" stroke-opacity="${active('pons') ? '.95' : '.65'}"/>
       <path d="${medulla}" fill="${fill('medulla')}" fill-opacity="${opacity('medulla')}" stroke="${stroke('medulla')}" stroke-width="${active('medulla') ? '1.6' : '1'}" stroke-opacity="${active('medulla') ? '.95' : '.65'}"/>
-      <path d="M126 164C130 170 132 177 133 182M137 159C140 167 142 174 143 182" stroke="currentColor" stroke-width="1.2" opacity=".55"/>
+      <path d="M126 164C130 170 132 177 133 182M137 159C140 167 142 174 143 182" stroke="${stroke('cord')}" stroke-width="${active('cord') ? '2.2' : '1.2'}" opacity="${active('cord') ? '.95' : '.55'}"/>
       <g stroke="currentColor" stroke-width=".65" opacity=".32">
         <path d="M119 95L132 102M118 99L131 106M117 103L130 110M100 116C110 120 120 122 131 120M100 120C111 125 122 127 130 124M104 126C114 130 121 131 128 129M116 141L129 142M118 146L131 147M121 152L133 152M125 158L135 157"/>
         <path d="M127 93C126 111 119 123 123 136C125 146 131 157 135 171"/>
@@ -80,30 +83,35 @@ function anatomyArt(zoneId = '', idPrefix = 'atlas') {
  * that side; long-tract signs on the opposite body still map to the same side here.
  * ------------------------------------------------------------------------- */
 const STRUCTURES = {
-  cst: {name:'Corticospinal tract', short:'CST', does:'Voluntary movement of the opposite limbs; the fibres cross lower down, at the pyramidal decussation.', lesion:'Weakness of the opposite limbs.', findings:['contraWeak']},
-  ml: {name:'Medial lemniscus', short:'ML', does:'Vibration and joint position sense from the opposite body, which crossed in the caudal medulla.', lesion:'Loss of vibration and proprioception on the opposite side.', findings:['dcml']},
+  cst: {name:'Corticospinal tract', short:'CST', does:'Voluntary movement of the opposite limbs; the fibres cross lower down, at the pyramidal decussation.', lesion:'Weakness of the opposite limbs.', findings:['weak:c']},
+  ml: {name:'Medial lemniscus', short:'ML', does:'Vibration and joint position sense from the opposite body, which crossed in the caudal medulla.', lesion:'Loss of vibration and proprioception on the opposite side.', findings:['dcml:c']},
   mlf: {name:'Medial longitudinal fasciculus', short:'MLF', does:'Links the abducens nucleus to the opposite oculomotor subnucleus so the eyes move together horizontally.', lesion:'Internuclear ophthalmoplegia: the eye on the lesion side fails to adduct.', findings:['ino']},
-  stt: {name:'Spinothalamic tract', short:'STT', does:'Pain and temperature from the opposite body, which crossed in the spinal cord.', lesion:'Pain and temperature loss over the opposite limbs and trunk.', findings:['spinothalamic']},
+  stt: {name:'Spinothalamic tract', short:'STT', does:'Pain and temperature from the opposite body, which crossed in the spinal cord.', lesion:'Pain and temperature loss over the opposite limbs and trunk.', findings:['spinothalamic:c']},
   sp5: {name:'Spinal trigeminal nucleus and tract', short:'Sp V', does:'Pain and temperature from the same side of the face.', lesion:'Loss of facial pain and temperature on the lesion side, often with touch spared.', findings:['dissociatedFace','corneal']},
   symp: {name:'Descending sympathetic fibres', short:'Symp', does:'Uncrossed hypothalamospinal fibres for pupil dilation, lid tone and facial sweating.', lesion:'Horner syndrome on the lesion side.', findings:['horner']},
   na: {name:'Nucleus ambiguus', short:'NA', does:'Motor nucleus for the palate, pharynx and larynx, through IX and X.', lesion:'Palatal and vocal fold weakness on the lesion side, with dysphagia and hoarseness.', findings:['palate','dysphagia','hoarseness']},
   xii: {name:'Hypoglossal nucleus and fascicle', short:'XII', does:'Supplies the same side of the tongue; the fibres leave between the pyramid and the olive.', lesion:'Tongue weakness and wasting, deviating towards the lesion.', findings:['xii']},
   dmx: {name:'Dorsal motor nucleus of X', short:'DMX', does:'Parasympathetic output to the heart, lungs and gut.', lesion:'No reliable bedside sign.', findings:[]},
   nts: {name:'Nucleus of the solitary tract', short:'NTS', does:'Receives taste and visceral sensation from VII, IX and X.', lesion:'Taste loss on the lesion side, rarely noticed at the bedside.', findings:['taste']},
-  vest: {name:'Vestibular nuclei', short:'Vest', does:'Balance, gaze holding and the vestibulo-ocular reflex.', lesion:'Vertigo, central nystagmus, skew deviation and imbalance.', findings:['vertigo','centralNystagmus','skew']},
-  icp: {name:'Inferior cerebellar peduncle', short:'ICP', does:'Carries spinal and olivary input into the cerebellum on the same side.', lesion:'Limb ataxia on the lesion side.', findings:['ipsiAtaxia']},
+  vest: {name:'Vestibular nuclei', short:'Vest', does:'Balance, gaze holding and the vestibulo-ocular reflex.', lesion:'Vertigo, central nystagmus, skew deviation and imbalance.', findings:['vertigo','centralNystagmus','skew','peripheralNystagmus:c']},
+  icp: {name:'Inferior cerebellar peduncle', short:'ICP', does:'Carries spinal and olivary input into the cerebellum on the same side.', lesion:'Limb ataxia on the lesion side.', findings:['limbAtaxia']},
   olive: {name:'Inferior olive', short:'IO', does:'Sends climbing fibres to the opposite cerebellum.', lesion:'No reliable acute sign; palatal tremor can follow damage to its connections.', findings:[]},
-  mcp: {name:'Middle cerebellar peduncle', short:'MCP', does:'Carries crossed pontocerebellar fibres into the cerebellum.', lesion:'Limb ataxia on the lesion side.', findings:['ipsiAtaxia']},
+  mcp: {name:'Middle cerebellar peduncle', short:'MCP', does:'Carries crossed pontocerebellar fibres into the cerebellum.', lesion:'Limb ataxia on the lesion side.', findings:['limbAtaxia']},
   vi: {name:'Abducens fascicle', short:'VI', does:'Axons from the VI nucleus to the lateral rectus of the same eye.', lesion:'Abduction deficit of the eye on the lesion side.', findings:['vi']},
   gaze: {name:'Abducens nucleus and PPRF', short:'VI n', does:'The horizontal gaze centre, driving both eyes towards the same side.', lesion:'Conjugate gaze palsy towards the lesion.', findings:['gaze']},
   vii: {name:'Facial nucleus and fascicle', short:'VII', does:'Facial expression on the same side; the fibres loop around the VI nucleus.', lesion:'Lower motor neuron facial weakness on the lesion side.', findings:['lmn7']},
   coch: {name:'Cochlear nuclei', short:'Co', does:'First relay for hearing from the same ear, at the pontomedullary junction.', lesion:'Hearing loss in the ear on the lesion side.', findings:['hearing','tinnitus']},
   vsens: {name:'Principal sensory nucleus and root of V', short:'V s', does:'Touch from the same side of the face and the afferent limb of the corneal reflex.', lesion:'Facial numbness and a reduced corneal reflex on the lesion side.', findings:['v1','v2','v3','corneal']},
   vmot: {name:'Trigeminal motor nucleus', short:'V m', does:'The muscles of mastication on the same side.', lesion:'Weak chewing; the jaw deviates towards the lesion on opening.', findings:['vmotor']},
-  scp: {name:'Superior cerebellar peduncle', short:'SCP', does:'Cerebellar outflow, which crosses lower in the midbrain.', lesion:'Limb ataxia on the lesion side when damaged before its crossing.', findings:['ipsiAtaxia']},
-  iii: {name:'Oculomotor nucleus and fascicles', short:'III', does:'Most eye movements, lid elevation and, through the Edinger–Westphal nucleus, pupil constriction.', lesion:'III palsy on the lesion side; a nuclear lesion can add bilateral ptosis.', findings:['iii','ptosis','pupil','bilateralPtosis']},
-  rn: {name:'Red nucleus and cerebellar outflow', short:'RN', does:'Receives crossed outflow from the opposite cerebellar hemisphere.', lesion:'Ataxia or tremor of the opposite limbs.', findings:['contraAtaxia']},
+  scp: {name:'Superior cerebellar peduncle', short:'SCP', does:'Cerebellar outflow, which crosses lower in the midbrain.', lesion:'Limb ataxia on the lesion side when damaged before its crossing.', findings:['limbAtaxia']},
+  iii: {name:'Oculomotor nucleus and fascicles', short:'III', does:'Most eye movements, lid elevation and, through the Edinger–Westphal nucleus, pupil constriction.', lesion:'III palsy on the lesion side; a nuclear lesion can add bilateral ptosis.', findings:['iii','ptosis','pupil']},
+  rn: {name:'Red nucleus and cerebellar outflow', short:'RN', does:'Receives crossed outflow from the opposite cerebellar hemisphere.', lesion:'Ataxia or tremor of the opposite limbs.', findings:['limbAtaxia:c']},
   sn: {name:'Substantia nigra', short:'SN', does:'Dopaminergic input to the basal ganglia.', lesion:'Parkinsonism of the opposite limbs; seldom an acute sign.', findings:[]},
+  lcst: {name:'Lateral corticospinal tract', short:'LCST', does:'Voluntary movement below this level on the same side; it crossed in the medulla.', lesion:'Upper motor neuron weakness on the same side, below the lesion.', findings:['weak','hyperreflexia','paraparesis','quadriparesis']},
+  dc: {name:'Dorsal columns', short:'DC', does:'Vibration and joint position sense from the same side, ascending uncrossed to the medulla.', lesion:'Loss of vibration and proprioception on the same side below the lesion; sensory ataxia.', findings:['dcml','romberg']},
+  alst: {name:'Spinothalamic tract', short:'STT', does:'Pain and temperature from the opposite side, crossed within a segment or two of entry.', lesion:'Pain and temperature loss on the opposite side, starting a segment or two below the lesion.', findings:['spinothalamic:c']},
+  ah: {name:'Anterior horn', short:'AH', does:'Lower motor neurons for the muscles of this segment.', lesion:'Wasting, fasciculation and areflexia at the level of the lesion.', findings:['lmnArms']},
+  awc: {name:'Anterior white commissure', short:'AWC', does:'Where pain and temperature fibres cross, just in front of the central canal.', lesion:'Bilateral, cape-like pain and temperature loss at the level of the lesion, as in syringomyelia.', findings:['capeLoss']},
   tectum: {name:'Tectum and pretectal area', short:'SC', does:'Superior colliculi, posterior commissure and pretectal nuclei for vertical gaze and the pupillary light reflex.', lesion:'Parinaud syndrome: upgaze palsy, light–near dissociation, convergence–retraction nystagmus, lid retraction.', findings:['upgaze','lightNear','convergenceRetraction','lidRetraction']}
 };
 
@@ -205,6 +213,27 @@ const SECTIONS = [
       'medulla-medial': 'M160 47C156 39 152 33 145 33C137 33 131 38 129 47L139 171C146 173 153 171 160 168Z',
       'medulla-lateral': 'M76 88C90 96 108 100 122 100L127 174C112 180 96 190 81 185C67 178 58 165 56 149C54 133 59 117 69 109C72 104 75 96 76 88Z'
     }
+  },
+  {
+    id: 'cord', name: 'Cervical cord', level: 'Cervical enlargement', nerves: 'C6',
+    outline: [[160,40],[150,34,120,33,100,39],[72,47,57,71,55,104],[53,137,72,161,104,171],[124,177,146,177,160,172]],
+    midline: '<path class="raphe" d="M160 40V58M160 172V128"/><circle class="csf" cx="160" cy="106" r="2.6"/>',
+    decor: '<path class="grey" d="M158 99C150 98 145 92 140 84C134 74 124 64 113 68C103 72 104 88 114 96C122 102 128 104 130 110C128 120 122 134 116 148C112 156 112 162 116 164C121 166 126 158 131 148C138 134 146 120 152 114C155 112 157 112 158 112Z"/>',
+    parts: {
+      lcst: '<ellipse cx="80" cy="118" rx="15" ry="18"/>',
+      alst: '<ellipse cx="86" cy="76" rx="13" ry="10"/>',
+      dc: '<ellipse cx="148" cy="147" rx="8" ry="21"/>',
+      ah: '<ellipse cx="122" cy="82" rx="12" ry="10"/>',
+      awc: '<ellipse cx="153" cy="99" rx="6" ry="3.6"/>'
+    },
+    labels: {lcst:[[80,120.5,'middle']], alst:[[86,78.5,'middle']], dc:[[148,149.5,'middle']], ah:[[122,84.5,'middle']], awc:[[146,92,'end']]},
+    zones: {
+      'cord-anterior': 'M160 40C150 34 120 33 100 39C72 47 57 71 55 104C55 110 56 115 57 120L160 120Z',
+      'cord-central': 'M160 88C149 88 141 96 141 106C141 116 149 124 160 124Z',
+      'cord-posterior': 'M160 172C152 175 146 176 140 175C138 160 137 140 140 126L160 126Z',
+      'cord-lateral': 'M160 40C150 34 120 33 100 39C72 47 57 71 55 104C53 137 72 161 104 171C124 177 146 177 160 172Z',
+      'cord-transverse': 'M160 40C150 34 120 33 100 39C72 47 57 71 55 104C53 137 72 161 104 171C124 177 146 177 160 172Z'
+    }
   }
 ].map(s=>({...s,structures:Object.keys(s.parts)}));
 const SECTION_BY_ID = new Map(SECTIONS.map(s=>[s.id,s]));
@@ -213,15 +242,30 @@ function sectionForSite(site){
   if(site.zone.startsWith('midbrain-'))return 'midbrain';
   if(site.zone.startsWith('pons-'))return site.id==='lateral-midpons'?'pons-mid':'pons-caudal';
   if(site.zone.startsWith('medulla-'))return 'medulla';
+  if(site.zone.startsWith('cord-'))return 'cord';
   return null;
 }
-/* 'involved' when any linked finding is present; 'spared' when the linked findings were only tested normal. */
-function structureStates(sectionId,findings){
+/*
+ * Map of 'structure:R' / 'structure:L' to 'involved' or 'spared'. A sided finding
+ * involves the structure on the side its link implies (':i' same, ':c' opposite).
+ * Unsided findings, such as dysphagia, involve `unsidedSides` (the leading lesion's
+ * sides when known). A structure is 'spared' when a linked finding was tested normal.
+ */
+function structureStates(sectionId,findings,unsidedSides=['R','L']){
   const states=new Map();
   for(const id of SECTION_BY_ID.get(sectionId).structures){
-    const values=STRUCTURES[id].findings.map(f=>findings[f]||0);
-    if(values.includes(1))states.set(id,'involved');
-    else if(values.includes(-1))states.set(id,'spared');
+    const links=STRUCTURES[id].findings.map(key=>parseLink(key,'i'));
+    const tested=links.some(l=>findings[l.id]==='N');
+    for(const side of ['R','L']){
+      const involved=links.some(l=>{
+        const v=findings[l.id];
+        if(!v||v==='N')return false;
+        if(!l.rel||v==='P')return unsidedSides.includes(side);
+        return v==='B'||v===(l.rel==='c'?OTHER_SIDE[side]:side);
+      });
+      if(involved)states.set(`${id}:${side}`,'involved');
+      else if(tested)states.set(`${id}:${side}`,'spared');
+    }
   }
   return states;
 }
@@ -238,38 +282,37 @@ function symmetricOutline([start,...segments]){
 }
 
 /*
- * opts.lesionSides: patient sides ('right'/'left') where states and the zone apply.
- * opts.zone: zone id to shade; opts.states: Map from structureStates; opts.focus: structure id.
+ * opts.zoneSides: patient sides ('R'/'L') on which to shade opts.zone; opts.states from
+ * structureStates; opts.focus: a structure id to outline.
  */
-function sectionSvg(sectionId,{lesionSides=[],zone=null,states=new Map(),focus=null,prefix='sec'}={}){
+function sectionSvg(sectionId,{zoneSides=[],zone=null,states=new Map(),focus=null,prefix='sec'}={}){
   const section=SECTION_BY_ID.get(sectionId);
   const pid=String(prefix).replace(/[^a-zA-Z0-9_-]/g,'')||'sec';
   const outline=symmetricOutline(section.outline);
-  const labelSide=lesionSides.length===1&&lesionSides[0]==='left'?'right':'left';
+  const labelSide=zoneSides.length===1&&zoneSides[0]==='L'?'R':'L';
   const flip='matrix(-1 0 0 1 320 0)';
   // Crop to the outline (control points bound the curve), leaving room for the R/L marks.
   const points=section.outline.flatMap(p=>p.reduce((pairs,v,i)=>i%2?pairs:[...pairs,[v,p[i+1]]],[]));
   const minX=Math.max(0,Math.min(...points.map(p=>p[0]))-22),minY=Math.max(0,Math.min(...points.map(p=>p[1]))-8);
   const maxY=Math.max(...points.map(p=>p[1]))+10,midY=Math.round((minY+maxY)/2)+4;
   const half=side=>{
-    const lesion=lesionSides.includes(side);
-    const zonePath=lesion&&zone&&section.zones[zone]?`<path class="zone" d="${section.zones[zone]}"/>`:'';
+    const zonePath=zoneSides.includes(side)&&zone&&section.zones[zone]?`<path class="zone" d="${section.zones[zone]}"/>`:'';
     const parts=section.structures.map(id=>{
-      const state=lesion?states.get(id)||'':'';
+      const state=states.get(`${id}:${side}`)||'';
       return `<g class="st ${state}${focus===id?' focus':''}" data-structure="${id}" data-side="${side}">${section.parts[id]}</g>`;
     }).join('');
-    return `<g${side==='left'?` transform="${flip}"`:''}>${zonePath}${parts}</g>`;
+    return `<g${side==='L'?` transform="${flip}"`:''}>${zonePath}${section.decor||''}${parts}</g>`;
   };
   const labels=section.structures.flatMap(id=>section.labels[id].map(([x,y,anchor,text])=>{
-    const mirrored=labelSide==='left';
+    const mirrored=labelSide==='L';
     const lx=mirrored?320-x:x,la=mirrored?{start:'end',end:'start',middle:'middle'}[anchor]:anchor;
-    const state=lesionSides.includes(labelSide)?states.get(id)||'':'';
+    const state=states.get(`${id}:${labelSide}`)||'';
     return `<text class="st-label ${state}${focus===id?' focus':''}" x="${lx}" y="${y}" text-anchor="${la}">${text||STRUCTURES[id].short}</text>`;
   })).join('');
   return `<svg class="section-art" viewBox="${minX} ${minY} ${320-2*minX} ${maxY-minY}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
     <defs><clipPath id="${pid}-clip"><path d="${outline}"/></clipPath></defs>
     <path class="outline" d="${outline}"/>
-    <g clip-path="url(#${pid}-clip)">${section.midline}${half('right')}${half('left')}</g>
+    <g clip-path="url(#${pid}-clip)">${section.midline}${half('R')}${half('L')}</g>
     <path class="outline-edge" d="${outline}"/>
     ${labels}
     <text class="orient" x="${minX+4}" y="${midY}">R</text><text class="orient" x="${316-minX}" y="${midY}" text-anchor="end">L</text>

@@ -5,27 +5,37 @@ the anatomical sites that best explain them, shows the involved brainstem
 structures, and lets you practise on generated cases. It is a teaching aid, not
 a diagnostic tool.
 
-## What is in 2.0
+## What is in 3.0
+
+- **A side for every sign.** Each sided finding has Right, Left and Both
+  buttons. Tapping the sign marks it on the last side used; tapping again marks
+  it tested normal. Every site's expected signs are defined relative to the
+  lesion (same side, opposite side, either or both), and one-sided sites are
+  scored with the lesion on each side, so results name the lesion side and
+  separate look-alikes such as Brown-Séquard and medial medulla, or frontal and
+  pontine gaze palsies.
+- **Nystagmus, spinal cord and cortex.** New finding groups and 21 sites:
+  foramen magnum (Chiari), vestibulocerebellar and upbeat nystagmus syndromes;
+  Brown-Séquard, anterior, posterior and central cord, syringomyelia,
+  transverse myelopathy and cauda equina; dominant and non-dominant MCA,
+  Broca and Wernicke aphasia, Gerstmann, ACA, frontal gaze palsy, cortical
+  blindness, pure motor and pure sensory lacunes and hemiballismus. There are
+  now 88 sites, 90 findings and 41 classic cases.
+- **A spinal cord section** joins the four brainstem sections, and structures
+  are shaded on the side each finding implies.
+- Saved examinations from 2.0 are converted to the new per-side format.
+
+## What was in 2.0
 
 - **Practice tab.** Cases are generated from the atlas and used only when the
-  model ranks the intended site first by at least 0.04. The other choices are
-  its nearest rivals plus one wider distractor. Feedback names the key clues,
-  explains why a wrong choice fails and shows the brainstem section. Score,
-  streak and topic are saved on the device.
-- **Brainstem sections.** Midbrain, mid pons, caudal pons and medulla are drawn
-  as axial schematics in MRI orientation. The results view shades the leading
-  region and every structure that a present finding involves, and outlines
-  structures whose findings were tested normal. Reference has a browsable copy.
-- **Finding guide.** Each of the 69 findings has an ⓘ sheet covering how to
-  examine it and which sites it defines or supports. Search also understands
-  plain words such as "double vision" or "droopy eyelid".
-- **New content.** Smell (CN I); Foster Kennedy syndrome; giant cell arteritis;
-  pituitary apoplexy; and the HINTS examination (head impulse, nystagmus, skew)
-  with vestibular neuritis, labyrinthitis and central acute vestibular
-  syndrome. There are now 67 sites and 24 classic cases grouped by topic, plus
-  two new bedside rules.
-- **Copy summary.** Copies a plain-text list of the findings and the top three
-  patterns, ready to paste into notes.
+  model ranks the intended site, on the intended side, first by at least 0.04.
+  Feedback names the key clues, explains why a wrong choice fails and shows the
+  section. Score, streak and topic are saved on the device.
+- **Brainstem sections** in MRI orientation, browsable in Reference too.
+- **Finding guide.** Each finding's ⓘ sheet covers how to examine it and which
+  sites it defines; search understands plain words such as "double vision".
+- Smell (CN I), Foster Kennedy, giant cell arteritis, pituitary apoplexy and
+  the HINTS examination; **Copy summary** for notes.
 
 ## Layout
 
@@ -34,8 +44,8 @@ src/            the app: index.html with {{placeholders}} for the parts below
   fonts.css     embedded Atkinson Hyperlegible and Spectral (OFL)
   styles.css
   data.js       sites, findings, cases, zones, topics, reference text
-  model.js      scoring, ranking, "examine next", practice case generation
-  anatomy.js    sagittal hero art, brainstem sections and their structures
+  model.js      per-side scoring, ranking, "examine next", practice cases
+  anatomy.js    sagittal hero art, brainstem and cord sections and their structures
   app.js        interface
 tests/          node tests for data integrity and model behaviour
 tools/          build_html.py, build_apk.py, apk.py (packaging and v2 signing)
@@ -60,7 +70,7 @@ sets the version and app id from `android/version.json` in the binary manifest, 
 v2, which is enough for the app's minSdk of 26. To check a build independently:
 
 ```sh
-pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-2.0.1.apk
+pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-3.0.0.apk
 ```
 
 ### Application id and signing

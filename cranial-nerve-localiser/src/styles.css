@@ -147,3 +147,24 @@ body:has(#finding-search:focus) .dock{display:none}
 @media(max-width:540px){.level-button{font-size:.72rem}.level-button small{font-size:.66rem}.practice-case-head h3{font-size:1.4rem}.option-text strong{font-size:1.02rem}.practice-feedback>h3{font-size:1.45rem}.structure-dl{grid-template-columns:74px minmax(0,1fr)}.cycle-info{margin-left:0}}
 @media(max-width:350px){.practice-next{grid-template-columns:minmax(0,1fr)}.case-grid{grid-template-columns:minmax(0,1fr)}.result-tools>span{display:none}}
 @media print{.practice,.result-tools,.finding-info,.level-tabs,.structure-list{display:none!important}}
+
+/* 3.0: a side for every finding */
+.exam-controls{grid-template-columns:minmax(0,1fr)}
+.side-chips{display:flex;align-items:stretch;gap:3px;flex-shrink:0}
+.side-chip{min-width:34px;min-height:44px;padding:0 7px;border:1px solid var(--line);border-radius:8px;background:var(--white);color:var(--muted);font-size:.74rem;font-weight:700}
+.side-chip[aria-pressed="true"]{background:var(--violet);border-color:var(--violet);color:var(--paper)}
+.single-category .side-chip{min-height:51px}
+.side-key{display:inline-grid;place-items:center;min-width:17px;height:17px;margin-right:2px;border:1px solid var(--line);border-radius:4px;font-size:.66rem;font-weight:700;color:var(--violet)}
+.check-actions[data-count="3"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+.check-actions[data-count="4"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+.check-actions[data-count="3"] .secondary-action,.check-actions[data-count="4"] .secondary-action{grid-column:1/-1}
+.check-actions .primary-action[aria-pressed="false"]{background:var(--wash);color:var(--violet);border-color:transparent}
+.section-art .grey{fill:var(--ink);fill-opacity:.07;stroke:var(--ink);stroke-opacity:.28;stroke-width:.7}
+.level-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}
+.map-row.cortex .map-cells,.map-row.cord .map-cells{grid-template-columns:repeat(3,minmax(0,1fr));padding:0}
+.map-row.above .map-cells{grid-template-columns:repeat(2,minmax(0,1fr));padding:0 6%}
+.map-row.medulla .map-cells{grid-template-columns:repeat(3,minmax(0,1fr));padding:0}
+@media(max-width:540px){.side-chip{min-width:31px;padding:0 5px;font-size:.7rem}.level-button{font-size:.66rem}.level-button small{font-size:.6rem}}
+@media(max-width:350px){.check-actions[data-count="4"]{grid-template-columns:repeat(3,minmax(0,1fr))}.side-chip{min-width:28px;padding:0 3px}}
+@media print{.side-chips{display:none!important}}
+.finding-row.sided .finding[data-state="present"]::after{display:none}
