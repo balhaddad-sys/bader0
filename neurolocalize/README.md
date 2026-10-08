@@ -1,7 +1,17 @@
-# NeuroLocalize 1.3.0
+# NeuroLocalize 1.4.0
 
 Offline neurological-localization study app (Android WebView shell + HTML/JS content).
 This folder holds the unpacked 1.1.0 APK, the 1.2 and 1.3 enhancements and a reproducible build.
+
+## What's new in 1.4.0
+- **Redrawn atlas.** All 35 diagrams share a refined finish: soft gradient canvas, card shadows,
+  top-lit accent fills, glow under pathways, solid arrowheads, serif titles and figure numbers.
+- **More anatomical drawing** in the generated figures: organic human silhouettes, faces with
+  brows and nasolabial folds, realistic eyes (fibred iris, catch-light) and eyeballs seen from above,
+  spinal cord sections with roots, fissure and central canal, a gyral brain with cerebellum and
+  brainstem, a sculpted brainstem, a striated muscle, a detailed synapse and a profile head.
+- The 11 original figures are kept as sources in `tools/legacy_atlas/` and given the same finish
+  by `tools/polish_legacy.py`.
 
 ## What's new in 1.3.0
 - **10 more diagrams** (35 total): weakness flowchart · time course and mechanism · stretch reflex arc ·
@@ -31,11 +41,12 @@ This folder holds the unpacked 1.1.0 APK, the 1.2 and 1.3 enhancements and a rep
 - `web/` – app assets (packaged as `assets/` in the APK)
 - `base/` – original native shell: manifest, dex, resources (the build sets the app ID and version)
 - `tools/diagrams.py` – diagram generator · `tools/build_apk.py` + `tools/signer/` – packaging/signing
-- `dist/NeuroLocalize-1.3.0.apk` – built, v2-signed APK
+- `dist/NeuroLocalize-1.4.0.apk` – built, v2-signed APK
 
 ## Build
 ```
 python3 tools/diagrams.py web/assets/atlas
+python3 tools/polish_legacy.py web/assets/atlas
 python3 tools/build_apk.py --apksig apksig-2.3.0.jar   # from Maven Central: com.android.tools.build:apksig
 ```
 A signing key is created in `signing/` (git-ignored) on first build. Keep it: future updates must

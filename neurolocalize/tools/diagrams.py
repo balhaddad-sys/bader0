@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the NeuroLocalize 1.2 atlas diagrams as standalone SVG files.
+"""Generate the NeuroLocalize atlas diagrams (figures 12–35) as standalone SVG files.
 
 Every diagram uses the same visual language as the original 1.1 atlas:
 a 720px-wide warm canvas, Arial labels, teal/blue/gold accents and a
@@ -33,12 +33,28 @@ GREY_MATTER = ('M288 203C278 224 297 242 312 249C289 271 272 305 287 326L322 290
                'C382 306 365 273 344 249C359 237 375 222 366 203L337 235L320 235Z')
 
 
+SOLID = {INK, TEAL, BLUE, GOLD, RED}
+
+
+def mix(color, other, t):
+    """Blend two #rrggbb colours: t=0 gives color, t=1 gives other."""
+    a = [int(color[i:i + 2], 16) for i in (1, 3, 5)]
+    b = [int(other[i:i + 2], 16) for i in (1, 3, 5)]
+    return '#' + ''.join(f'{round(x + (y - x) * t):02x}' for x, y in zip(a, b))
+
+
 class Svg:
+    """Builder for one diagram. Rendering adds the shared 1.4 polish: a soft gradient canvas with a
+    faint dot grid, drop shadows under cards, gradient fills on solid accents, a soft glow under
+    thick pathways, solid arrowheads and a serif title."""
+
     def __init__(self, title, subtitle, h=560, w=720):
         self.w, self.h, self.title, self.subtitle = w, h, title, subtitle
         self.defs = []
         self.body = []
         self.uid = 0
+        self.fig = ''
+        self.grads = set()
 
     def nid(self, prefix):
         self.uid += 1
@@ -47,37 +63,65 @@ class Svg:
     def add(self, s):
         self.body.append(s)
 
+    def paint(self, fill):
+        """Swap a solid accent colour for a subtle top-lit gradient of the same hue."""
+        if fill not in SOLID:
+            return fill
+        gid = 'g' + fill.strip('#')
+        if gid not in self.grads:
+            self.grads.add(gid)
+            self.defs.append(f'<linearGradient id="{gid}" x1="0" y1="0" x2="0" y2="1">'
+                             f'<stop offset="0" stop-color="{mix(fill, WHITE, .22)}"/>'
+                             f'<stop offset="1" stop-color="{mix(fill, INK, .12)}"/></linearGradient>')
+        return f'url(#{gid})'
+
+    def radial(self, inner, outer):
+        gid = 'r' + inner.strip('#') + outer.strip('#')
+        if gid not in self.grads:
+            self.grads.add(gid)
+            self.defs.append(f'<radialGradient id="{gid}" cx=".4" cy=".35" r=".75">'
+                             f'<stop offset="0" stop-color="{inner}"/><stop offset="1" stop-color="{outer}"/></radialGradient>')
+        return f'url(#{gid})'
+
     def text(self, x, y, s, size=15, fill=MUTED, anchor='start', weight=None, italic=False):
         lines = s if isinstance(s, (list, tuple)) else [s]
         extra = (f' font-weight="{weight}"' if weight else '') + (' font-style="italic"' if italic else '')
+        if weight == '700' and size <= 13 and fill not in (WHITE,):
+            extra += ' letter-spacing=".6"'
         for i, line in enumerate(lines):
             self.add(f'<text x="{x}" y="{y + i * round(size * 1.35)}" font-size="{size}" fill="{fill}" '
                      f'text-anchor="{anchor}"{extra}>{escape(line)}</text>')
 
     def rect(self, x, y, w, h, fill=WHITE, stroke=None, sw=2, rx=12, extra=''):
-        st = f' stroke="{stroke}" stroke-width="{sw}"' if stroke else ''
-        self.add(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx}" fill="{fill}"{st}{extra}/>')
+        st = f' stroke="{stroke}" stroke-width="{min(sw, 1.6)}"' if stroke else ''
+        lift = ' filter="url(#shadow)"' if stroke and fill in (WHITE, PALE) and w > 40 and h > 24 else ''
+        if fill == WHITE and lift:
+            fill = 'url(#card)'
+        self.add(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx}" fill="{self.paint(fill)}"{st}{lift}{extra}/>')
 
     def circle(self, cx, cy, r, fill=WHITE, stroke=None, sw=2, extra=''):
         st = f' stroke="{stroke}" stroke-width="{sw}"' if stroke else ''
-        self.add(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{fill}"{st}{extra}/>')
+        lift = ' filter="url(#lift)"' if fill in SOLID and 5 < r <= 26 else ''
+        self.add(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{self.paint(fill)}"{st}{lift}{extra}/>')
 
     def ellipse(self, cx, cy, rx, ry, fill=WHITE, stroke=None, sw=2, extra=''):
         st = f' stroke="{stroke}" stroke-width="{sw}"' if stroke else ''
-        self.add(f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" fill="{fill}"{st}{extra}/>')
+        self.add(f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" fill="{self.paint(fill)}"{st}{extra}/>')
 
-    def path(self, d, stroke=TEAL, sw=3, fill='none', arrow=None, dash=None, extra=''):
+    def path(self, d, stroke=TEAL, sw=3, fill='none', arrow=None, dash=None, extra='', glow=True):
         mk = f' marker-end="url(#{self.marker(arrow)})"' if arrow else ''
         ds = f' stroke-dasharray="{dash}"' if dash else ''
+        if glow and sw >= 3.5 and stroke in SOLID and fill == 'none' and not dash:
+            self.add(f'<path d="{d}" fill="none" stroke="{stroke}" stroke-width="{sw + 7}" stroke-opacity=".13" '
+                     f'stroke-linecap="round" stroke-linejoin="round"/>')
         self.add(f'<path d="{d}" fill="{fill}" stroke="{stroke}" stroke-width="{sw}" '
                  f'stroke-linecap="round" stroke-linejoin="round"{ds}{mk}{extra}/>')
 
     def marker(self, color):
         mid = 'arrow-' + color.strip('#')
         if not any(f'id="{mid}"' in d for d in self.defs):
-            self.defs.append(f'<marker id="{mid}" markerWidth="8" markerHeight="8" refX="6" refY="3" '
-                             f'orient="auto"><path d="M0 0L6 3L0 6" fill="none" stroke="{color}" '
-                             f'stroke-width="1.3"/></marker>')
+            self.defs.append(f'<marker id="{mid}" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" '
+                             f'refX="11" refY="8" orient="auto"><path d="M2 2.5L13 8L2 13.5L5 8Z" fill="{color}"/></marker>')
         return mid
 
     def clip(self, inner):
@@ -86,11 +130,12 @@ class Svg:
         return cid
 
     def badge(self, cx, cy, label, fill=RED, r=13, size=14):
-        self.circle(cx, cy, r, fill=fill)
+        self.circle(cx, cy, r, fill=fill, stroke=WHITE, sw=2)
         self.text(cx, cy + size * 0.36, str(label), size=size, fill=WHITE, anchor='middle', weight='700')
 
     def card(self, x, y, w, h, heading, lines, color=TEAL, size=14, hsize=17, fill=WHITE):
-        self.rect(x, y, w, h, fill=fill, stroke=color)
+        self.rect(x, y, w, h, fill=fill, stroke=mix(color, WHITE, .25))
+        self.add(f'<rect x="{x + 1}" y="{y + 10}" width="3.5" height="{min(h - 20, 30)}" rx="1.75" fill="{color}"/>')
         self.text(x + 14, y + 26, heading, size=hsize, fill=color)
         if lines:
             self.text(x + 14, y + 26 + round(hsize * 1.45), lines, size=size)
@@ -102,16 +147,135 @@ class Svg:
 
     def render(self):
         h, w = self.h, self.w
+        base = ('<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f9f9f4"/>'
+                '<stop offset="1" stop-color="#eef1e8"/></linearGradient>'
+                '<linearGradient id="card" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/>'
+                '<stop offset="1" stop-color="#f9faf6"/></linearGradient>'
+                '<pattern id="dots" width="18" height="18" patternUnits="userSpaceOnUse">'
+                '<circle cx="2" cy="2" r=".9" fill="#d3dbcf"/></pattern>'
+                '<filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="2" '
+                'stdDeviation="3" flood-color="#173e39" flood-opacity=".09"/></filter>'
+                '<filter id="lift" x="-40%" y="-40%" width="180%" height="190%"><feDropShadow dx="0" dy="1.2" '
+                'stdDeviation="1.4" flood-color="#173e39" flood-opacity=".22"/></filter>')
         head = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
                 f'role="img"><title>{escape(self.title)}</title><desc>{escape(self.subtitle)} Original '
-                f'simplified teaching diagram; not to scale.</desc><defs>{"".join(self.defs)}</defs>'
-                f'<rect width="{w}" height="{h}" rx="18" fill="{BG}"/><g font-family="Arial,sans-serif">'
-                f'<text x="28" y="39" font-size="25" fill="{INK}" text-anchor="start">{escape(self.title)}</text>'
+                f'simplified teaching diagram; not to scale.</desc><defs>{base}{"".join(self.defs)}</defs>'
+                f'<rect width="{w}" height="{h}" rx="18" fill="url(#bg)"/>'
+                f'<rect width="{w}" height="{h}" rx="18" fill="url(#dots)" opacity=".55"/>'
+                f'<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="17.5" fill="none" stroke="#dfe5da"/>'
+                f'<g font-family="Arial,Helvetica,sans-serif">'
+                f'<text x="28" y="40" font-size="26" fill="{INK}" font-family="Georgia,\'Times New Roman\',serif" '
+                f'letter-spacing="-.4">{escape(self.title)}</text>'
                 f'<text x="28" y="68" font-size="15" fill="{MUTED}" text-anchor="start">{escape(self.subtitle)}</text>')
         foot = (f'<path d="M28 {h - 36}L{w - 28} {h - 36}" fill="none" stroke="{LINE}" stroke-width="1"/>'
-                f'<text x="28" y="{h - 13}" font-size="12" fill="{MUTED}" text-anchor="start">'
-                f'NEUROLOCALIZE  /  ORIGINAL SCHEMATIC · NOT TO SCALE</text></g></svg>')
+                f'<text x="28" y="{h - 13}" font-size="11" fill="{MUTED}" letter-spacing="1.2">'
+                f'NEUROLOCALIZE  ·  ORIGINAL SCHEMATIC  ·  NOT TO SCALE</text>'
+                f'<text x="{w - 28}" y="{h - 13}" font-size="11" fill="{TEAL}" text-anchor="end" letter-spacing="1.2" '
+                f'font-weight="700">{escape(self.fig)}</text></g></svg>')
         return head + ''.join(self.body) + foot
+
+
+# ---------------------------------------------------------------- anatomy helpers
+
+SKIN_HI, SKIN_LO = '#fffbf5', '#efe5d6'
+
+
+def eye_front(s, cx, cy, w, h, look=0, lid=True):
+    """Front-view eye: almond aperture, fibred iris, pupil and catch-light."""
+    al = f'M{cx - w} {cy}Q{cx} {cy - h * 1.3:.1f} {cx + w} {cy}Q{cx} {cy + h * 1.3:.1f} {cx - w} {cy}Z'
+    cid = s.clip(f'<path d="{al}"/>')
+    s.add(f'<path d="{al}" fill="{s.radial("#ffffff", "#e7ece4")}"/>')
+    r = h * 0.92
+    ix = cx + look
+    g = [f'<circle cx="{ix}" cy="{cy}" r="{r:.1f}" fill="{s.radial(mix(BLUE, WHITE, .45), mix(TEAL, INK, .35))}"/>']
+    for k in range(16):
+        import math
+        a = k * math.pi / 8
+        g.append(f'<path d="M{ix + r * .48 * math.cos(a):.1f} {cy + r * .48 * math.sin(a):.1f}L{ix + r * .92 * math.cos(a):.1f} '
+                 f'{cy + r * .92 * math.sin(a):.1f}" stroke="#ffffff" stroke-opacity=".22" stroke-width="1"/>')
+    g.append(f'<circle cx="{ix}" cy="{cy}" r="{r * .42:.1f}" fill="#10231f"/>')
+    g.append(f'<circle cx="{ix - r * .32:.1f}" cy="{cy - r * .32:.1f}" r="{max(1.5, r * .16):.1f}" fill="#ffffff" opacity=".9"/>')
+    s.add(f'<g clip-path="url(#{cid})">{"".join(g)}</g>')
+    s.add(f'<path d="{al}" fill="none" stroke="{INK}" stroke-width="2" stroke-linejoin="round"/>')
+    if lid:
+        s.add(f'<path d="M{cx - w * .8:.1f} {cy - h * .95:.1f}Q{cx} {cy - h * 1.75:.1f} {cx + w * .8:.1f} {cy - h * .95:.1f}" '
+              f'fill="none" stroke="{MUTED}" stroke-width="1.4" stroke-opacity=".55" stroke-linecap="round"/>')
+
+
+def eyeball_top(s, cx, cy, r):
+    """Eyeball seen from above: cornea forward (up), lens, retina at the back."""
+    s.circle(cx, cy, r, fill=s.radial('#ffffff', '#dde5db'), stroke=INK, sw=2.2)
+    s.add(f'<path d="M{cx - r * .55:.1f} {cy - r * .83:.1f}Q{cx} {cy - r * 1.42:.1f} {cx + r * .55:.1f} {cy - r * .83:.1f}" '
+          f'fill="{BLUE_PALE}" stroke="{INK}" stroke-width="1.6"/>')
+    s.ellipse(cx, cy - r * .6, r * .4, r * .17, fill='#f4efe0', stroke=GREY, sw=1.2)
+    s.add(f'<path d="M{cx - r * .82:.1f} {cy + r * .5:.1f}A{r * .95:.1f} {r * .95:.1f} 0 0 0 {cx + r * .82:.1f} {cy + r * .5:.1f}" '
+          f'fill="none" stroke="{mix(RED, WHITE, .35)}" stroke-width="2.4" stroke-opacity=".7"/>')
+
+
+def cord_section(s, cx, cy, rx, ry, roots=True, shade=None):
+    """Axial cord, dorsal up: roots, white matter, grey matter, fissure, canal; optional clipped shading."""
+    if roots:
+        for side in (-1, 1):
+            s.path(f'M{cx + side * rx * .5:.1f} {cy - ry * .8:.1f}C{cx + side * rx * .9:.1f} {cy - ry * 1.05:.1f} '
+                   f'{cx + side * rx * 1.1:.1f} {cy - ry * .95:.1f} {cx + side * rx * 1.28:.1f} {cy - ry * .9:.1f}',
+                   mix(GOLD, WHITE, .3), max(3, rx * .1), glow=False)
+            s.path(f'M{cx + side * rx * .4:.1f} {cy + ry * .82:.1f}C{cx + side * rx * .8:.1f} {cy + ry * 1.05:.1f} '
+                   f'{cx + side * rx * 1.05:.1f} {cy + ry * 1.0:.1f} {cx + side * rx * 1.25:.1f} {cy + ry * .92:.1f}',
+                   mix(TEAL, WHITE, .3), max(3, rx * .1), glow=False)
+            s.ellipse(cx + side * rx * 1.02, cy - ry * .99, rx * .13, ry * .1, fill=SAND, stroke=GOLD, sw=1)
+    s.ellipse(cx, cy, rx, ry, fill=s.radial('#f7f9f4', '#d9e4d4'))
+    k = rx / 150
+    s.add(f'<path d="{GREY_MATTER}" fill="{s.radial(mix(GREY, WHITE, .25), mix(GREY, INK, .2))}" '
+          f'transform="translate({cx} {cy}) scale({k:.4f} {ry / 135:.4f}) translate(-327 -264)"/>')
+    if shade:
+        cid = s.clip(f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}"/>')
+        s.add(f'<g fill="{RED}" opacity=".4" clip-path="url(#{cid})">{shade}</g>')
+    s.ellipse(cx, cy, rx, ry, fill='none', stroke=INK, sw=2.4)
+    s.add(f'<path d="M{cx - rx * .07:.1f} {cy + ry + 1:.1f}L{cx} {cy + ry * .7:.1f}L{cx + rx * .07:.1f} {cy + ry + 1:.1f}" '
+          f'fill="{BG}" stroke="{INK}" stroke-width="1.6" stroke-linejoin="round"/>')
+    s.path(f'M{cx} {cy - ry}L{cx} {cy - ry * .62:.1f}', INK, 1.3, glow=False)
+    s.circle(cx, cy + ry * .02, max(1.6, rx * .035), fill=INK)
+
+
+def mirror_x(d, axis=440):
+    import re
+    toks = re.findall(r'[MLCQZ]|-?\d+(?:\.\d+)?', d)
+    out, i, pair = [], 0, 0
+    for t in toks:
+        if t in 'MLCQZ':
+            out.append(t); pair = 0
+        else:
+            out.append(f'{axis - float(t):g}' if pair % 2 == 0 else t); pair += 1
+    return ' '.join(out).replace(' Z', 'Z')
+
+
+ARM = ('M168 166C156 172 152 200 150 230C148 254 147 262 146 272C142 304 139 338 140 370L160 372'
+       'C161 340 164 306 168 276C171 248 178 214 184 182C186 172 180 162 168 166Z')
+HAND = 'M140 366C133 378 135 398 141 410C145 419 156 419 160 410C164 398 164 380 160 368Z'
+THUMB = 'M141 376C132 380 127 392 130 401C132 407 139 406 142 399Z'
+LEG = 'M178 300C175 340 179 384 185 428C183 470 185 516 189 556L210 556C212 516 215 470 213 430C217 390 219 344 221 306Z'
+FOOT = 'M188 550C181 562 173 574 175 582C177 589 208 589 211 582C213 572 212 560 210 550Z'
+BODY_PATHS = (['M209 136L231 136L233 160L207 160Z',
+               'M176 170C182 157 200 152 220 152C240 152 258 157 264 170C268 204 260 234 256 262C260 280 263 296 263 308'
+               'L177 308C177 296 180 280 184 262C180 234 172 204 176 170Z']
+              + [ARM, HAND, THUMB, LEG, FOOT] + [mirror_x(d) for d in (ARM, HAND, THUMB, LEG, FOOT)])
+
+
+def body_figure(s, transform='', k=1.0, shade=None, shade_color=GOLD):
+    """Front-view human silhouette in local coordinates (centre x 220, head at y 116, feet ~588).
+    `shade` is SVG markup in the same local coordinates, clipped to the body."""
+    T = f' transform="{transform}"' if transform else ''
+    shapes = [f'<ellipse cx="220" cy="116" rx="24" ry="29"{T}/>'] + [f'<path d="{d}"{T}/>' for d in BODY_PATHS]
+    allp = ''.join(shapes)
+    s.add(f'<g fill="{INK}" stroke="{INK}" stroke-width="{3.6:.2f}" stroke-linejoin="round">{allp}</g>')
+    s.add(f'<g fill="{s.radial(SKIN_HI, SKIN_LO)}">{allp}</g>')
+    if shade:
+        cid = s.clip(allp)
+        s.add(f'<g clip-path="url(#{cid})"><g{T} fill="{shade_color}" opacity=".72">{shade}</g></g>')
+    detail = ('M192 168Q205 174 216 168M224 168Q235 174 248 168M220 178L220 214M196 425Q202 433 209 425M231 425Q238 433 244 425'
+              'M206 120Q209 123 212 120M228 120Q231 123 234 120M214 132Q220 135 226 132')
+    s.add(f'<path d="{detail}"{T} fill="none" stroke="{MUTED}" stroke-opacity=".45" stroke-width="{1.4 / k:.2f}" stroke-linecap="round"/>')
+    s.add(f'<circle cx="220" cy="262" r="2"{T} fill="{MUTED}" opacity=".5"/>')
 
 
 # ---------------------------------------------------------------- diagrams
@@ -166,42 +330,46 @@ def facial():
     s = Svg('Which part of the face is weak?', 'Forehead involvement separates a central from a peripheral pattern.', h=600)
     faces = [(190, 'CENTRAL (ABOVE THE NUCLEUS)', TEAL, 'lower'), (530, 'PERIPHERAL (NUCLEUS OR NERVE)', GOLD, 'half')]
     for cx, label, color, kind in faces:
-        cy = 222
+        cy = 226
         s.text(cx, 96, label, 13, color, 'middle', weight='700')
-        cid = s.clip(f'<ellipse cx="{cx}" cy="{cy}" rx="104" ry="110"/>')
-        s.ellipse(cx, cy, 104, 110, fill=WHITE)
+        face = (f'M{cx} {cy - 112}C{cx + 62} {cy - 112} {cx + 98} {cy - 70} {cx + 98} {cy - 10}C{cx + 98} {cy + 50} {cx + 70} {cy + 100} '
+                f'{cx} {cy + 112}C{cx - 70} {cy + 100} {cx - 98} {cy + 50} {cx - 98} {cy - 10}C{cx - 98} {cy - 70} {cx - 62} {cy - 112} {cx} {cy - 112}Z')
+        for side in (-1, 1):
+            s.ellipse(cx + side * 98, cy - 4, 14, 26, fill=s.radial(SKIN_HI, SKIN_LO), stroke=INK, sw=2)
+        s.add(f'<path d="{face}" fill="{s.radial(SKIN_HI, SKIN_LO)}"/>')
+        cid = s.clip(f'<path d="{face}"/>')
         if kind == 'lower':
-            s.add(f'<rect x="{cx - 110}" y="{cy + 8}" width="110" height="130" fill="{SAND}" opacity=".85" clip-path="url(#{cid})"/>')
+            s.add(f'<rect x="{cx - 110}" y="{cy + 4}" width="110" height="130" fill="{GOLD}" opacity=".26" clip-path="url(#{cid})"/>')
         else:
-            s.add(f'<rect x="{cx - 110}" y="{cy - 130}" width="110" height="260" fill="{SAND}" opacity=".85" clip-path="url(#{cid})"/>')
-        s.ellipse(cx, cy, 104, 110, fill='none', stroke=INK, sw=3)
-        s.path(f'M{cx} {cy - 110}L{cx} {cy + 110}', LINE, 1.5, dash='5 5')
-        # forehead lines: weak side smooth if peripheral
+            s.add(f'<rect x="{cx - 110}" y="{cy - 130}" width="110" height="260" fill="{GOLD}" opacity=".26" clip-path="url(#{cid})"/>')
+        s.add(f'<path d="M{cx - 80} {cy - 70}C{cx - 60} {cy - 112} {cx + 60} {cy - 112} {cx + 80} {cy - 70}C{cx + 50} {cy - 92} {cx - 50} {cy - 92} {cx - 80} {cy - 70}Z" '
+              f'fill="#5d4a39" opacity=".88" clip-path="url(#{cid})"/>')
+        s.add(f'<path d="{face}" fill="none" stroke="{INK}" stroke-width="2.6"/>')
+        s.path(f'M{cx} {cy - 112}L{cx} {cy + 112}', mix(GOLD, WHITE, .4), 1.2, dash='4 5')
+        # forehead creases: absent on the weak side in the peripheral pattern
         for k in range(3):
-            yy = cy - 82 + k * 13
-            s.path(f'M{cx + 18} {yy}Q{cx + 45} {yy - 6} {cx + 72} {yy}', MUTED, 2)
+            yy = cy - 64 + k * 11
+            s.path(f'M{cx + 16} {yy}Q{cx + 42} {yy - 6} {cx + 66} {yy}', MUTED, 1.6, glow=False)
             if kind == 'lower':
-                s.path(f'M{cx - 72} {yy}Q{cx - 45} {yy - 6} {cx - 18} {yy}', MUTED, 2)
-        # eyes
-        s.ellipse(cx + 40, cy - 22, 19, 10, fill=WHITE, stroke=INK, sw=2)
-        s.circle(cx + 40, cy - 22, 5, fill=INK)
-        if kind == 'lower':
-            s.ellipse(cx - 40, cy - 22, 19, 10, fill=WHITE, stroke=INK, sw=2)
-            s.circle(cx - 40, cy - 22, 5, fill=INK)
-        else:
-            s.ellipse(cx - 40, cy - 21, 19, 13, fill=WHITE, stroke=INK, sw=2)
-            s.circle(cx - 40, cy - 21, 5, fill=INK)
-        # nose and mouth (weak corner droops)
-        s.path(f'M{cx} {cy - 6}L{cx - 8} {cy + 30}L{cx + 6} {cy + 32}', MUTED, 2)
-        s.path(f'M{cx + 42} {cy + 62}Q{cx} {cy + 78} {cx - 40} {cy + 78}', INK, 3)
-        # labels
-        s.text(cx - 52, cy + 138, 'affected side', 13, GOLD, 'middle')
-        s.text(cx + 52, cy + 138, 'other side', 13, MUTED, 'middle')
-    s.text(190, 386, ['Lower face weak; forehead', 'wrinkles and eye closure', 'largely preserved.'], 15, INK, 'middle')
-    s.text(530, 386, ['Forehead, eye closure and', 'mouth weak on the side', 'of the lesion.'], 15, INK, 'middle')
-    s.note(442, 'Why the forehead differs', ['Forehead motor neurons receive input from both hemispheres. Sparing',
+                s.path(f'M{cx - 66} {yy}Q{cx - 42} {yy - 6} {cx - 16} {yy}', MUTED, 1.6, glow=False)
+        # eyebrows
+        s.path(f'M{cx + 20} {cy - 36}Q{cx + 40} {cy - 46} {cx + 62} {cy - 38}', INK, 3.2, glow=False)
+        drop = 6 if kind == 'half' else 0
+        s.path(f'M{cx - 62} {cy - 38 + drop}Q{cx - 40} {cy - 46 + drop} {cx - 20} {cy - 36 + drop}', INK, 3.2, glow=False)
+        eye_front(s, cx + 40, cy - 16, 19, 9)
+        eye_front(s, cx - 40, cy - 16, 19, 13 if kind == 'half' else 9)
+        # nose, nasolabial folds (flattened on a weak lower face), mouth droop
+        s.path(f'M{cx + 2} {cy - 18}C{cx - 2} {cy + 6} {cx - 12} {cy + 22} {cx - 12} {cy + 30}C{cx - 6} {cy + 36} {cx + 8} {cy + 36} {cx + 14} {cy + 30}', MUTED, 2, glow=False)
+        s.path(f'M{cx + 22} {cy + 30}Q{cx + 40} {cy + 50} {cx + 46} {cy + 66}', MUTED, 1.6, glow=False)
+        s.path(f'M{cx - 22} {cy + 32}Q{cx - 30} {cy + 46} {cx - 34} {cy + 56}', MUTED, 1.2, glow=False, extra=' stroke-opacity=".35"')
+        s.path(f'M{cx + 38} {cy + 64}Q{cx + 4} {cy + 74} {cx - 34} {cy + 80}', mix(RED, INK, .3), 3, glow=False)
+        s.text(cx - 52, cy + 140, 'affected side', 13, GOLD, 'middle', weight='700')
+        s.text(cx + 52, cy + 140, 'other side', 13, MUTED, 'middle')
+    s.text(190, 390, ['Lower face weak; forehead', 'wrinkles and eye closure', 'largely preserved.'], 15, INK, 'middle')
+    s.text(530, 390, ['Forehead, eye closure and', 'mouth weak on the side', 'of the lesion.'], 15, INK, 'middle')
+    s.note(446, 'Why the forehead differs', ['Forehead motor neurons receive input from both hemispheres. Sparing',
                                               'favors a central lesion but is not absolute: check limbs, speech and',
-                                              'other cranial nerves. Faces are drawn facing you.'], h=110)
+                                              'other cranial nerves. Faces are drawn facing you.'], h=106)
     return s
 
 
@@ -211,16 +379,15 @@ def field_defects():
     s.text(40, 98, "Viewed from above · patient's left on the left", 12, MUTED)
     L, R, Y = 110, 250, 140
     for x, lab in ((L, 'Left eye'), (R, 'Right eye')):
-        s.circle(x, Y, 32, fill=WHITE, stroke=INK, sw=2.5)
-        s.circle(x, Y - 18, 10, fill=INK)
-        s.text(x, Y + 4, lab, 11, MUTED, 'middle')
+        eyeball_top(s, x, Y, 32)
+        s.text(x, Y + 10, lab, 11, MUTED, 'middle')
     cx, cy = 180, 228
     s.path(f'M{L} {Y + 32}L{cx} {cy}', BLUE, 5)
     s.path(f'M{R} {Y + 32}L{cx} {cy}', GOLD, 5)
     s.path(f'M{cx} {cy}L{L} 300', BLUE, 5)
     s.path(f'M{cx} {cy}L{R} 300', GOLD, 5)
-    s.ellipse(L, 304, 14, 9, fill=GREY)
-    s.ellipse(R, 304, 14, 9, fill=GREY)
+    s.ellipse(L, 304, 15, 10, fill=s.radial(mix(GREY, WHITE, .3), mix(GREY, INK, .2)), stroke=INK, sw=1)
+    s.ellipse(R, 304, 15, 10, fill=s.radial(mix(GREY, WHITE, .3), mix(GREY, INK, .2)), stroke=INK, sw=1)
     s.text(180, 309, 'LGN', 12, MUTED, 'middle')
     # left hemisphere radiations (simple)
     s.path(f'M{L} 313L{L + 10} 495', BLUE, 4)
@@ -228,7 +395,7 @@ def field_defects():
     s.path(f'M{R} 313C{R + 52} 330 {R + 60} 400 {R - 15} 495', GOLD, 4)
     s.path(f'M{R} 313L{R - 20} 495', GOLD, 4, dash='2 0')
     s.text(R + 34, 300, ['Meyer', 'loop'], 12, GOLD)
-    s.rect(70, 495, 220, 42, fill=PALE, stroke=GREY, rx=10)
+    s.rect(70, 495, 220, 42, fill=s.radial('#f2f5ef', '#d8e2d3'), stroke=GREY, rx=10)
     s.path('M180 495L180 537', GREY, 1.5, dash='4 4')
     s.text(180, 521, 'Occipital cortex', 14, INK, 'middle')
     s.text(180, 566, ['Gold = right pathway, which carries', 'the LEFT visual hemifield'], 12, MUTED, 'middle')
@@ -280,9 +447,17 @@ def field_defects():
 def brainstem_rule():
     s = Svg('Medial and lateral brainstem clues', "The 'rule of 4': a teaching shortcut for brainstem syndromes.", h=600)
     # brainstem silhouette
-    s.path('M70 100L170 100L178 190L196 210L200 300L182 330L172 420L160 470L80 470L68 420L58 330L40 300L44 210L62 190Z',
-           INK, 2.5, fill=PALE)
-    s.add(f'<rect x="96" y="100" width="48" height="370" fill="{TEAL_PALE}"/>')
+    bs = ('M60 96C80 106 98 110 120 110C142 110 160 106 180 96L178 188C196 198 206 224 206 258C206 294 196 318 180 332'
+          'L176 360C188 372 188 398 176 410L166 440C164 456 162 468 160 480L80 480C78 468 76 456 74 440L64 410'
+          'C52 398 52 372 64 360L60 332C44 318 34 294 34 258C34 224 44 198 62 188Z')
+    s.add(f'<path d="{bs}" fill="{s.radial("#f1f5ee", "#d4e0cf")}"/>')
+    bcid = s.clip(f'<path d="{bs}"/>')
+    s.add(f'<g clip-path="url(#{bcid})"><rect x="96" y="90" width="48" height="400" fill="{TEAL}" opacity=".13"/>'
+          + ''.join(f'<path d="M30 {y}Q120 {y + 14} 210 {y}" fill="none" stroke="{GREY}" stroke-width="1.2" opacity=".7"/>' for y in range(212, 320, 16))
+          + f'<path d="M106 344L104 480M134 344L136 480" fill="none" stroke="{GREY}" stroke-width="1.4"/>'
+          + f'<ellipse cx="62" cy="384" rx="9" ry="20" fill="none" stroke="{GREY}" stroke-width="1.4"/>'
+          + f'<ellipse cx="178" cy="384" rx="9" ry="20" fill="none" stroke="{GREY}" stroke-width="1.4"/></g>')
+    s.add(f'<path d="{bs}" fill="none" stroke="{INK}" stroke-width="2.4" stroke-linejoin="round"/>')
     s.path('M120 92L120 478', TEAL, 1.5, dash='5 5')
     for y in (190, 330):
         s.path(f'M44 {y}L196 {y}', GREY, 1.5)
@@ -330,9 +505,6 @@ def cord_syndromes():
     rx, ry = 74, 62
     k = rx / 150
     for cx, cy, name, lines, kind in cells:
-        cid = s.clip(f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}"/>')
-        s.ellipse(cx, cy, rx, ry, fill=PALE)
-        s.add(f'<path d="{GREY_MATTER}" fill="{GREY}" transform="translate({cx} {cy}) scale({k:.4f}) translate(-327 -264)"/>')
         shade = {
             'all': f'<rect x="{cx - rx}" y="{cy - ry}" width="{2 * rx}" height="{2 * ry}"/>',
             'central': f'<ellipse cx="{cx}" cy="{cy + 2}" rx="{rx * .5:.0f}" ry="{ry * .5:.0f}"/>',
@@ -340,13 +512,12 @@ def cord_syndromes():
             'posterior': f'<path d="M{cx - 26} {cy - ry}L{cx + 26} {cy - ry}L{cx + 6} {cy - 4}L{cx - 6} {cy - 4}Z"/>',
             'hemi': f'<rect x="{cx - rx}" y="{cy - ry}" width="{rx}" height="{2 * ry}"/>',
         }[kind]
-        s.add(f'<g fill="{RED}" opacity=".42" clip-path="url(#{cid})">{shade}</g>')
-        s.ellipse(cx, cy, rx, ry, fill='none', stroke=INK, sw=2.5)
-        s.text(cx, cy - ry - 10, 'dorsal', 11, MUTED, 'middle')
+        cord_section(s, cx, cy, rx, ry, roots=True, shade=shade)
+        s.text(cx, cy - ry - 14, 'dorsal', 11, MUTED, 'middle')
         s.text(cx, cy + ry + 30, name, 18, INK, 'middle')
         s.text(cx, cy + ry + 54, lines, 13, MUTED, 'middle')
         if kind == 'hemi':
-            s.text(cx - rx - 4, cy + 5, 'lesion', 11, RED, 'end')
+            s.text(cx - rx - 12, cy + 5, 'lesion', 11, RED, 'end', weight='700')
     s.text(40, 590, 'Patterns are idealized; real lesions are often partial.', 13, GOLD)
     return s
 
@@ -451,15 +622,23 @@ def nmj_compare():
         s.text(cx, 102, title, 14, color, 'middle', weight='700')
         # nerve terminal
         s.path(f'M{cx - 30} 116L{cx - 30} 150Q{cx - 80} 158 {cx - 90} 196L{cx + 90} 196Q{cx + 80} 158 {cx + 30} 150L{cx + 30} 116',
-               INK, 2.5, fill=WHITE)
-        for dx in (-50, -18, 14, 46):
-            s.circle(cx + dx, 176, 7, fill=SAND, stroke=GOLD, sw=1.5)
+               INK, 2.5, fill=s.radial('#ffffff', '#e8eee5'))
+        s.path(f'M{cx - 30} 118L{cx - 30} 146M{cx + 30} 118L{cx + 30} 146', mix(GOLD, WHITE, .35), 5, glow=False)
+        s.ellipse(cx - 2, 158, 17, 7, fill=mix(GOLD, WHITE, .55), stroke=GOLD, sw=1.2)
+        s.path(f'M{cx - 14} 158C{cx - 10} 152 {cx - 6} 164 {cx - 2} 158C{cx + 2} 152 {cx + 6} 164 {cx + 10} 158', GOLD, 1.1, glow=False)
+        for dx, dy in ((-50, 178), (-34, 168), (-18, 180), (14, 178), (30, 168), (46, 180), (-62, 172), (60, 172)):
+            s.circle(cx + dx, dy, 6.5, fill=s.radial('#fff6e6', SAND), stroke=GOLD, sw=1.2)
+            s.circle(cx + dx + 1.5, dy + 1, 1.3, fill=GOLD)
+        for k, dx in enumerate((-80, -56, -36, -14, 6, 24, 44, 66, 84)):
+            s.circle(cx + dx, 207 + (k % 3) * 3, 2, fill=GOLD, extra=' opacity=".75"')
         # calcium channels on terminal membrane
         for dx in (-62, 62):
             s.rect(cx + dx - 6, 188, 12, 14, fill=BLUE, rx=3)
         # muscle with folds
         s.path(f'M{cx - 120} 222' + ''.join(f'L{cx - 120 + i * 30 + 10} 222L{cx - 120 + i * 30 + 15} 240L{cx - 120 + i * 30 + 20} 222'
-                                          for i in range(8)) + f'L{cx + 120} 222L{cx + 120} 272L{cx - 120} 272Z', INK, 2.5, fill=PALE)
+                                          for i in range(8)) + f'L{cx + 120} 222L{cx + 120} 272L{cx - 120} 272Z', INK, 2.5,
+               fill=s.radial('#f1d9cc', '#d8ad98'))
+        s.add(''.join(f'<path d="M{cx - 116} {y}L{cx + 116} {y}" stroke="#ffffff" stroke-opacity=".35" stroke-width="1"/>' for y in (250, 258, 266)))
         for i in range(8):
             s.rect(cx - 120 + i * 30 + 8, 216, 9, 9, fill=TEAL, rx=2)
         if site == 'post':
@@ -531,8 +710,7 @@ def gaze_circuit():
     s.text(372, 200, 'RIGHT', 11, MUTED, 'start')
     # eyes
     for x, lab in ((220, 'Left eye'), (490, 'Right eye')):
-        s.ellipse(x, 146, 56, 32, fill=WHITE, stroke=INK, sw=2.5)
-        s.circle(x + 26, 146, 14, fill=INK)
+        eye_front(s, x, 146, 56, 26, look=22)
         s.text(x - 92, 151, lab, 12, MUTED, 'middle') if x < 360 else s.text(x + 92, 151, lab, 12, MUTED, 'middle')
     s.path('M196 102L246 102', TEAL, 3, arrow=TEAL)
     s.path('M466 102L516 102', TEAL, 3, arrow=TEAL)
@@ -571,15 +749,17 @@ def gaze_circuit():
 def horner():
     s = Svg('The sympathetic path to the eye', 'Three neurons: hypothalamus → C8–T2 → superior cervical ganglion → eye.', h=600)
     # head and body outline
-    s.path('M140 120C140 80 220 72 250 104C268 124 262 160 250 180L246 214L210 220L206 290L150 290L150 210C128 190 140 150 140 120Z',
-           GREY, 2, fill=WHITE)
-    s.path('M150 290L120 340L120 520L330 520L330 340L206 290', GREY, 2, fill=WHITE)
+    prof = ('M150 300C128 250 116 170 142 118C164 76 230 70 256 110C262 120 263 128 262 136L284 166C286 170 282 174 276 174'
+            'L270 176C272 182 268 188 268 192C270 198 266 204 262 206C264 214 258 222 246 224L228 230L230 292'
+            'C270 300 320 316 340 340L340 520L110 520L110 340C120 320 134 308 150 300Z')
+    s.add(f'<path d="{prof}" fill="{s.radial(SKIN_HI, SKIN_LO)}" stroke="{INK}" stroke-width="2.2" stroke-linejoin="round"/>')
+    s.path('M176 150L176 400', mix(TEAL, WHITE, .55), 10, glow=False, extra=' stroke-opacity=".45"')
+    s.text(170, 470, 'cord', 11, MUTED, 'middle')
     s.ellipse(258, 412, 52, 70, fill=BLUE_PALE, stroke=GREY, sw=1.5)
     s.text(258, 420, 'lung', 12, BLUE, 'middle')
     s.text(258, 436, 'apex', 12, BLUE, 'middle')
     # eye
-    s.ellipse(236, 132, 14, 8, fill=WHITE, stroke=INK, sw=2)
-    s.circle(236, 132, 3, fill=INK)
+    eye_front(s, 240, 134, 13, 6, look=5, lid=False)
     # neuron 1: hypothalamus down brainstem/cord to C8-T2
     s.circle(192, 118, 9, fill=TEAL)
     s.path('M192 128L184 210L176 300L172 372', TEAL, 5, arrow=TEAL)
@@ -606,9 +786,15 @@ def vascular():
     for cx, title, kind in views:
         cy = 260
         s.text(cx, 104, title, 12, MUTED, 'middle', weight='700')
-        d = (f'M{cx - 150} {cy}C{cx - 150} {cy - 110} {cx - 60} {cy - 128} {cx + 10} {cy - 126}'
-             f'C{cx + 100} {cy - 124} {cx + 156} {cy - 70} {cx + 152} {cy + 6}C{cx + 150} {cy + 64} {cx + 110} {cy + 86} {cx + 60} {cy + 84}'
-             f'C{cx + 10} {cy + 92} {cx - 40} {cy + 110} {cx - 80} {cy + 84}C{cx - 120} {cy + 64} {cx - 150} {cy + 50} {cx - 150} {cy}Z')
+        d = (f'M{cx - 150} {cy + 4}C{cx - 154} {cy - 62} {cx - 104} {cy - 124} {cx - 14} {cy - 126}'
+             f'C{cx + 78} {cy - 128} {cx + 150} {cy - 82} {cx + 154} {cy - 10}C{cx + 158} {cy + 38} {cx + 134} {cy + 70} {cx + 98} {cy + 78}'
+             f'C{cx + 70} {cy + 84} {cx + 42} {cy + 78} {cx + 22} {cy + 88}C{cx - 14} {cy + 104} {cx - 66} {cy + 100} {cx - 92} {cy + 74}'
+             f'C{cx - 104} {cy + 60} {cx - 112} {cy + 44} {cx - 130} {cy + 42}C{cx - 146} {cy + 38} {cx - 150} {cy + 24} {cx - 150} {cy + 4}Z')
+        s.add(f'<path d="M{cx + 28} {cy + 70}C{cx + 34} {cy + 108} {cx + 42} {cy + 130} {cx + 46} {cy + 150}L{cx + 72} {cy + 150}'
+              f'C{cx + 66} {cy + 126} {cx + 66} {cy + 100} {cx + 72} {cy + 70}Z" fill="{s.radial("#eef2ea", "#cfdaca")}" stroke="{INK}" stroke-width="2"/>')
+        s.ellipse(cx + 104, cy + 92, 50, 27, fill=s.radial('#eef2ea', '#cdd8c7'), stroke=INK, sw=2)
+        s.add(''.join(f'<path d="M{cx + 62} {cy + 84 + k * 7}Q{cx + 104} {cy + 76 + k * 9} {cx + 148} {cy + 86 + k * 6}" fill="none" '
+                      f'stroke="{GREY}" stroke-width="1.2"/>' for k in range(4)))
         cid = s.clip(f'<path d="{d}"/>')
         s.add(f'<path d="{d}" fill="{WHITE}"/>')
         if kind == 'lat':
@@ -624,7 +810,25 @@ def vascular():
             s.path(f'M{cx - 70} {cy + 4}C{cx - 70} {cy - 40} {cx + 50} {cy - 46} {cx + 60} {cy}C{cx + 40} {cy - 22} {cx - 50} {cy - 20} {cx - 70} {cy + 4}Z',
                    INK, 2, fill=PALE)
             s.text(cx - 6, cy + 32, 'corpus callosum', 11, INK, 'middle')
-        s.add(f'<path d="{d}" fill="none" stroke="{INK}" stroke-width="3"/>')
+        if kind == 'lat':
+            sulci = [f'M{cx - 112} {cy + 40}C{cx - 80} {cy + 20} {cx - 30} {cy + 8} {cx + 30} {cy - 14}',
+                     f'M{cx + 18} {cy - 126}C{cx + 6} {cy - 90} {cx + 2} {cy - 56} {cx - 16} {cy + 4}',
+                     f'M{cx - 8} {cy - 124}C{cx - 20} {cy - 90} {cx - 24} {cy - 54} {cx - 40} {cy + 10}',
+                     f'M{cx + 44} {cy - 120}C{cx + 32} {cy - 84} {cx + 30} {cy - 50} {cx + 12} {cy - 6}',
+                     f'M{cx - 86} {cy + 66}C{cx - 40} {cy + 50} {cx + 20} {cy + 40} {cx + 72} {cy + 20}',
+                     f'M{cx - 124} {cy - 40}C{cx - 96} {cy - 58} {cx - 70} {cy - 62} {cx - 44} {cy - 58}',
+                     f'M{cx - 136} {cy - 2}C{cx - 106} {cy - 16} {cx - 80} {cy - 14} {cx - 52} {cy - 20}',
+                     f'M{cx + 60} {cy - 62}C{cx + 84} {cy - 50} {cx + 110} {cy - 56} {cx + 134} {cy - 40}',
+                     f'M{cx + 70} {cy - 8}C{cx + 96} {cy - 2} {cx + 120} {cy + 2} {cx + 146} {cy - 6}']
+        else:
+            sulci = [f'M{cx - 100} {cy + 10}C{cx - 104} {cy - 66} {cx + 40} {cy - 84} {cx + 74} {cy - 18}',
+                     f'M{cx + 52} {cy - 122}C{cx + 58} {cy - 90} {cx + 62} {cy - 50} {cx + 70} {cy - 12}',
+                     f'M{cx + 70} {cy - 12}C{cx + 100} {cy - 14} {cx + 126} {cy - 8} {cx + 152} {cy - 2}',
+                     f'M{cx - 120} {cy - 46}C{cx - 100} {cy - 70} {cx - 80} {cy - 88} {cx - 50} {cy - 100}',
+                     f'M{cx - 4} {cy - 120}C{cx - 6} {cy - 108} {cx - 2} {cy - 98} {cx + 8} {cy - 92}']
+        s.add(f'<g clip-path="url(#{cid})" fill="none" stroke="{INK}" stroke-opacity=".32" stroke-width="1.8" stroke-linecap="round">'
+              + ''.join(f'<path d="{x}"/>' for x in sulci) + '</g>')
+        s.add(f'<path d="{d}" fill="none" stroke="{INK}" stroke-width="2.6"/>')
         s.text(cx - 150, cy + 134, 'front', 12, MUTED)
         s.text(cx + 150, cy + 134, 'back', 12, MUTED, 'end')
     keys = [(TEAL, 'Middle cerebral (MCA)', ['Lateral convexity: opposite face and arm', '> leg; language (dominant) or neglect.']),
@@ -646,33 +850,27 @@ def body_patterns():
              (125, 440, 'A strip in one limb', 'Root (or named nerve)', 'root'),
              (360, 440, 'Hands and feet', 'Length-dependent neuropathy', 'stocking'),
              (595, 440, 'Shoulders and hips', 'Muscle or junction (motor)', 'proximal')]
+    shades = {
+        'hemi': '<rect x="100" y="60" width="120" height="560"/>',
+        'crossed': '<rect x="100" y="60" width="120" height="86"/><rect x="220" y="150" width="140" height="470"/>',
+        'level': '<rect x="172" y="240" width="96" height="380"/>',
+        'root': '<rect x="287" y="166" width="20" height="252"/>',
+        'stocking': '<rect x="120" y="364" width="62" height="70"/><rect x="258" y="364" width="62" height="70"/><rect x="170" y="476" width="100" height="130"/>',
+        'proximal': '<rect x="130" y="150" width="180" height="72"/><rect x="172" y="286" width="96" height="104"/>',
+    }
+    k = 0.37
     for cx, cy, title, where, kind in cells:
-        sx, sy = cx, cy - 70  # head centre
-        parts = (f'<circle cx="{sx}" cy="{sy}" r="17"/>'
-                 f'<rect x="{sx - 25}" y="{sy + 22}" width="50" height="72" rx="10"/>'
-                 f'<rect x="{sx - 41}" y="{sy + 24}" width="14" height="70" rx="7"/>'
-                 f'<rect x="{sx + 27}" y="{sy + 24}" width="14" height="70" rx="7"/>'
-                 f'<rect x="{sx - 24}" y="{sy + 96}" width="21" height="78" rx="9"/>'
-                 f'<rect x="{sx + 3}" y="{sy + 96}" width="21" height="78" rx="9"/>')
-        cid = s.clip(parts)
-        s.add(f'<g fill="{WHITE}">{parts}</g>')
-        shade = {
-            'hemi': f'<rect x="{sx - 50}" y="{sy - 20}" width="50" height="200"/>',
-            'crossed': f'<rect x="{sx - 50}" y="{sy - 20}" width="50" height="40"/><rect x="{sx}" y="{sy + 20}" width="50" height="160"/>',
-            'level': f'<rect x="{sx - 50}" y="{sy + 58}" width="100" height="130"/>',
-            'root': f'<rect x="{sx + 33}" y="{sy + 24}" width="9" height="70"/>',
-            'stocking': f'<rect x="{sx - 42}" y="{sy + 74}" width="16" height="22"/><rect x="{sx + 26}" y="{sy + 74}" width="16" height="22"/><rect x="{sx - 50}" y="{sy + 140}" width="100" height="40"/>',
-            'proximal': f'<rect x="{sx - 50}" y="{sy + 22}" width="100" height="30"/><rect x="{sx - 25}" y="{sy + 84}" width="50" height="40"/>',
-        }[kind]
-        s.add(f'<g fill="{GOLD}" opacity=".75" clip-path="url(#{cid})">{shade}</g>')
-        s.add(f'<g fill="none" stroke="{INK}" stroke-width="2">{parts}</g>')
+        top = cy - 90
+        tr = f'translate({cx - 220 * k:.1f} {top - 86 * k:.1f}) scale({k})'
+        s.ellipse(cx, cy + 106, 40, 6, fill=INK, extra=' opacity=".08"')
+        body_figure(s, tr, k, shades[kind])
         if kind == 'level':
-            s.path(f'M{sx - 60} {sy + 58}L{sx + 60} {sy + 58}', RED, 2, dash='5 4')
-        s.text(cx, cy + 124, title, 15, INK, 'middle')
-        s.text(cx, cy + 144, where, 13, TEAL, 'middle')
-    s.text(40, 612, 'Figures face you. Shading shows where findings cluster, not exact borders.', 13, GOLD)
+            y = top + (240 - 86) * k
+            s.path(f'M{cx - 56} {y:.1f}L{cx + 56} {y:.1f}', RED, 2, dash='5 4')
+        s.text(cx, cy + 128, title, 15, INK, 'middle')
+        s.text(cx, cy + 148, where, 13, TEAL, 'middle', weight='700')
+    s.text(40, 614, 'Figures face you. Shading shows where findings cluster, not exact borders.', 13, GOLD)
     return s
-
 
 
 # ---------------------------------------------------------------- 1.3 diagrams
@@ -744,13 +942,18 @@ def reflex_arc():
     s = Svg('The stretch reflex arc', 'Where a lesion sits decides whether reflexes fall or rise.', h=620)
     k = 90 / 150
     cx, cy = 480, 210
-    s.ellipse(cx, cy, 90, 76, fill=PALE, stroke=INK, sw=2.5)
-    s.add(f'<path d="{GREY_MATTER}" fill="{GREY}" transform="translate({cx} {cy}) scale({k:.4f}) translate(-327 -264)"/>')
+    cord_section(s, cx, cy, 90, 76, roots=False)
     s.text(cx - 20, 124, 'spinal cord (dorsal up)', 11, MUTED, 'end')
     s.ellipse(372, 168, 16, 11, fill=SAND, stroke=GOLD, sw=2)
     s.text(372, 146, 'dorsal root ganglion', 11, GOLD, 'middle')
-    s.rect(50, 266, 180, 62, fill=SAND, rx=28)
-    s.ellipse(140, 297, 34, 10, fill=WHITE, stroke=GOLD, sw=2)
+    mus = 'M48 297C78 258 202 258 232 297C202 336 78 336 48 297Z'
+    s.path('M22 297L52 297M228 297L256 297', mix(GOLD, WHITE, .2), 7, glow=False)
+    s.add(f'<path d="{mus}" fill="{s.radial("#efc9b6", "#c98f78")}" stroke="{mix(RED, INK, .3)}" stroke-width="2"/>')
+    mcid = s.clip(f'<path d="{mus}"/>')
+    s.add(f'<g clip-path="url(#{mcid})" fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width="1.2">'
+          + ''.join(f'<path d="M{x} 250Q{x + 6} 297 {x} 344"/>' for x in range(60, 232, 9)) + '</g>')
+    s.ellipse(140, 297, 36, 10, fill='#fff7ee', stroke=GOLD, sw=2)
+    s.path('M110 297C116 289 122 305 128 297C134 289 140 305 146 297C152 289 158 305 164 297C168 292 170 297 172 297', GOLD, 1.6, glow=False)
     s.text(140, 350, 'muscle with spindle', 12, INK, 'middle')
     s.path('M166 292C230 220 300 172 356 168', GOLD, 4)
     s.path('M388 168C440 166 458 196 460 230', GOLD, 4, arrow=GOLD)
@@ -782,8 +985,7 @@ def reflex_arc():
 def eye_muscles():
     s = Svg('Six eye muscles, three nerves', "The right eye as you face the patient: abduction points to your left.", h=620)
     cx, cy = 210, 300
-    s.circle(cx, cy, 66, fill=WHITE, stroke=INK, sw=2.5)
-    s.circle(cx, cy, 24, fill=INK)
+    eye_front(s, cx, cy, 74, 44)
     arrows = [('LR', 'VI', -1, 0, BLUE), ('MR', 'III', 1, 0, TEAL), ('SR', 'III', -1, -1, TEAL),
               ('IR', 'III', -1, 1, TEAL), ('IO', 'III', 1, -1, TEAL), ('SO', 'IV', 1, 1, GOLD)]
     for m, n, dx, dy, color in arrows:
@@ -811,19 +1013,18 @@ def eye_muscles():
 
 def pupil_reflex():
     s = Svg('The pupillary light reflex', 'Light in one eye constricts both pupils through a bilateral relay.', h=640)
-    s.rect(130, 282, 460, 112, fill=PALE, rx=12)
+    s.rect(130, 282, 460, 112, fill=s.radial('#eef3ea', '#dce6d7'), rx=40)
     s.text(146, 302, 'MIDBRAIN', 11, MUTED, weight='700')
     for x, lab in ((230, 'Left eye'), (490, 'Right eye')):
-        s.circle(x, 130, 32, fill=WHITE, stroke=INK, sw=2.5)
-        s.circle(x, 112, 9, fill=INK)
-        s.text(x, 84, lab, 12, MUTED, 'middle')
+        eyeball_top(s, x, 130, 32)
+        s.text(x + 44, 134, lab, 12, MUTED, 'start' if x > 360 else 'start')
     s.path('M230 162L360 216', GOLD, 4)
     s.path('M490 162L360 216', GOLD, 4)
     s.path('M360 216L300 262L330 312', GOLD, 4, arrow=GOLD)
     s.path('M360 216L420 262L390 312', GOLD, 4, arrow=GOLD)
     s.text(400, 222, 'chiasm', 11, MUTED)
     for x in (330, 390):
-        s.circle(x, 320, 10, fill=GREY)
+        s.circle(x, 320, 10, fill=s.radial(mix(GREY, WHITE, .3), mix(GREY, INK, .25)), stroke=INK, sw=1)
     s.text(316, 324, 'pretectal nuclei', 11, INK, 'end')
     for a, b in ((330, 336), (330, 384), (390, 336), (390, 384)):
         s.path(f'M{a} 330L{b} 368', GOLD, 2)
@@ -932,6 +1133,19 @@ def hand_nerves():
         outline = ''.join(f'<rect x="{r[0]}" y="{r[1]}" width="{r[2]}" height="{r[3]}" rx="13"/>' for r in fingers.values())
         outline += f'<rect x="{px}" y="{py}" width="{pw}" height="{ph}" rx="22"/>' + thumb
         s.add(f'<g fill="none" stroke="{INK}" stroke-width="2">{outline}</g>')
+        det = []
+        for name, (x, y, w, h) in fingers.items():
+            if view == 'PALM':
+                for t in (.34, .64):
+                    det.append(f'<path d="M{x + 6} {y + h * t:.1f}Q{x + w / 2} {y + h * t + 3:.1f} {x + w - 6} {y + h * t:.1f}"/>')
+            else:
+                det.append(f'<rect x="{x + 6}" y="{y + 6}" width="{w - 12}" height="17" rx="6" fill="#ffffff" fill-opacity=".55"/>')
+                det.append(f'<path d="M{x + 8} {y + h * .6:.1f}Q{x + w / 2} {y + h * .6 - 4:.1f} {x + w - 8} {y + h * .6:.1f}"/>')
+        if view == 'PALM':
+            det.append(f'<path d="M{px + 14} {py + 46}Q{px + 70} {py + 30} {px + 122} {py + 42}"/>')
+            det.append(f'<path d="M{px + 10} {py + 70}Q{px + 60} {py + 56} {px + 100} {py + 76}"/>')
+            det.append(f'<path d="M{px + 30} {py + 40}Q{px + 22} {py + 100} {px + 46} {py + 142}"/>')
+        s.add(f'<g fill="none" stroke="{INK}" stroke-opacity=".4" stroke-width="1.3" stroke-linecap="round">{"".join(det)}</g>')
         s.text(x0 + 66, 432, 'thumb ' + ('←' if thumb_left else '→'), 12, MUTED, 'middle')
     for i, (color, head, line) in enumerate(((TEAL, 'Median', 'palm side of thumb to radial ring finger; dorsal fingertips'),
                                              (GOLD, 'Ulnar', 'little finger and ulnar half of ring finger, both sides'),
@@ -946,23 +1160,15 @@ def hand_nerves():
 
 def dermatome_landmarks():
     s = Svg('Dermatome landmarks', 'Standard sensory key points, front view. Labels on the right side of the body.', h=680)
-    parts = ('<circle cx="220" cy="118" r="26"/><rect x="182" y="150" width="76" height="152" rx="16"/>'
-             '<rect x="152" y="156" width="26" height="114" rx="12"/><rect x="146" y="266" width="24" height="108" rx="11"/>'
-             '<ellipse cx="156" cy="392" rx="16" ry="22"/>'
-             '<rect x="262" y="156" width="26" height="114" rx="12"/><rect x="270" y="266" width="24" height="108" rx="11"/>'
-             '<ellipse cx="284" cy="392" rx="16" ry="22"/>'
-             '<rect x="186" y="298" width="32" height="140" rx="14"/><rect x="186" y="434" width="28" height="124" rx="12"/>'
-             '<rect x="222" y="298" width="32" height="140" rx="14"/><rect x="226" y="434" width="28" height="124" rx="12"/>'
-             '<ellipse cx="196" cy="572" rx="22" ry="12"/><ellipse cx="244" cy="572" rx="22" ry="12"/>')
-    s.add(f'<g fill="{WHITE}" stroke="{INK}" stroke-width="2">{parts}</g>')
+    body_figure(s)
     s.text(220, 640, "patient's right ← → left", 11, MUTED, 'middle')
-    pts = [('C5', 150, 262, 'Lateral side of the elbow crease'), ('C6', 141, 402, 'Thumb'),
-           ('C7', 156, 414, 'Middle finger'), ('C8', 170, 404, 'Little finger'),
-           ('T1', 176, 262, 'Medial side of the elbow crease'), ('T4', 204, 192, 'Nipple line'),
-           ('T10', 220, 258, 'Umbilicus'), ('L1', 202, 306, 'Groin (inguinal region)'),
-           ('L2', 202, 362, 'Front of the mid-thigh'), ('L3', 216, 428, 'Medial knee'),
-           ('L4', 210, 548, 'Medial ankle (malleolus)'), ('L5', 196, 568, 'Top of the foot'),
-           ('S1', 176, 574, 'Outer heel')]
+    pts = [('C5', 151, 266, 'Lateral side of the elbow crease'), ('C6', 134, 394, 'Thumb'),
+           ('C7', 150, 412, 'Middle finger'), ('C8', 159, 402, 'Little finger'),
+           ('T1', 163, 268, 'Medial side of the elbow crease'), ('T4', 204, 192, 'Nipple line'),
+           ('T10', 226, 262, 'Umbilicus'), ('L1', 206, 314, 'Groin (inguinal region)'),
+           ('L2', 200, 362, 'Front of the mid-thigh'), ('L3', 210, 428, 'Medial knee'),
+           ('L4', 207, 548, 'Medial ankle (malleolus)'), ('L5', 194, 572, 'Top of the foot'),
+           ('S1', 180, 580, 'Outer heel')]
     labx = {'C5': 110, 'C6': 110, 'C7': 110, 'C8': 110, 'T1': 110, 'T4': 120, 'T10': 120, 'L1': 120, 'L2': 120,
             'L3': 120, 'L4': 120, 'L5': 120, 'S1': 120}
     laby = {'C5': 250, 'C6': 398, 'C7': 426, 'C8': 454, 'T1': 284, 'T4': 186, 'T10': 222, 'L1': 318, 'L2': 362,
@@ -971,7 +1177,7 @@ def dermatome_landmarks():
         color = TEAL if root.startswith('C') else (BLUE if root.startswith('T') else GOLD)
         lx, ly = labx[root], laby[root]
         s.path(f'M{x} {y}L{lx + 6} {ly - 4}', LINE, 1.2)
-        s.circle(x, y, 5, fill=color, stroke=WHITE, sw=1.5)
+        s.circle(x, y, 5.5, fill=color, stroke=WHITE, sw=1.5)
         s.text(lx, ly, root, 12, color, 'end', weight='700')
     for i, (root, _, _, where) in enumerate(pts):
         y = 98 + i * 38
@@ -1056,6 +1262,14 @@ def conus_cauda():
     s.text(40, 556, ['New saddle numbness or sphincter change needs urgent assessment;', 'real lesions often overlap both patterns.'], 13, GOLD)
     return s
 
+
+def atlas_order():
+    """Diagram ids in atlas order, so figure numbers match their position in the app."""
+    import re
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'web', 'atlas.js')
+    return re.findall(r"\{id:'([^']+)'", open(path, encoding='utf-8').read())
+
+
 DIAGRAMS = {
     'umn-lmn': umn_lmn, 'facial': facial, 'field-defects': field_defects, 'brainstem-rule': brainstem_rule,
     'cord-syndromes': cord_syndromes, 'sensory-pathways': sensory_pathways, 'root-signatures': root_signatures,
@@ -1069,8 +1283,10 @@ DIAGRAMS = {
 if __name__ == '__main__':
     out = sys.argv[1] if len(sys.argv) > 1 else 'web/assets/atlas'
     os.makedirs(out, exist_ok=True)
+    order = atlas_order()
     for name, fn in DIAGRAMS.items():
         svg = fn()
+        svg.fig = f'FIG. {order.index(name) + 1:02d}' if name in order else ''
         with open(os.path.join(out, name + '.svg'), 'w', encoding='utf-8') as f:
             f.write(svg.render())
         print(f'{name}.svg  {svg.w}x{svg.h}')
