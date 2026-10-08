@@ -5,6 +5,23 @@ the anatomical sites that best explain them, shows the involved brainstem
 structures, and lets you practise on generated cases. It is a teaching aid, not
 a diagnostic tool.
 
+## What is in 3.4
+
+Easier to use:
+
+- **How to use** card on first open, in three steps, with **Try an example**.
+  "How to use" above the list brings it back.
+- **Every examination area is always visible** as a row of chips (scrolling on
+  phones, wrapping on wide screens), each with a count of marked signs. The
+  area picker sheet is gone.
+- **No pop-up on every tap.** A bar at the bottom shows the best match, with
+  **Undo** and **See results**; it hides while you type in the search box.
+- **Plain words:** "Match" instead of "Pattern fit", "Normal" instead of
+  "Tested normal", "Where is the lesion?" for the results, and a one-line key:
+  tap once for present, twice for normal, R / L / Both for the side.
+- **Faster GCS:** one row of numbers for each part, with the meaning of the
+  chosen score written underneath.
+
 ## What is in 3.3
 
 - **Coma assessment.** A step-by-step sheet, opened from the Conscious level
@@ -132,7 +149,7 @@ sets the version and app id from `android/version.json` in the binary manifest, 
 v2, which is enough for the app's minSdk of 26. To check a build independently:
 
 ```sh
-pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-3.3.0.apk
+pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-3.4.0.apk
 ```
 
 ### Application id and signing

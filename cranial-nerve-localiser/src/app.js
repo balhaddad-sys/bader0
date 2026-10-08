@@ -10,14 +10,14 @@ const esc = value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
 const cap = text=>text[0].toUpperCase()+text.slice(1);
 const listText = items=>items.length<2?items.join(''):`${items.slice(0,-1).join(', ')} and ${items[items.length-1]}`;
 const isPresent = v=>!!v&&v!=='N';
-let state = {findings:{},gcs:{e:null,v:null,m:null},lastSide:'R',theme:'system',practice:{answered:0,correct:0,streak:0,best:0,topic:'all'}};
+let state = {findings:{},gcs:{e:null,v:null,m:null},introSeen:false,lastSide:'R',theme:'system',practice:{answered:0,correct:0,streak:0,best:0,topic:'all'}};
 /* Finding areas for the category picker: [id, symbol, tile name, title]. An area shows every group whose `area` (or id) matches. */
 const CATEGORIES=[['eyes','III','Eyes'],['vision','I–II','Vision & smell'],['nystagmus','≋','Nystagmus'],['face','VII','Face'],['hearing','VIII','Hearing & balance'],['bulbar','XII','Bulbar'],['tracts','↕','Limbs'],['cortex','Cx','Cortex'],['cord','C–S','Spinal cord'],['coma','GCS','Conscious level','Consciousness & coma'],['context','＋','Context'],['all','∴','All signs','All examination areas']];
 const areaOf=g=>g.area||g.id;
 const GROUP_BY_ID=new Map(GROUPS.map(g=>[g.id,g]));
 let activePreset=null, zoneFilter=null, visibleLimit=6, currentTab='localise', mobileView='examination', resultsOnScreen=false, toastTimer, liveTimer;
 let examinationScroll=0, activeCategory='eyes', lastAction=null, activeCheckId=null, checkOrigin=null;
-let ranked=[];
+let ranked=[], introOpen=false;
 let storageAvailable=true;
 /* Each anatomy viewer remembers its chosen level and focused structure. */
 const viewers={results:{auto:null,chosen:null,focus:null},reference:{chosen:'medulla',focus:null}};
@@ -43,6 +43,7 @@ try{
   if(saved && typeof saved==='object'){
     if(['light','dark','system'].includes(saved.theme))state.theme=saved.theme;
     if(['R','L'].includes(saved.lastSide))state.lastSide=saved.lastSide;
+    if(saved.introSeen===true)state.introSeen=true;
     if(saved.gcs&&typeof saved.gcs==='object')for(const c of GCS){const v=saved.gcs[c.id];if(v==='NT'||c.options.some(([n])=>n===v))state.gcs[c.id]=v;}
     if(saved.findings && typeof saved.findings==='object'){
       const findings=Object.values(saved.findings).some(v=>typeof v==='number')?migrateFindings(saved):saved.findings;
@@ -59,7 +60,7 @@ function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));stor
 function renderStorage(){$('save-error').hidden=storageAvailable;$('storage-status').textContent=storageAvailable?'Saved on this device':'This session only';}
 /* Label for a finding as it stands in a findings map (the examination by default). */
 function label(f,findings=state.findings){return findingLabel(f,findings[f.id]);}
-function valueText(f,v){return v==='N'?'tested normal':!v?'untested':f.sided?{R:'right',L:'left',B:'both sides'}[v]:'present';}
+function valueText(f,v){return v==='N'?'normal':!v?'untested':f.sided?{R:'right',L:'left',B:'both sides'}[v]:'present';}
 function zoneName(id){const z=ZONE_BY_ID.get(id);return ['above','outside'].includes(z.level)?z.name:`${{cortex:'Cerebrum',cord:'Spinal cord'}[z.level]||cap(z.level)} · ${z.name.toLowerCase()}`;}
 /* Where the lesion sits, as a short phrase. */
 function lesionText(r){
@@ -92,7 +93,7 @@ function setFinding(id,value){
   const text=value&&value!=='N'?label(f):f.name;
   const top=ranked[0];
   announce(`${text}: ${valueText(f,value)}.${top?` Leading pattern: ${siteTitle(top.site)}, ${lesionText(top)}, ${Math.round(top.fit*100)} percent fit.`:''}`);
-  toast(`${text} · ${value==='N'?'tested normal':value?'present':'cleared'}`,true);
+  dismissToast();
 }
 /* Tapping a finding cycles untested → present (on the last side used) → tested normal → untested. */
 function cycleFinding(id){
@@ -118,7 +119,7 @@ function checkActions(f){
   const v=state.findings[f.id]||0;
   const options=f.sided?[['R','Right'],['L','Left'],...(f.both===false?[]:[['B','Both']])]:[['P','Present']];
   return options.map(([value,text])=>`<button class="primary-action" data-check-value="${value}" aria-pressed="${v===value}">${text}</button>`).join('')
-    +`<button class="secondary-action" data-check-value="N" aria-pressed="${v==='N'}"><span aria-hidden="true">−</span> Tested normal</button>`;
+    +`<button class="secondary-action" data-check-value="N" aria-pressed="${v==='N'}"><span aria-hidden="true">−</span> Normal</button>`;
 }
 function openCheck(id,origin){
   const f=FINDING_BY_ID.get(id);if(!f)return;
@@ -127,7 +128,7 @@ function openCheck(id,origin){
   $('check-kicker').textContent=origin==='suggest'?'Examine next':GROUPS.find(g=>g.id===f.group).name;
   $('check-title').textContent=f.name;$('check-hint').textContent=f.hint;
   $('check-test').textContent=f.test;$('check-value').textContent=findingValue(f);
-  $('check-state').textContent=isPresent(v)?`Currently marked: ${label(f)}.`:v==='N'?'Currently tested normal.':'Currently untested.';
+  $('check-state').textContent=isPresent(v)?`Currently marked: ${label(f)}.`:v==='N'?'Currently marked normal.':'Currently untested.';
   const actions=$('check-actions');
   actions.innerHTML=checkActions(f);actions.dataset.count=String(actions.children.length);
   $('check-clear').textContent=v?'Clear to untested':'Leave untested';
@@ -141,7 +142,7 @@ function renderFindings(){
     const status=isPresent(v)?'present':v==='N'?'absent':'untested';
     for(const b of document.querySelectorAll(`.finding[data-finding="${f.id}"]:not([data-review])`)){
       b.dataset.state=status;b.querySelector('.finding-label').textContent=isPresent(v)&&!f.sided?label(f):f.name;b.querySelector('.state-mark').textContent=isPresent(v)?'✓':v==='N'?'−':'';
-      b.setAttribute('aria-label',`${isPresent(v)?label(f):f.name}. ${isPresent(v)?'Present. Tap for tested normal':v==='N'?'Tested normal. Tap to clear':f.sided?`Untested. Tap for present on the ${SIDE_WORD[state.lastSide]}, or choose a side`:'Untested. Tap for present'}.`);
+      b.setAttribute('aria-label',`${isPresent(v)?label(f):f.name}. ${isPresent(v)?'Present. Tap again for normal':v==='N'?'Normal. Tap again to clear':f.sided?`Untested. Tap for present on the ${SIDE_WORD[state.lastSide]}, or choose a side`:'Untested. Tap for present'}.`);
       b.setAttribute('title',f.hint);
     }
     document.querySelectorAll(`[data-info="${f.id}"]`).forEach(i=>i.setAttribute('aria-label',`How to examine: ${f.name}`));
@@ -149,12 +150,14 @@ function renderFindings(){
   }
   document.querySelectorAll('[data-preset]').forEach(b=>{const active=b.dataset.preset===activePreset;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
   const values=Object.values(state.findings),present=values.filter(isPresent).length,absent=values.filter(v=>v==='N').length;
-  $('finding-count').innerHTML=present||absent?`<b>${present} present</b> <span class="separator">·</span> ${absent} tested normal`:'No findings marked';
+  $('finding-count').innerHTML=present||absent?`<b>${present} present</b> <span class="separator">·</span> ${absent} normal`:'No findings marked';
   $('clear-all').disabled=!present&&!absent;
   for(const g of GROUPS){const selected=FINDINGS.filter(f=>f.group===g.id&&state.findings[f.id]).length;$(`counter-${g.id}`).textContent=selected?`${selected} marked`:'';}
   $('clear-all').disabled=!present&&!absent&&!gcsScored();
-  renderMarkedReview();filterFindings();
+  renderMarkedReview();filterFindings();renderIntro();
 }
+/* The how-to card shows on first use until dismissed, or when asked for again. */
+function renderIntro(){$('intro-card').hidden=!introOpen&&(state.introSeen||Object.keys(state.findings).length>0);}
 function renderMarkedReview(){
   const marked=FINDINGS.filter(f=>state.findings[f.id]);
   const present=marked.filter(f=>isPresent(state.findings[f.id])).length;
@@ -166,7 +169,7 @@ function renderMarkedReview(){
   document.querySelectorAll('[data-undo]').forEach(b=>b.disabled=!lastAction);
   $('marked-chips').innerHTML=marked.map(f=>{
     const yes=isPresent(state.findings[f.id]),text=yes?label(f):f.name;
-    return `<button class="finding" id="review-${f.id}" data-finding="${f.id}" data-review="true" data-state="${yes?'present':'absent'}" aria-label="${esc(text)}. ${yes?'Present. Tap for tested normal':'Tested normal. Tap to clear'}." title="${esc(f.hint)}"><span class="state-mark" aria-hidden="true">${yes?'✓':'−'}</span><span class="finding-label">${esc(text)}</span></button>`;
+    return `<button class="finding" id="review-${f.id}" data-finding="${f.id}" data-review="true" data-state="${yes?'present':'absent'}" aria-label="${esc(text)}. ${yes?'Present. Tap again for normal':'Normal. Tap again to clear'}." title="${esc(f.hint)}"><span class="state-mark" aria-hidden="true">${yes?'✓':'−'}</span><span class="finding-label">${esc(text)}</span></button>`;
   }).join('');
 }
 const fold=text=>text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
@@ -181,8 +184,7 @@ function filterFindings(){
   $('group-count').textContent=q?`${total} matches`:`${total} signs`;
   const category=CATEGORIES.find(c=>c[0]===activeCategory),group=GROUP_BY_ID.get(activeCategory);
   $('category-title').textContent=q?'Search results':category[3]||group.name;
-  $('category-symbol').textContent=q?'⌕':category[1];
-  $('category-hint').textContent=q?`${total} matches across all areas`:`${total} findings · change area`;
+  $('category-hint').textContent=q?`${total} ${total===1?'match':'matches'} in all areas`:`${total} signs`;
   $('finding-groups').classList.toggle('single-category',!q&&activeCategory!=='all');
   $('finding-groups').classList.toggle('multi-group',!q&&activeCategory!=='all'&&GROUPS.filter(g=>areaOf(g)===activeCategory).length>1);
   $('no-findings').hidden=total>0;$('search-clear').hidden=!q;
@@ -287,13 +289,13 @@ function resultCard(r,index){
   const {explains,unexplained,against}=evidenceFor(r,state.findings);
   const worth=FINDINGS.filter(f=>!state.findings[f.id]&&(weightOf(s,f.id)>=2||excludes(s,f.id))).sort((a,b)=>(weightOf(s,b.id)||2)-(weightOf(s,a.id)||2)).slice(0,5);
   return `<details class="result-card ${index===0?'top':''}" data-result="${s.id}" ${index===0?'open':''}>
-  <summary class="result-summary"><span class="rank-no">${String(ranked.indexOf(r)+1).padStart(2,'0')}</span><div class="result-copy"><h3 class="result-name">${esc(siteTitle(s))}</h3>${s.eponym?`<p class="result-anatomy">${esc(s.name)}</p>`:''}<div class="result-subline"><span class="side-pill">${esc(lesionText(r))}</span></div></div><div class="result-metric"><div class="percent">${pct}<small>%</small></div><div class="fit-caption">Pattern fit</div><div class="fit-bar" aria-hidden="true"><span style="--fit:${pct}%"></span></div><span class="expand-hint" aria-hidden="true"></span></div>${index===0?heroArt(r):''}</summary>
+  <summary class="result-summary"><span class="rank-no">${String(ranked.indexOf(r)+1).padStart(2,'0')}</span><div class="result-copy"><h3 class="result-name">${esc(siteTitle(s))}</h3>${s.eponym?`<p class="result-anatomy">${esc(s.name)}</p>`:''}<div class="result-subline"><span class="side-pill">${esc(lesionText(r))}</span></div></div><div class="result-metric"><div class="percent">${pct}<small>%</small></div><div class="fit-caption">Match</div><div class="fit-bar" aria-hidden="true"><span style="--fit:${pct}%"></span></div><span class="expand-hint" aria-hidden="true"></span></div>${index===0?heroArt(r):''}</summary>
   <div class="result-details">${tagsBlock('Explains','good',explains)}${unexplained.length?tagsBlock('Doesn’t explain','unexplained',unexplained):''}${against.length?tagsBlock('Argues against','against',against):''}${!unexplained.length&&!against.length?'<p class="clear-evidence">No mismatches among marked findings.</p>':''}<details class="clinical-more"><summary>Clinical notes & investigation</summary>${worth.length?`<div class="evidence-block"><div class="evidence-label">Worth checking</div><div class="chips">${worth.map(suggestionButton).join('')}</div></div>`:''}<dl class="clinical-dl"><dt>Region</dt><dd>${esc(zoneName(s.zone))}</dd><dt>Usual causes</dt><dd>${esc(s.causes)}</dd><dt>Investigation</dt><dd>${esc(s.investigation)}</dd></dl><blockquote class="pearl"><span class="pearl-label">At the bedside</span>${esc(s.pearl)}</blockquote><p class="score-detail" title="Evidence, absent expected signs, untested signs, contradictions, unexplained findings">Score components · E ${r.E} · A ${r.A} · U ${r.U} · C ${r.C} · O ${r.O}</p></details></div></details>`;
 }
 function renderResults(){
   ranked=rankSites(state.findings);renderMap();
   const next=examineNext(ranked.slice(0,4),state.findings);
-  $('examine-next').innerHTML=next.length?`<section class="examine-next" aria-label="Examine next"><div class="small-heading"><span class="next-spark" aria-hidden="true">✳</span> The next useful check</div><p>Choose a sign to see how to examine it, then record the side or tested normal.</p><div class="chips">${next.map(n=>suggestionButton(n.finding)).join('')}</div></section>`:'';
+  $('examine-next').innerHTML=next.length?`<section class="examine-next" aria-label="Examine next"><div class="small-heading"><span class="next-spark" aria-hidden="true">✳</span> The next useful check</div><p>Choose a sign to see how to examine it, then record the side, or normal.</p><div class="chips">${next.map(n=>suggestionButton(n.finding)).join('')}</div></section>`:'';
   const filtered=zoneFilter?ranked.filter(r=>r.site.zone===zoneFilter):ranked;
   const filterBanner=zoneFilter?`<div class="zone-filter"><span>${esc(zoneName(zoneFilter))}</span><button id="clear-zone">Clear filter ×</button></div>`:'';
   const anyPresent=Object.values(state.findings).some(isPresent);
@@ -306,7 +308,7 @@ function renderResults(){
   $('results-eyebrow').textContent=zoneFilter?'Filtered by region':'02 / Follow the anatomy';
   $('mobile-result-count').textContent=top?`${Math.round(top.fit*100)}%`:'';
   renderGcs();
-  $('dock-kicker').textContent=top?`Best pattern fit · ${Math.round(top.fit*100)}%`:'Your examination';$('dock-best').textContent=top?siteTitle(top.site):'Start with a localising finding';
+  $('dock-kicker').textContent=top?`Best match · ${Math.round(top.fit*100)}%`:'No match yet';$('dock-best').textContent=top?siteTitle(top.site):'Add a localising sign';
   renderDock();
 }
 function summaryText(){
@@ -330,7 +332,7 @@ async function copySummary(){
   }
   toast(copied?'Summary copied. Paste it into your notes.':'Copying is not available on this device.');
 }
-function renderDock(){$('mobile-dock').hidden=currentTab!=='localise'||mobileView==='results'||resultsOnScreen||!ranked.length||!$('toast').hidden;}
+function renderDock(){$('mobile-dock').hidden=currentTab!=='localise'||mobileView==='results'||resultsOnScreen||!Object.keys(state.findings).length||!$('toast').hidden;}
 function setMobileView(view){setTab(view==='results'?'results':'localise');$(`tab-${view==='results'?'results':'localise'}`).focus({preventScroll:true});}
 function update(){renderFindings();renderResults();save();}
 function loadFindings(findings){
@@ -370,20 +372,21 @@ function setGcs(id,raw){
 }
 function comaLauncher(){return `<button class="coma-launch" data-open-coma aria-haspopup="dialog"><span class="coma-launch-symbol" aria-hidden="true">GCS</span><span><strong>Coma assessment</strong><span class="coma-launch-note">Score the GCS, then work through the brainstem step by step</span></span><span aria-hidden="true">↗</span></button>`;}
 function gcsBlock(){
-  return `<div class="gcs" id="gcs">${GCS.map(c=>`<fieldset class="gcs-part"><legend>${esc(c.name)} <span class="gcs-short">${c.short}</span></legend><div class="gcs-options">${c.options.map(([n,name,desc])=>`<button class="gcs-option" data-gcs="${c.id}" data-gcs-value="${n}" aria-pressed="false" title="${esc(desc)}"><b>${n}</b><span>${esc(name)}</span><small>${esc(desc)}</small></button>`).join('')}<button class="gcs-option nt" data-gcs="${c.id}" data-gcs-value="NT" aria-pressed="false" title="${esc(c.nt)}"><b>${c.id==='v'?'T':'NT'}</b><span>${esc(c.nt.split(':')[0])}</span><small>${esc(cap(c.nt.split(': ')[1]))}</small></button></div></fieldset>`).join('')}<output class="gcs-total" id="gcs-total" aria-live="polite"></output><p class="gcs-warning" id="gcs-warning" hidden>Eyes open, but no movement of the limbs? Ask the patient to look up and down: locked-in syndrome scores misleadingly low.</p></div>`;
+  return `<div class="gcs" id="gcs">${GCS.map(c=>`<div class="gcs-part" role="group" aria-labelledby="gcs-${c.id}-label"><span class="gcs-label" id="gcs-${c.id}-label">${esc(c.name)} <span class="gcs-short">${c.short}</span></span><div class="gcs-options">${c.options.map(([n,name,desc])=>`<button class="gcs-option" data-gcs="${c.id}" data-gcs-value="${n}" aria-pressed="false" aria-label="${n}: ${esc(name)}. ${esc(desc)}" title="${esc(name)}: ${esc(desc)}">${n}</button>`).join('')}<button class="gcs-option nt" data-gcs="${c.id}" data-gcs-value="NT" aria-pressed="false" aria-label="${esc(c.nt)}" title="${esc(c.nt)}">${c.id==='v'?'T':'NT'}</button></div><p class="gcs-choice" id="gcs-${c.id}-choice"></p></div>`).join('')}<output class="gcs-total" id="gcs-total" aria-live="polite"></output><p class="gcs-warning" id="gcs-warning" hidden>Eyes open, but no movement of the limbs? Ask the patient to look up and down: locked-in syndrome scores misleadingly low.</p></div>`;
 }
 function renderComaSteps(){
   $('coma-steps').innerHTML=COMA_STEPS.map((step,i)=>`<li class="coma-step"><div class="coma-step-head"><span class="coma-step-no" aria-hidden="true">${i+1}</span><h3>${esc(step.title)}</h3></div><p>${esc(step.text)}</p>${step.gcs?gcsBlock():''}<div class="chips">${step.findings.map(id=>findingRow(FINDING_BY_ID.get(id),'coma-')).join('')}</div></li>`).join('');
 }
 function renderGcs(){
   document.querySelectorAll('[data-gcs]').forEach(b=>b.setAttribute('aria-pressed',String(String(state.gcs[b.dataset.gcs])===b.dataset.gcsValue)));
+  for(const c of GCS){const v=state.gcs[c.id],o=c.options.find(([n])=>n===v);$(`gcs-${c.id}-choice`).textContent=v===null?'Tap a score':v==='NT'?c.nt:`${o[1]}: ${o[2].charAt(0).toLowerCase()}${o[2].slice(1)}`;}
   const total=gcsTotal(),scored=gcsScored();
-  $('gcs-total').innerHTML=scored?`<span class="gcs-score">GCS ${total===null?'—':total}</span><span>${esc(GCS.map(gcsPart).join(' '))}</span><span class="gcs-band${total!==null&&total<=8?' severe':''}">${esc(total===null?GCS.some(c=>state.gcs[c.id]==='NT')?'Not testable in part: report the components':'Score all three components':gcsBand(total))}</span>`:'<span class="gcs-empty">Tap a score in each part. Tap again to clear it.</span>';
+  $('gcs-total').innerHTML=scored?`<span class="gcs-score">GCS ${total===null?'—':total}</span><span>${esc(GCS.map(gcsPart).join(' '))}</span><span class="gcs-band${total!==null&&total<=8?' severe':''}">${esc(total===null?GCS.some(c=>state.gcs[c.id]==='NT')?'Not testable in part: report the components':'Score all three components':gcsBand(total))}</span>`:'<span class="gcs-empty">Score each part; tap again to clear.</span>';
   $('gcs-warning').hidden=!(state.gcs.e>=3&&typeof state.gcs.m==='number'&&state.gcs.m<=2);
   const note=scored?`GCS ${gcsText()}${total===null?'':` · ${gcsBand(total).split(':')[0]}`}`:'Score the GCS, then work through the brainstem step by step';
   document.querySelectorAll('.coma-launch-note').forEach(n=>{n.textContent=note;});
   const top=ranked[0];
-  $('coma-footer').innerHTML=top?`<div><span class="coma-footer-kicker">Leading pattern · ${Math.round(top.fit*100)}% fit</span><strong>${esc(siteTitle(top.site))}</strong></div><button class="primary-action" data-coma-results>See results</button>`:'<div><span class="coma-footer-kicker">Leading pattern</span><strong>Mark a sign to begin</strong></div>';
+  $('coma-footer').innerHTML=top?`<div><span class="coma-footer-kicker">Best match · ${Math.round(top.fit*100)}%</span><strong>${esc(siteTitle(top.site))}</strong></div><button class="primary-action" data-coma-results>See results</button>`:'<div><span class="coma-footer-kicker">Best match</span><strong>Mark a sign to begin</strong></div>';
 }
 function openComa(){openSheet('coma-sheet');}
 
@@ -443,7 +446,7 @@ function renderPractice(){
     </section>`;
   }
   $('practice-card').innerHTML=`<header class="practice-case-head"><h3 id="practice-case-title" tabindex="-1">Case ${practice.number}</h3><span class="side-pill">${esc(TOPICS.find(t=>t.id===TOPIC_BY_SITE.get(c.site.id)).name)}</span></header>
-    <div class="practice-findings"><p class="practice-label">On examination</p>${tags(present,'present',f=>label(f,c.findings))}${normal.length?`<p class="practice-label">Tested normal</p>${tags(normal,'normal',f=>f.name)}`:''}</div>
+    <div class="practice-findings"><p class="practice-label">On examination</p>${tags(present,'present',f=>label(f,c.findings))}${normal.length?`<p class="practice-label">Normal</p>${tags(normal,'normal',f=>f.name)}`:''}</div>
     <div class="practice-question" role="group" aria-labelledby="practice-question-label"><p class="practice-label" id="practice-question-label">Which localisation explains this best?</p>${options}</div>
     ${answered?feedback:`<div class="practice-actions">${practice.hint?`<p class="practice-hint"><b>Hint:</b> ${esc(practiceHint(c.site))}</p>`:'<button class="text-button" id="practice-hint">Show a hint</button>'}<button class="text-button" id="practice-skip">Skip this case</button></div>`}`;
 }
@@ -506,7 +509,7 @@ function findingRow(f,prefix=''){
 
 function init(){
   applyTheme();
-  $('categories').innerHTML=CATEGORIES.map(([id,symbol,name])=>`<button class="category" data-category="${id}" aria-pressed="${id===activeCategory}"><span class="category-symbol" aria-hidden="true">${symbol}</span><span>${name}</span><span class="category-count"></span></button>`).join('');
+  $('categories').innerHTML=CATEGORIES.map(([id,symbol,name])=>`<button class="category" data-category="${id}" aria-pressed="${id===activeCategory}"><span class="category-symbol" aria-hidden="true">${symbol}</span><span class="category-name">${name}</span><span class="category-count"></span></button>`).join('');
   $('finding-groups').innerHTML=GROUPS.map(g=>`<details class="group" id="group-${g.id}" open><summary><span class="nerve-label" aria-hidden="true">${g.nerve}</span><span class="group-title">${g.name}</span><span class="group-counter" id="counter-${g.id}"></span><span class="chevron" aria-hidden="true"></span></summary><div class="group-content">${g.id==='coma'?comaLauncher():''}<div class="chips">${FINDINGS.filter(f=>f.group===g.id).map(f=>findingRow(f)).join('')}</div></div></details>`).join('');
   renderComaSteps();
   renderCases();
@@ -529,9 +532,11 @@ function init(){
     else if(b.hasAttribute('data-close-sheet'))b.closest('dialog').close();
     else if(b.hasAttribute('data-undo'))undoLast();
     else if(b.dataset.mobileView)setMobileView(b.dataset.mobileView);
-    else if(b.dataset.category){activeCategory=b.dataset.category;$('finding-search').value='';$('category-sheet').close();filterFindings();announce(`${b.textContent.replace(/\d+$/,'').trim()} findings`);}
+    else if(b.dataset.category){activeCategory=b.dataset.category;$('finding-search').value='';filterFindings();b.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});announce(`${b.textContent.replace(/\d+$/,'').trim()} findings`);}
     else if(b.dataset.preset)loadPreset(b.dataset.preset);
-    else if(b.dataset.loadExample)loadPreset(b.dataset.loadExample);
+    else if(b.dataset.loadExample){introOpen=false;state.introSeen=true;loadPreset(b.dataset.loadExample);}
+    else if(b.id==='intro-dismiss'){introOpen=false;state.introSeen=true;save();renderIntro();$('finding-search').focus({preventScroll:true});}
+    else if(b.id==='intro-open'){introOpen=true;renderIntro();$('intro-card').scrollIntoView({block:'nearest'});$('intro-dismiss').focus({preventScroll:true});}
     else if(b.dataset.zone){zoneFilter=zoneFilter===b.dataset.zone?null:b.dataset.zone;visibleLimit=6;renderResults();announce(zoneFilter?`Results filtered to ${zoneName(zoneFilter)}.`:'Showing all regions.');}
     else if(b.dataset.sectionLevel){const viewer=b.closest('.section-viewer').dataset.viewer;viewers[viewer].chosen=b.dataset.sectionLevel;viewers[viewer].focus=null;renderSectionViewer(viewer);$(viewer==='results'?'result-sections':'reference-sections').querySelector(`[data-section-level="${b.dataset.sectionLevel}"]`).focus({preventScroll:true});announce(`${SECTION_BY_ID.get(b.dataset.sectionLevel).name} section.`);}
     else if(b.dataset.structureChip)focusStructure(b.closest('.section-viewer').dataset.viewer,b.dataset.structureChip);
@@ -549,7 +554,6 @@ function init(){
     else if(b.id==='search-clear'||b.id==='reset-search'){$('finding-search').value='';filterFindings();$('finding-search').focus();}
     else if(TABS.includes(b.id.replace('tab-',''))&&b.id.startsWith('tab-'))setTab(b.id.replace('tab-',''));
     else if(b.id==='see-results')setMobileView('results');
-    else if(b.id==='open-categories')openSheet('category-sheet');
     else if(b.id==='open-cases')openSheet('case-sheet');
     else if(b.id==='open-review'||b.id==='review-results')openSheet('review-sheet');
     else if(b.id==='dismiss-toast')dismissToast();
