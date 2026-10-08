@@ -7,7 +7,7 @@ const TABS = ['localise','results','practice','reference'];
 const $ = id=>document.getElementById(id);
 const esc = value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const cap = text=>text[0].toUpperCase()+text.slice(1);
-const listText = items=>items.length<2?items.join(''):`${items.slice(0,-1).join(', ')} and ${items.at(-1)}`;
+const listText = items=>items.length<2?items.join(''):`${items.slice(0,-1).join(', ')} and ${items[items.length-1]}`;
 let state = {side:'right',findings:{},theme:'system',practice:{answered:0,correct:0,streak:0,best:0,topic:'all'}};
 let activePreset=null, zoneFilter=null, visibleLimit=6, currentTab='localise', mobileView='examination', resultsOnScreen=false, toastTimer, liveTimer;
 let examinationScroll=0, activeCategory='eyes', lastAction=null, activeCheckId=null, checkOrigin=null;
@@ -425,7 +425,7 @@ function init(){
   $('finding-search').addEventListener('input',filterFindings);
   $('theme').addEventListener('change',e=>{state.theme=e.target.value;applyTheme();save();});
   document.querySelectorAll('dialog').forEach(d=>{d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}});});
-  document.querySelector('[role="tablist"]').addEventListener('keydown',e=>{if(['ArrowRight','ArrowLeft','Home','End'].includes(e.key)){e.preventDefault();const i=TABS.indexOf(currentTab),name=e.key==='Home'?TABS[0]:e.key==='End'?TABS.at(-1):TABS[(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length];setTab(name);$(`tab-${name}`).focus();}});
+  document.querySelector('[role="tablist"]').addEventListener('keydown',e=>{if(['ArrowRight','ArrowLeft','Home','End'].includes(e.key)){e.preventDefault();const i=TABS.indexOf(currentTab),name=e.key==='Home'?TABS[0]:e.key==='End'?TABS[TABS.length-1]:TABS[(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length];setTab(name);$(`tab-${name}`).focus();}});
   if('IntersectionObserver' in window){const observer=new IntersectionObserver(entries=>{resultsOnScreen=entries[0].isIntersecting;renderDock();},{threshold:0});observer.observe($('results'));}
   else{const check=()=>{const r=$('results').getBoundingClientRect();resultsOnScreen=r.top<innerHeight&&r.bottom>0;renderDock();};addEventListener('scroll',check,{passive:true});addEventListener('resize',check);check();}
 }
