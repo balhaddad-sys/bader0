@@ -5,6 +5,20 @@ the anatomical sites that best explain them, shows the involved brainstem
 structures, and lets you practise on generated cases. It is a teaching aid, not
 a diagnostic tool.
 
+## What is in 3.5
+
+- **Install from the website, and use it offline.** On the website the atlas
+  can be added to the home screen: Chrome and Android offer an **Install this
+  app** button in the footer, and iPhone shows how to use Share → Add to Home
+  Screen. A service worker keeps a copy for offline use and picks up updates
+  when online. None of this runs inside the Android app.
+- **Start again** appears beside the area title once anything is marked;
+  Undo brings the examination back.
+- **Jump links** at the top of Reference: nerves, brainstem slices, coma,
+  reflexes, rule of 4 and bedside rules.
+- Less clutter: no "Soft" tags on the finding rows (the finding sheet still
+  says so), and the results are titled **Most likely lesion**.
+
 ## What is in 3.4
 
 Easier to use:
@@ -127,7 +141,8 @@ src/            the app: index.html with {{placeholders}} for the parts below
   anatomy.js    sagittal hero art, brainstem and cord sections and their structures
   app.js        interface
 tests/          node tests for data integrity and model behaviour
-tools/          build_html.py, build_apk.py, apk.py (packaging and v2 signing)
+tools/          build_html.py, build_web.mjs, build_apk.py, apk.py (packaging and v2 signing)
+site/           web app manifest, icons and service worker for the website
 android/shell/  the prebuilt Android wrapper taken from release 1.2.0
 android/version.json
 releases/       signed APKs
@@ -149,7 +164,7 @@ sets the version and app id from `android/version.json` in the binary manifest, 
 v2, which is enough for the app's minSdk of 26. To check a build independently:
 
 ```sh
-pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-3.4.0.apk
+pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-3.5.0.apk
 ```
 
 ### Application id and signing
@@ -170,9 +185,12 @@ git.
 ## Website (Vercel)
 
 `vercel.json` builds the static site with `node tools/build_web.mjs`, which
-inlines `src/` into `web/index.html` (byte-identical to the APK's page) and
-copies the newest APK from `releases/` so visitors can download the Android
-app from the footer. No dependencies are installed.
+inlines `src/` into `web/index.html` (byte-identical to the APK's page), adds
+the install files from `site/` (web app manifest, icons and an offline service
+worker whose cache name changes with every build) and copies the newest APK
+from `releases/` so visitors can download the Android app from the footer. No
+dependencies are installed. The page turns on the install and offline features
+only when served over https (or from localhost), never inside the Android app.
 
 To deploy, import the GitHub repository at https://vercel.com/new and set
 **Root Directory** to `cranial-nerve-localiser` (Framework preset: Other; leave

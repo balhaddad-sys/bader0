@@ -362,3 +362,10 @@ body:has(#finding-search:focus) .dock{display:none}
 .dock-text strong{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.2}
 @media(min-width:960px){.exam-toolbar{align-items:flex-start}.exam-toolbar .review-shortcut{min-height:66px}}
 .finding-label{overflow-wrap:anywhere;hyphens:auto}
+.start-again{min-height:32px;padding:4px 0;margin:0;font-size:.8rem}
+.ref-jump{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 20px}
+.ref-jump button{min-height:40px;padding:7px 13px;border:1px solid var(--line);border-radius:20px;background:var(--white);color:var(--violet);font-size:.82rem}
+.reference-section,#nerve-grid{scroll-margin-top:16px}
+.install-link{border:0;background:none;padding:0;font:inherit;cursor:pointer}
+.install-note{display:block;margin-top:6px;font-size:.78rem;color:var(--muted)}
+.install-link{color:var(--violet);text-decoration:underline;text-underline-offset:3px}

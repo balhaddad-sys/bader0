@@ -185,6 +185,8 @@ function filterFindings(){
   const category=CATEGORIES.find(c=>c[0]===activeCategory),group=GROUP_BY_ID.get(activeCategory);
   $('category-title').textContent=q?'Search results':category[3]||group.name;
   $('category-hint').textContent=q?`${total} ${total===1?'match':'matches'} in all areas`:`${total} signs`;
+  const marked=Object.keys(state.findings).length>0||gcsScored();
+  $('start-again').hidden=!!q||!marked;$('category-hint').hidden=!q&&marked;
   $('finding-groups').classList.toggle('single-category',!q&&activeCategory!=='all');
   $('finding-groups').classList.toggle('multi-group',!q&&activeCategory!=='all'&&GROUPS.filter(g=>areaOf(g)===activeCategory).length>1);
   $('no-findings').hidden=total>0;$('search-clear').hidden=!q;
@@ -390,6 +392,21 @@ function renderGcs(){
 }
 function openComa(){openSheet('coma-sheet');}
 
+/* ---- The website: offer the APK, install as a home-screen app and work offline. Never inside the Android app. ---- */
+function setupWebApp(){
+  const onWeb=(location.protocol==='https:'||location.hostname==='localhost')&&location.hostname!=='appassets.androidplatform.net';
+  $('apk-link').hidden=!onWeb;
+  if(!onWeb)return;
+  for(const [rel,href] of [['manifest','manifest.webmanifest'],['apple-touch-icon','apple-touch-icon.png']]){const link=document.createElement('link');link.rel=rel;link.href=href;document.head.append(link);}
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if(matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)return;
+  let deferred=null;
+  addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferred=event;$('install-app').hidden=false;});
+  addEventListener('appinstalled',()=>{$('install-app').hidden=true;});
+  $('install-app').addEventListener('click',async()=>{if(!deferred)return;deferred.prompt();try{await deferred.userChoice;}catch{}deferred=null;$('install-app').hidden=true;});
+  $('ios-install').hidden=!/iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
 /* ---- Practice ---- */
 function practicePool(){const topic=state.practice.topic;return PRACTICE_SITES.filter(s=>topic==='all'||TOPIC_BY_SITE.get(s.id)===topic);}
 function newPracticeCase(){
@@ -504,7 +521,7 @@ function renderCases(){
 }
 function findingRow(f,prefix=''){
   const sides=f.sided?`<span class="side-chips" role="group" aria-label="Side: ${esc(f.name)}">${[['R','R','right'],['L','L','left'],...(f.both===false?[]:[['B','Both','both sides']])].map(([value,text,word])=>`<button class="side-chip" data-side-for="${f.id}" data-side-value="${value}" aria-pressed="false" aria-label="${esc(f.name)}, ${word}">${text}</button>`).join('')}</span>`:'';
-  return `<div class="finding-row${f.sided?' sided':''}" id="${prefix}finding-row-${f.id}"><button class="finding" id="${prefix}finding-${f.id}" data-finding="${f.id}" data-state="untested"><span class="state-mark" aria-hidden="true"></span><span class="finding-label"></span>${f.soft?'<span class="soft-indicator" aria-hidden="true">Soft</span>':''}</button>${sides}<button class="finding-info" id="${prefix}info-${f.id}" data-info="${f.id}" aria-haspopup="dialog"><span aria-hidden="true">i</span></button></div>`;
+  return `<div class="finding-row${f.sided?' sided':''}" id="${prefix}finding-row-${f.id}"><button class="finding" id="${prefix}finding-${f.id}" data-finding="${f.id}" data-state="untested"><span class="state-mark" aria-hidden="true"></span><span class="finding-label"></span></button>${sides}<button class="finding-info" id="${prefix}info-${f.id}" data-info="${f.id}" aria-haspopup="dialog"><span aria-hidden="true">i</span></button></div>`;
 }
 
 function init(){
@@ -516,7 +533,7 @@ function init(){
   initMap();renderReference();renderFindings();renderResults();save();
   $('atlas-count').textContent=SITES.length;$('case-count').textContent=PRESETS.length;
   // On the website, offer the Android app; inside the Android shell the page is served from appassets.
-  $('apk-link').hidden=location.protocol!=='https:'||location.hostname==='appassets.androidplatform.net';
+  setupWebApp();
   document.addEventListener('click',event=>{
     const structure=event.target.closest('[data-structure]');
     if(structure&&structure.closest('.section-viewer')){focusStructure(structure.closest('.section-viewer').dataset.viewer,structure.dataset.structure);return;}
@@ -550,7 +567,8 @@ function init(){
     else if(b.id==='copy-summary')copySummary();
     else if(b.id==='clear-zone'){zoneFilter=null;renderResults();$('results').focus({preventScroll:true});}
     else if(b.id==='show-more'){const previous=visibleLimit;visibleLimit+=6;renderResults();const firstNew=document.querySelectorAll('.result-summary')[previous];firstNew?.focus({preventScroll:true});}
-    else if(b.id==='clear-all'||b.id==='review-clear')clearFindings();
+    else if(b.id==='clear-all'||b.id==='review-clear'||b.id==='start-again')clearFindings();
+    else if(b.dataset.jump)$(b.dataset.jump).scrollIntoView({block:'start',behavior:'smooth'});
     else if(b.id==='search-clear'||b.id==='reset-search'){$('finding-search').value='';filterFindings();$('finding-search').focus();}
     else if(TABS.includes(b.id.replace('tab-',''))&&b.id.startsWith('tab-'))setTab(b.id.replace('tab-',''));
     else if(b.id==='see-results')setMobileView('results');
