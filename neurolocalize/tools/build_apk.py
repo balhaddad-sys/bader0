@@ -11,41 +11,56 @@ VERSION_NAME, VERSION_CODE = '1.2.0', 3
 FIXED_TIME = (2026, 10, 8, 12, 0, 0)
 
 
-def patch_manifest(data):
-    """Set versionCode/versionName in the binary AndroidManifest (same-length string patch)."""
-    old, new = '1.1.0', VERSION_NAME
-    assert len(old) == len(new)
-    for enc in ('utf-16-le', 'utf-8'):
-        o, n = old.encode(enc), new.encode(enc)
-        if data.count(o) == 1:
-            data = data.replace(o, n)
-            break
-    else:
-        if new.encode('utf-16-le') not in data:
-            sys.exit('versionName string not found in manifest')
-    # walk start-element chunks to find the versionCode attribute (typed int, 0x10)
-    buf = bytearray(data)
-    sp_size = struct.unpack_from('<I', buf, 12)[0]
-    cnt, flags, sstart = struct.unpack_from('<I', buf, 16)[0], struct.unpack_from('<I', buf, 24)[0], struct.unpack_from('<I', buf, 28)[0]
+OLD_PACKAGE, PACKAGE = 'org.neurolocalize.academy', 'com.neurolocalize.app'
+
+
+def read_pool(buf):
+    """Return (strings, pool_size) for a UTF-16 AXML string pool starting at offset 8."""
+    size, cnt, styles, flags, sstart = struct.unpack_from('<I4I', buf, 12)[0:1] + struct.unpack_from('<4I', buf, 16)
+    if flags & 0x100 or styles:
+        sys.exit('unexpected manifest string pool format')
     offs = struct.unpack_from('<%dI' % cnt, buf, 36)
-
-    def string(k):
-        o = 8 + sstart + offs[k]
-        if flags & 0x100:
-            o += 2 if buf[o] & 0x80 else 1
-            m = buf[o]; o += 1
-            if m & 0x80: m = ((m & 0x7f) << 8) | buf[o]; o += 1
-            return bytes(buf[o:o + m]).decode()
+    out = []
+    for o in offs:
+        o += 8 + sstart
         n = struct.unpack_from('<H', buf, o)[0]
-        return bytes(buf[o + 2:o + 2 + 2 * n]).decode('utf-16-le')
+        if n & 0x8000:
+            n = ((n & 0x7fff) << 16) | struct.unpack_from('<H', buf, o + 2)[0]; o += 2
+        out.append(bytes(buf[o + 2:o + 2 + 2 * n]).decode('utf-16-le'))
+    return out, size
 
-    j = 8 + sp_size
+
+def build_pool(strings):
+    body, offs = b'', []
+    for st in strings:
+        offs.append(len(body))
+        enc = st.encode('utf-16-le')
+        body += struct.pack('<H', len(st)) + enc + b'\0\0'
+    body += b'\0' * ((4 - len(body) % 4) % 4)
+    sstart = 28 + 4 * len(strings)
+    head = struct.pack('<HHI5I', 0x0001, 28, sstart + len(body), len(strings), 0, 0, sstart, 0)
+    return head + struct.pack('<%dI' % len(strings), *offs) + body
+
+
+def patch_manifest(data):
+    """Rename the package, keep the activity class resolvable, and set the version (like aapt2
+    --rename-manifest-package): only the string pool and the versionCode value change."""
+    strings, pool_size = read_pool(data)
+    mapping = {OLD_PACKAGE: PACKAGE, '.MainActivity': OLD_PACKAGE + '.MainActivity', '1.1.0': VERSION_NAME}
+    for k in mapping:
+        if strings.count(k) != 1:
+            sys.exit(f'manifest string {k!r} not found exactly once')
+    strings = [mapping.get(x, x) for x in strings]
+    rest = data[8 + pool_size:]
+    body = build_pool(strings) + rest
+    buf = bytearray(struct.pack('<HHI', 0x0003, 8, 8 + len(body)) + body)
+    j = 8 + struct.unpack_from('<I', buf, 12)[0]
     while j < len(buf):
         t, _, size = struct.unpack_from('<HHI', buf, j)
         if t == 0x102:
             for k in range(struct.unpack_from('<H', buf, j + 28)[0]):
                 b = j + 36 + 20 * k
-                if string(struct.unpack_from('<I', buf, b + 4)[0]) == 'versionCode':
+                if strings[struct.unpack_from('<I', buf, b + 4)[0]] == 'versionCode':
                     struct.pack_into('<I', buf, b + 16, VERSION_CODE)
                     return bytes(buf)
         j += size

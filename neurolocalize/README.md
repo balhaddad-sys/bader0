@@ -20,7 +20,7 @@ This folder holds the unpacked 1.1.0 APK, the 1.2.0 enhancements and a reproduci
 
 ## Layout
 - `web/` – app assets (packaged as `assets/` in the APK)
-- `base/` – original native shell: manifest, dex, resources (unchanged except version)
+- `base/` – original native shell: manifest, dex, resources (the build sets the app ID and version)
 - `tools/diagrams.py` – diagram generator · `tools/build_apk.py` + `tools/signer/` – packaging/signing
 - `dist/NeuroLocalize-1.2.0.apk` – built, v2-signed APK
 
@@ -30,5 +30,10 @@ python3 tools/diagrams.py web/assets/atlas
 python3 tools/build_apk.py --apksig apksig-2.3.0.jar   # from Maven Central: com.android.tools.build:apksig
 ```
 A signing key is created in `signing/` (git-ignored) on first build. Keep it: future updates must
-be signed with the same key. Because 1.1.0 was signed with a different key, Android requires
-uninstalling 1.1.0 before installing 1.2.0 (local study progress is removed with it).
+be signed with the same key.
+
+The application ID is `com.neurolocalize.app` (1.1.0 used `org.neurolocalize.academy`). The build
+renames the manifest package and writes the activity's full class name, the same way
+`aapt2 --rename-manifest-package` does, so the compiled code keeps its original Java package.
+Because the ID changed, 1.2.0 installs as a separate app next to 1.1.0, and study progress from
+1.1.0 does not carry over.
