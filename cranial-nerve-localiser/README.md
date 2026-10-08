@@ -48,29 +48,35 @@ releases/       signed APKs
 
 ```sh
 node --test                           # data and model tests
+python3 -m unittest discover -s tests # manifest patching
 python3 tools/build_html.py           # writes dist/atlas.html (open it in a browser)
 pip install cryptography              # once
 CNL_STOREPASS=... python3 tools/build_apk.py --keystore path/to/release.p12
 ```
 
 `build_apk.py` reuses the compiled shell (`classes.dex`, resources and icons),
-sets the version from `android/version.json` in the binary manifest, stores
+sets the version and app id from `android/version.json` in the binary manifest, stores
 `resources.arsc` uncompressed and aligned, and signs with APK Signature Scheme
 v2, which is enough for the app's minSdk of 26. To check a build independently:
 
 ```sh
-pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-2.0.0.apk
+pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-2.0.1.apk
 ```
 
-### Signing
+### Application id and signing
 
-Android installs an update only when it is signed with the same key as the
-installed app. Release 2.0.0 is signed with a new key, so it cannot update a
-1.2.0 install in place: uninstall 1.2.0 first. Saved findings live in the app's
-local storage and are lost when it is uninstalled. Keep the 2.0 keystore safe
-and outside git; future releases must use it to update in place. If you still
-have the key that signed 1.2.0, build with it instead and the update installs
-over the old version.
+From 2.0.1 the app id is `org.bedsideatlas.craniallocaliser2`, set by
+`applicationId` in `android/version.json`. Release 1.2.0 used
+`org.bedsideatlas.craniallocaliser` with a different signing key, so 2.0.1
+installs as a separate app beside it instead of failing with "App not
+installed". You can uninstall 1.2.0 whenever you like; findings saved in it do
+not carry over. The compiled classes keep their original Java package, and
+`patch_manifest` writes the activity's full class name so the new id still
+finds it. Leave `applicationId` out to keep the shell's original id.
+
+Every later release must keep this app id and be signed with the 2.0 keystore,
+or Android will refuse to update it in place. Keep the keystore safe and out of
+git.
 
 ## The Android shell
 

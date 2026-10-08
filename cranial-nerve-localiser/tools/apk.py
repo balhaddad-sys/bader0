@@ -3,7 +3,7 @@
 The Android shell (dex, resources, icons) never changes, so instead of a full
 Gradle build we repackage it with a new atlas.html:
 
-* patch_manifest_version: rewrites versionCode/versionName in binary AXML;
+* patch_manifest: rewrites the version and application id in binary AXML;
 * aligned_zip: writes the APK, storing resources.arsc uncompressed and
   4-byte aligned (required when targetSdk >= 30);
 * sign_v2: adds an APK Signature Scheme v2 block (sufficient for minSdk 24+).
@@ -64,8 +64,17 @@ def _encode_string_pool(strings):
     return header + struct.pack(f'<{len(strings)}I', *offsets) + body
 
 
-def patch_manifest_version(axml: bytes, version_code: int, version_name: str) -> bytes:
-    """Return AndroidManifest.xml (binary) with a new versionCode and versionName."""
+COMPONENT_TAGS = {'application', 'activity', 'activity-alias', 'service', 'receiver', 'provider'}
+
+
+def patch_manifest(axml: bytes, version_code: int, version_name: str, package: str = None) -> bytes:
+    """Return AndroidManifest.xml (binary) with a new version and, optionally, application id.
+
+    Changing the package keeps the compiled classes where they are: relative component
+    names such as ".MainActivity" are expanded with the original package first, as
+    aapt2 --rename-manifest-package does. New strings are appended to the pool so a
+    string shared by other attributes is never altered.
+    """
     _, xml_header_size, _ = struct.unpack_from('<HHI', axml, 0)
     pool_off = xml_header_size
     if struct.unpack_from('<H', axml, pool_off)[0] != RES_STRING_POOL:
@@ -73,32 +82,50 @@ def patch_manifest_version(axml: bytes, version_code: int, version_name: str) ->
     strings, pool_size = _read_string_pool(axml, pool_off)
     rest = bytearray(axml[pool_off + pool_size:])
 
-    code_idx, name_idx = strings.index('versionCode'), strings.index('versionName')
+    def set_string(a, value):
+        strings.append(value)
+        struct.pack_into('<I', rest, a + 8, len(strings) - 1)   # rawValue
+        struct.pack_into('<I', rest, a + 16, len(strings) - 1)  # typed data
+
+    original_package = None
     patched = set()
     p = 0
     while p < len(rest):
         chunk_type, header_size, chunk_size = struct.unpack_from('<HHI', rest, p)
         if chunk_type == RES_XML_START_ELEMENT:
             ext = p + header_size
+            element = strings[struct.unpack_from('<I', rest, ext + 4)[0]]
             attr_start, attr_size, attr_count = struct.unpack_from('<HHH', rest, ext + 8)
             for i in range(attr_count):
                 a = ext + attr_start + i * attr_size
-                name = struct.unpack_from('<I', rest, a + 4)[0]
+                attr = strings[struct.unpack_from('<I', rest, a + 4)[0]]
                 data_type = rest[a + 15]
-                if name == code_idx:
+                value = struct.unpack_from('<I', rest, a + 16)[0]
+                if element == 'manifest' and attr == 'versionCode':
                     if data_type != TYPE_INT_DEC:
                         raise ValueError('versionCode is not a plain integer')
                     struct.pack_into('<I', rest, a + 16, version_code)
-                    patched.add('code')
-                elif name == name_idx:
+                    patched.add('versionCode')
+                elif element == 'manifest' and attr == 'versionName':
                     if data_type != TYPE_STRING:
                         raise ValueError('versionName is not a string')
-                    value_idx = struct.unpack_from('<I', rest, a + 16)[0]
-                    strings[value_idx] = version_name
-                    patched.add('name')
+                    set_string(a, version_name)
+                    patched.add('versionName')
+                elif element == 'manifest' and attr == 'package':
+                    original_package = strings[value]
+                    if package:
+                        set_string(a, package)
+                        patched.add('package')
+                elif package and element in COMPONENT_TAGS and attr == 'name' and data_type == TYPE_STRING:
+                    name = strings[value]
+                    if original_package is None:
+                        raise ValueError('Component found before the manifest package')
+                    if name.startswith('.') or '.' not in name:
+                        set_string(a, original_package + (name if name.startswith('.') else '.' + name))
         p += chunk_size
-    if patched != {'code', 'name'}:
-        raise ValueError(f'Could not find version attributes (patched: {patched})')
+    expected = {'versionCode', 'versionName'} | ({'package'} if package else set())
+    if patched != expected:
+        raise ValueError(f'Could not find manifest attributes (patched: {sorted(patched)})')
 
     pool = _encode_string_pool(strings)
     body = axml[8:pool_off] + pool + bytes(rest)

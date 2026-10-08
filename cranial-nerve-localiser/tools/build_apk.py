@@ -20,7 +20,7 @@ import sys
 from cryptography.hazmat.primitives.serialization import pkcs12
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from apk import aligned_zip, patch_manifest_version, sign_v2  # noqa: E402
+from apk import aligned_zip, patch_manifest, sign_v2  # noqa: E402
 from build_html import ROOT, build_html  # noqa: E402
 
 SHELL = ROOT / 'android' / 'shell'
@@ -52,8 +52,8 @@ def main():
         raise SystemExit('Keystore must contain a private key and certificate')
 
     html = build_html().encode('utf-8')
-    manifest = patch_manifest_version((SHELL / 'AndroidManifest.xml').read_bytes(),
-                                      version['versionCode'], version['versionName'])
+    manifest = patch_manifest((SHELL / 'AndroidManifest.xml').read_bytes(),
+                              version['versionCode'], version['versionName'], version.get('applicationId'))
     files = {'AndroidManifest.xml': manifest, 'assets/atlas.html': html}
     entries = [(name, files.get(name) or (SHELL / name).read_bytes(), store) for name, store in LAYOUT]
 
@@ -61,7 +61,7 @@ def main():
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_bytes(signed)
     (args.out.parent / 'atlas.html').write_bytes(html)
-    print(f"{args.out} · {version['versionName']} ({version['versionCode']}) · {len(signed):,} bytes")
+    print(f"{args.out} · {version.get('applicationId', 'original id')} · {version['versionName']} ({version['versionCode']}) · {len(signed):,} bytes")
 
 
 if __name__ == '__main__':
