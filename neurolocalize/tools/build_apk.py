@@ -7,7 +7,7 @@ Env:   NL_KEY_PASSWORD (default 'neurolocalize'), NL_KEY_ALIAS (default 'neurolo
 import argparse, os, struct, subprocess, sys, tempfile, zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSION_NAME, VERSION_CODE = '1.7.0', 8
+VERSION_NAME, VERSION_CODE = '1.8.0', 9
 FIXED_TIME = (2026, 10, 8, 12, 0, 0)
 
 

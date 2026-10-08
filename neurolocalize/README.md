@@ -1,7 +1,18 @@
-# NeuroLocalize 1.7.0
+# NeuroLocalize 1.8.0
 
 Offline neurological-localization study app (Android WebView shell + HTML/JS content).
 This folder holds the unpacked 1.1.0 APK, the 1.2 and 1.3 enhancements and a reproducible build.
+
+## What's new in 1.8.0
+- **Fuller case explanations (all 120 cases)** in `web/explain.js`: what each finding tells you, the
+  anatomy behind the best answer, and a specific reason for every option, shown in tutor feedback,
+  session results and exam review.
+- **The right figure for each case**: every case now names its most relevant figures (best first)
+  instead of the first figure for its region; extra relevant figures appear as thumbnails.
+- **Figure reading guides (all 35)** in `web/figguide.js`: orientation, what each labelled element
+  means, how to use it at the bedside, and its limits, in the lesson, case and zoom views.
+- **Deeper lessons**: a "Why it works" paragraph under each of the 51 lesson sections, and lesson
+  figures ordered by relevance.
 
 ## What's new in 1.7.0
 - **Exam mode**: build a mock paper (10, 20 or 40 questions; untimed, 90 s or 60 s per question;
@@ -68,7 +79,7 @@ This folder holds the unpacked 1.1.0 APK, the 1.2 and 1.3 enhancements and a rep
 - `web/` – app assets (packaged as `assets/` in the APK)
 - `base/` – original native shell: manifest, dex, resources (the build sets the app ID and version)
 - `tools/diagrams.py` – diagram generator · `tools/build_apk.py` + `tools/signer/` – packaging/signing
-- `dist/NeuroLocalize-1.7.0.apk` – built, v2-signed APK
+- `dist/NeuroLocalize-1.8.0.apk` – built, v2-signed APK
 
 ## Build
 ```
