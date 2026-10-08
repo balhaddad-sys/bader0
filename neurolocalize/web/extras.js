@@ -59,40 +59,57 @@ window.NL_EXTRAS = {
    sourceIds:['px-lumbosacral','px-femoral','px-obturator','cs-fibular','px-deep-fibular','cs-roots']}
  ],
  drills: [
-  {id:'roots',title:'Root signatures',description:'Reflexes, movements and dermatome points.',diagram:'root-signatures',prompt:'Which root best matches this?',items:[
-   ['Biceps reflex','C5–C6'],['Brachioradialis reflex','C6'],['Triceps reflex','C7'],['Knee reflex','L3–L4'],['Ankle reflex','S1'],
-   ['Shoulder abduction','C5'],['Wrist extension','C6'],['Finger flexion and small hand muscles','C8'],['Great-toe extension','L5'],
-   ['Sensation over the thumb','C6'],['Sensation over the middle finger','C7'],['Sensation over the little finger','C8'],
-   ['Sensation at the umbilicus','T10'],['Sensation at the nipple line','T4'],['Sensation at the medial ankle','L4'],['Sensation at the outer heel','S1']]},
-  {id:'fields',title:'Visual field defects',description:'Match the field loss to the lesion.',diagram:'field-defects',prompt:'Where is the lesion most likely?',items:[
-   ['Loss of vision in one eye only','Optic nerve'],['Central scotoma in one eye with a relative afferent pupillary defect','Optic nerve'],
-   ['Bitemporal hemianopia','Optic chiasm'],['Incongruous contralateral homonymous hemianopia','Optic tract'],
-   ['Contralateral homonymous superior quadrantanopia','Temporal lobe (Meyer loop)'],['Contralateral homonymous inferior quadrantanopia','Parietal optic radiation'],
-   ['Congruous contralateral hemianopia with macular sparing','Occipital cortex']]},
-  {id:'aphasia',title:'Aphasia types',description:'Fluency, comprehension, repetition.',diagram:'aphasia-tree',prompt:'Which aphasia fits best?',items:[
-   ['Nonfluent; comprehends; cannot repeat','Broca aphasia'],['Nonfluent; comprehends; repeats well','Transcortical motor aphasia'],
-   ['Nonfluent; poor comprehension; cannot repeat','Global aphasia'],['Nonfluent; poor comprehension; repeats well','Mixed transcortical aphasia'],
-   ['Fluent; comprehends; cannot repeat','Conduction aphasia'],['Fluent; comprehends; repeats; word-finding pauses','Anomic aphasia'],
-   ['Fluent; poor comprehension; cannot repeat','Wernicke aphasia'],['Fluent; poor comprehension; repeats well','Transcortical sensory aphasia']]},
-  {id:'eyes',title:'Eye muscles',description:'Actions, best test positions and nerves.',diagram:'eye-muscles',prompt:'Which muscle is this?',items:[
-   ['Abducts the eye','Lateral rectus (VI)'],['Adducts the eye','Medial rectus (III)'],['Depresses the eye best in adduction','Superior oblique (IV)'],
-   ['Elevates the eye best in adduction','Inferior oblique (III)'],['Elevates the eye best in abduction','Superior rectus (III)'],['Depresses the eye best in abduction','Inferior rectus (III)']]},
-  {id:'brainstem',title:'Brainstem syndromes',description:'Level and medial or lateral.',diagram:'brainstem-rule',prompt:'Where is the lesion most likely?',items:[
-   ['Same-side third nerve palsy with opposite arm and leg weakness','Medial midbrain'],
-   ['Same-side abducens palsy with opposite hemiparesis','Medial pons'],
-   ['Same-side tongue weakness, opposite hemiparesis and opposite vibration loss','Medial medulla'],
-   ['Same-side facial pain loss and Horner syndrome, opposite body pain loss, hoarseness','Lateral medulla'],
-   ['Same-side facial weakness, hearing loss and limb ataxia with opposite body pain loss','Lateral pons']]},
-  {id:'nerves',title:'Arm and leg nerves',description:'Name the nerve from the deficit.',diagram:'lumbosacral',prompt:'Which nerve is most likely affected?',items:[
-   ['Wrist drop with numbness over the back of the first web space','Radial nerve'],
-   ['Weak thumb abduction with numb index fingertip','Median nerve'],
-   ['Weak finger spreading, numb little finger and split ring finger','Ulnar nerve'],
-   ['Weak deltoid with a numb patch over the lateral shoulder','Axillary nerve'],
-   ['Weak elbow flexion with numb lateral forearm','Musculocutaneous nerve'],
-   ['Foot drop and weak eversion with inversion spared','Common fibular nerve'],
-   ['Weak knee extension and absent knee reflex with hip adduction spared','Femoral nerve'],
-   ['Weak hip adduction with medial thigh numbness','Obturator nerve'],
-   ['Weak plantar flexion with numbness of the sole','Tibial nerve']]}
+  {id:'roots',title:'Root signatures',description:'Short neck and back pain cases: name the nerve root.',diagram:'root-signatures',prompt:'Which nerve root is most likely affected?',items:[
+   ['A 45-year-old has neck pain shooting to the shoulder. The biceps jerk is reduced and the arm is weak lifting out to the side.','C5–C6','The biceps reflex and shoulder abduction both run through C5–C6.'],
+   ['A 50-year-old gardener has neck pain into the thumb. The forearm (brachioradialis) reflex is lost and wrist extension is weak.','C6','Thumb numbness, wrist extension and the brachioradialis reflex are the C6 triad.'],
+   ['A 52-year-old has pain down the back of the arm into the middle finger. The triceps jerk is gone and elbow straightening is weak.','C7','Triceps reflex, elbow extension and the middle finger all belong to C7.'],
+   ['A 60-year-old has numbness of the little finger and the inner forearm. Gripping and fine finger movements are weak.','C8','C8 supplies the little finger, the inner forearm and the long finger flexors and hand muscles.'],
+   ['A 40-year-old has pain down the front of the thigh to the inner shin. The knee jerk is reduced and climbing stairs is hard.','L3–L4','The knee reflex and knee extension come from L3–L4, and L4 reaches the inner shin and ankle.'],
+   ['A 38-year-old lifted a heavy box and now has pain down the side of the leg to the top of the foot. He cannot lift his big toe; the ankle jerk is normal.','L5','Big-toe extension and the top of the foot are L5; L5 has no reliable reflex, so the ankle jerk is spared.'],
+   ['A 47-year-old has pain down the back of the leg to the outer heel. She cannot stand on tiptoe on that side and the ankle jerk is absent.','S1','Plantar flexion, the ankle reflex and the outer heel and little toe are S1.'],
+   ['A 70-year-old has a band of shingles rash running around the body at the level of the belly button.','T10','The umbilicus is the T10 dermatome.'],
+   ['A 66-year-old has burning pain wrapping around the chest at the level of the nipples.','T4','The nipple line is the T4 dermatome.'],
+   ['A 35-year-old has a weak, stiff shoulder after a neck injury. The arm cannot be lifted sideways and the outer shoulder is numb; reflexes are normal.','C5','Shoulder abduction and the outer shoulder are mainly C5.']]},
+  {id:'fields',title:'Visual field defects',description:'Describe what the patient cannot see: place the lesion.',diagram:'field-defects',prompt:'Where is the lesion most likely?',items:[
+   ['A 30-year-old woman has painful, blurred vision in her right eye only. The right pupil reacts less well when the light is swung to it.','Optic nerve','One eye plus a relative afferent pupil defect means the problem is before the chiasm.'],
+   ['A 72-year-old woke unable to see anything from his left eye; the right eye is normal.','Optic nerve','Loss confined to one eye puts the lesion in that eye or its optic nerve.'],
+   ['A 45-year-old keeps bumping into door frames on both sides. Testing shows she has lost the outer half of the field in each eye.','Optic chiasm','The crossing fibres from both nasal retinas meet at the chiasm, so both temporal fields go.'],
+   ['A 58-year-old has lost the right half of vision in both eyes, but the shape of the loss differs between the eyes and the right pupil is subtly sluggish.','Optic tract','A homonymous loss that is incongruous, with an afferent pupil sign, points to the optic tract.'],
+   ['After surgery on his left temporal lobe a 40-year-old has lost the upper right quarter of vision in both eyes.','Temporal lobe (Meyer loop)','The lower fibres (Meyer loop) loop through the temporal lobe and carry the upper field.'],
+   ['After a right parietal stroke a 66-year-old has lost the lower left quarter of vision in both eyes.','Parietal optic radiation','The upper radiation fibres run through the parietal lobe and carry the lower field.'],
+   ['A 75-year-old has lost the left half of vision in both eyes, identical in each eye, but can still read the central letters.','Occipital cortex','A congruous hemianopia with macular sparing is classic for occipital cortex.']]},
+  {id:'aphasia',title:'Aphasia types',description:'Listen to how the patient speaks: name the aphasia.',diagram:'aphasia-tree',prompt:'Which aphasia fits best?',items:[
+   ['After a stroke a 62-year-old speaks in slow, effortful, short phrases. He follows commands well but cannot repeat a sentence.','Broca aphasia','Non-fluent, good understanding, poor repetition.'],
+   ['A 70-year-old barely starts speaking and says little, yet follows commands and repeats long sentences perfectly.','Transcortical motor aphasia','Like Broca aphasia, but repetition is preserved.'],
+   ['A 68-year-old after a large left stroke says almost nothing, follows no commands and cannot repeat.','Global aphasia','Every language function is lost.'],
+   ['A 74-year-old says little and understands little, but echoes back whatever you say word for word.','Mixed transcortical aphasia','Repetition is the only function left.'],
+   ['A 58-year-old speaks fluently and understands well, but repeating a sentence produces garbled sound errors.','Conduction aphasia','Fluent, good understanding, poor repetition.'],
+   ['A 65-year-old speaks fluently, understands and repeats, but keeps pausing to hunt for names of objects.','Anomic aphasia','Only word finding is affected.'],
+   ['A 71-year-old talks rapidly in jumbled, meaningless sentences, does not follow commands and cannot repeat. He seems unaware of the problem.','Wernicke aphasia','Fluent, poor understanding, poor repetition.'],
+   ['A 76-year-old speaks fluently but makes no sense of what is said to him, yet repeats your sentences accurately.','Transcortical sensory aphasia','Like Wernicke aphasia, but repetition is preserved.']]},
+  {id:'eyes',title:'Eye muscles',description:'Double vision cases: name the weak eye muscle.',diagram:'eye-muscles',prompt:'Which eye muscle is weak?',items:[
+   ['A 60-year-old with diabetes sees double when looking to the right. His right eye will not turn outward.','Lateral rectus (VI)','Turning the eye outward (abduction) is the lateral rectus, supplied by the sixth nerve.'],
+   ['A 55-year-old sees double looking left; her right eye will not move inward toward the nose. Her pupil and eyelid are normal.','Medial rectus (III)','Turning the eye inward (adduction) is the medial rectus.'],
+   ['After a head injury a 25-year-old sees double reading and walking downstairs, and tilts his head to the opposite side. His eye cannot look down when turned in.','Superior oblique (IV)','The superior oblique depresses the eye best when it is turned in; the fourth nerve is easily hurt by head trauma.'],
+   ['A 50-year-old\'s left eye cannot look up when turned toward the nose.','Inferior oblique (III)','In adduction, elevation is done by the inferior oblique.'],
+   ['A 45-year-old\'s right eye cannot look up when turned outward.','Superior rectus (III)','In abduction, elevation is done by the superior rectus.'],
+   ['A 48-year-old\'s left eye cannot look down when turned outward.','Inferior rectus (III)','In abduction, depression is done by the inferior rectus.']]},
+  {id:'brainstem',title:'Brainstem syndromes',description:'Crossed signs at the bedside: find the level and side.',diagram:'brainstem-rule',prompt:'Where is the lesion most likely?',items:[
+   ['A 66-year-old has a droopy right eyelid, a large right pupil and an eye turned down and out. His left arm and leg are weak.','Medial midbrain','A third nerve palsy on one side with weakness on the other places the lesion in the medial midbrain.'],
+   ['A 70-year-old cannot turn his left eye outward and has weakness of the right arm and leg.','Medial pons','A sixth nerve palsy on one side with crossed weakness places the lesion in the medial pons.'],
+   ['A 63-year-old\'s tongue points to the left when stuck out. Her right arm and leg are weak and she cannot feel vibration on the right.','Medial medulla','Twelfth nerve on one side, plus the crossed pyramid and medial lemniscus, is the medial medulla.'],
+   ['A 58-year-old has sudden vertigo, hoarseness and trouble swallowing. The left face has lost pain feeling and the left pupil is small, while pain is lost over the right body.','Lateral medulla','Crossed pain loss with Horner syndrome and hoarseness is the lateral medullary (Wallenberg) syndrome.'],
+   ['A 61-year-old has a weak left face, deafness in the left ear, a clumsy left arm and loss of pain sensation over the right body.','Lateral pons','Facial weakness, hearing loss and ataxia on one side with crossed pain loss point to the lateral pons.']]},
+  {id:'nerves',title:'Arm and leg nerves',description:'Weakness and numbness in a limb: name the nerve.',diagram:'lumbosacral',prompt:'Which nerve is most likely affected?',items:[
+   ['A 30-year-old fell asleep drunk with his arm over a chair. He wakes with a wrist drop and a numb patch on the back of the hand near the thumb. His triceps works.','Radial nerve','Wrist drop with sensory loss on the back of the first web space is the radial nerve at the arm.'],
+   ['A 52-year-old typist has numb thumb, index and middle fingers that wake her at night, and weakness lifting her thumb away from the palm.','Median nerve','Night numbness of the first three fingers with weak thumb abduction is carpal tunnel (median nerve).'],
+   ['A 45-year-old who leans on his elbows has a numb little finger and half of the ring finger, and cannot spread his fingers.','Ulnar nerve','The ulnar nerve supplies the little finger, half the ring finger and the finger-spreading muscles.'],
+   ['After a shoulder dislocation a 22-year-old cannot lift his arm out to the side and has a numb patch over the outer shoulder.','Axillary nerve','The axillary nerve supplies the deltoid and the skin over it.'],
+   ['After heavy lifting a 35-year-old has weak elbow bending and numbness along the outer forearm.','Musculocutaneous nerve','It supplies the biceps and ends as the lateral cutaneous nerve of the forearm.'],
+   ['A 40-year-old who sits with his legs crossed now has a foot drop and cannot turn his foot outward, but can still turn it inward.','Common fibular nerve','Foot drop with weak eversion and spared inversion localizes to the fibular nerve at the fibular head, not L5.'],
+   ['After pelvic surgery a 55-year-old has a buckling knee, an absent knee jerk and a numb inner shin, but can still squeeze the thighs together.','Femoral nerve','Weak knee extension with spared hip adduction separates the femoral nerve from an L3–L4 root.'],
+   ['After a difficult childbirth a 29-year-old cannot bring her leg inward and has numbness over the inner thigh.','Obturator nerve','The obturator nerve supplies the hip adductors and the inner thigh.'],
+   ['A 60-year-old cannot stand on tiptoe on one side and has a numb sole; the ankle jerk is reduced but the back is pain free.','Tibial nerve','The tibial nerve supplies plantar flexion and the sole.']]}
  ],
  finder: {
   levels: [
