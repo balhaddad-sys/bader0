@@ -5,6 +5,38 @@ the anatomical sites that best explain them, shows the involved brainstem
 structures, and lets you practise on generated cases. It is a teaching aid, not
 a diagnostic tool.
 
+## What is in 3.3
+
+- **Coma assessment.** A step-by-step sheet, opened from the Conscious level
+  area or Reference: treat first, score the Glasgow Coma Scale, then pupils,
+  eye movements, brainstem reflexes, motor responses, breathing and clues to
+  the cause. Each sign records straight into the examination and the leading
+  pattern shows at the foot of the sheet.
+- **GCS calculator** with the structured descriptors, not-testable and
+  intubated (VT) options and a severity band. Scoring marks reduced
+  consciousness and, for M3 or M2, the matching posturing; it is saved, copied
+  into the summary and undone with the findings. Open eyes with M1–2 prompts a
+  check for locked-in syndrome.
+- **21 new signs** in four coma groups and the context group: small reactive
+  pupils, roving eyes, ocular bobbing, doll's eye and caloric responses,
+  calorics provoking nystagmus, seizures, five breathing patterns (Cheyne–Stokes,
+  hyperventilation, apneustic, ataxic, slow), neck stiffness, fever, the Cushing
+  response, drugs, low glucose, cardiac arrest, head injury, plus reduced
+  pharyngeal sensation (IX) and a weak cough for the gag and cough reflexes.
+- **11 new localisations** in a Coma & consciousness practice topic: central
+  and tonsillar herniation, subarachnoid haemorrhage, bacterial meningitis, HSV
+  encephalitis, non-convulsive status, opioid toxicity, functional
+  unresponsiveness, hypoxic-ischaemic injury, akinetic mutism and cerebellar
+  haemorrhage. With pinpoint pupils alone, opioid toxicity now leads; bobbing
+  and weakness of all four limbs move it to the pons.
+- **Coma, level by level:** pupils (drawn), eye movements, motor responses and
+  breathing traces for uncal herniation, diencephalon, midbrain, pons and
+  medulla. **Brainstem reflexes:** afferent, centre and efferent diagrams for the
+  light, corneal, doll's eye and caloric, gag and cough reflexes and the drive to
+  breathe, with a note on brainstem death testing.
+- The medulla section gains the respiratory centres, and foramen magnum sites
+  now show it. 104 sites, 119 findings and 59 cases in all.
+
 ## What is in 3.2
 
 - **Consciousness and coma.** A new area groups reduced consciousness with
@@ -100,7 +132,7 @@ sets the version and app id from `android/version.json` in the binary manifest, 
 v2, which is enough for the app's minSdk of 26. To check a build independently:
 
 ```sh
-pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-3.2.0.apk
+pip install apksigtool && apksigtool verify dist/cranial-nerve-localiser-3.3.0.apk
 ```
 
 ### Application id and signing

@@ -7,7 +7,8 @@ import vm from 'node:vm';
 const src = name => readFileSync(new URL(`../src/${name}`, import.meta.url), 'utf8');
 const context = vm.createContext({});
 vm.runInContext(`${src('data.js')}\n${src('model.js')}\n${src('anatomy.js')}
-globalThis.api = {SITES, FINDINGS, PRESETS, ZONES, TOPICS, GROUPS, NERVES, STRUCTURES, SECTIONS,
+globalThis.api = {SITES, FINDINGS, PRESETS, ZONES, TOPICS, GROUPS, NERVES, STRUCTURES, SECTIONS, GCS, COMA_LEVELS, REFLEXES, COMA_STEPS,
+  pupilPair, breathTrace, reflexArc,
   FINDING_BY_ID, TOPIC_BY_SITE, scoreSite, rankSites, examineNext, findingLabel, parseLink,
   makePracticeCase, practiceOptions, sectionForSite, structureStates, sectionSvg, anatomyArt, PRACTICE_SITES,
   levelGlyph, NERVE_GLYPHS};`, context);
@@ -129,9 +130,24 @@ test('bilateral findings', () => {
 test('consciousness, coma and the gag reflex', () => {
   // Drowsiness alone: a toxic or metabolic cause is the commonest.
   assert.equal(top({ consciousness: 'P' }).site.id, 'metabolic-encephalopathy');
-  // The pupils localise coma: pinpoint to the pons, fixed mid-position to the midbrain.
-  assert.equal(top({ consciousness: 'P', pinpointPupils: 'P' }).site.id, 'pontine-haemorrhage');
+  // Pinpoint pupils: opioids first; with bobbing and weakness of all four limbs, the pons.
+  assert.equal(top({ consciousness: 'P', pinpointPupils: 'P' }).site.id, 'opioid-toxicity');
+  assert.equal(top({ consciousness: 'P', pinpointPupils: 'P', bobbing: 'P', quadriparesis: 'P' }).site.id, 'pontine-haemorrhage');
+  // Fixed mid-position pupils: midbrain. One dilated pupil: uncal herniation on that side.
   assert.equal(top({ consciousness: 'P', fixedMidPupils: 'P' }).site.id, 'aras-coma');
+  const uncal = top({ consciousness: 'P', pupil: 'R', weak: 'L' });
+  assert.equal(uncal.site.id, 'uncal'); assert.equal(uncal.side, 'R');
+  // Breathing patterns follow the level: Cheyne–Stokes high, ataxic breathing in the medulla.
+  assert.equal(top({ consciousness: 'P', ataxicBreathing: 'P', cushing: 'P' }).site.id, 'tonsillar-herniation');
+  assert.equal(top({ consciousness: 'P', smallReactivePupils: 'P', cheyneStokes: 'P', posturingFlexor: 'P', cushing: 'P' }).site.id, 'central-herniation');
+  // Fever separates meningitis from subarachnoid haemorrhage; seizures without fever, non-convulsive status.
+  assert.equal(top({ consciousness: 'P', meningism: 'P', thunderclap: 'P' }).site.id, 'subarachnoid-haemorrhage');
+  assert.equal(top({ consciousness: 'P', meningism: 'P', fever: 'P' }).site.id, 'meningitis');
+  assert.equal(top({ consciousness: 'P', seizures: 'P', fever: 'N' }).site.id, 'nonconvulsive-status');
+  // Signs of an awake cortex point away from structural coma.
+  assert.equal(top({ consciousness: 'P', activeEyeClosure: 'P', caloricNystagmus: 'P' }).site.id, 'functional-unresponsiveness');
+  const functional = m.SITES.find(s => s.id === 'functional-unresponsiveness');
+  assert.ok(m.scoreSite(functional, { consciousness: 'P', activeEyeClosure: 'P', fixedMidPupils: 'P' }).C > 0);
   // Awake but unable to move or speak is locked-in, which reduced consciousness argues against.
   assert.equal(top({ lockedIn: 'P', quadriparesis: 'P' }).site.id, 'locked-in');
   const lockedIn = m.SITES.find(s => s.id === 'locked-in');
@@ -143,6 +159,22 @@ test('consciousness, coma and the gag reflex', () => {
   const r = top({ gag: 'R', palate: 'R', dysphagia: 'P', xi: 'R' });
   assert.equal(r.site.id, 'vernet'); assert.equal(r.side, 'R');
   assert.equal(m.structureStates('medulla', { gag: 'L' }).get('na:L'), 'involved');
+});
+
+test('coma reference data and the assessment steps', () => {
+  // The GCS runs 3–15 with descending options.
+  assert.deepEqual([...m.GCS.map(c => c.options.map(([n]) => n).join(''))], ['4321', '54321', '654321']);
+  // Every step lists real findings, and every coma-area finding appears in a step.
+  const stepped = new Set(m.COMA_STEPS.flatMap(s => s.findings));
+  for (const id of stepped) assert.ok(m.FINDING_BY_ID.has(id), `coma step: unknown finding ${id}`);
+  for (const f of m.FINDINGS) if (m.GROUPS.find(g => g.id === f.group).area === 'coma') assert.ok(stepped.has(f.id), `${f.id} missing from the coma assessment`);
+  assert.equal(m.COMA_STEPS.filter(s => s.gcs).length, 1);
+  // Diagrams draw for every level and reflex.
+  for (const l of m.COMA_LEVELS) {
+    assert.ok(m.pupilPair(l.pupils).includes('class="pupil"'), `${l.id}: pupils`);
+    assert.ok(/class="breath-line" d="M0 25L/.test(m.breathTrace(l.breathing)), `${l.id}: breathing`);
+  }
+  for (const r of m.REFLEXES) assert.ok(m.reflexArc(r).includes('arc-part on'), `${r.id}: centre level`);
 });
 
 test('practice cases are solvable and their options are fair', () => {
@@ -189,7 +221,7 @@ test('cross-sections draw every structure they list', () => {
   }
   for (const s of m.SITES) {
     const section = m.sectionForSite(s);
-    if (/^(midbrain|pons|medulla|cord)-/.test(s.zone)) assert.ok(section, `${s.id}: brainstem or cord site without a section`);
+    if (/^(midbrain|pons|medulla|cord)-|^foramen-magnum$/.test(s.zone)) assert.ok(section, `${s.id}: brainstem or cord site without a section`);
     else assert.equal(section, null, `${s.id}: site outside the sections has one`);
   }
 });

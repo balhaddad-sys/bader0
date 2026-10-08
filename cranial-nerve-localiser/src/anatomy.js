@@ -112,7 +112,8 @@ const STRUCTURES = {
   alst: {name:'Spinothalamic tract', short:'STT', does:'Pain and temperature from the opposite side, crossed within a segment or two of entry.', lesion:'Pain and temperature loss on the opposite side, starting a segment or two below the lesion.', findings:['spinothalamic:c']},
   ah: {name:'Anterior horn', short:'AH', does:'Lower motor neurons for the muscles of this segment.', lesion:'Wasting, fasciculation and areflexia at the level of the lesion.', findings:['lmnArms']},
   awc: {name:'Anterior white commissure', short:'AWC', does:'Where pain and temperature fibres cross, just in front of the central canal.', lesion:'Bilateral, cape-like pain and temperature loss at the level of the lesion, as in syringomyelia.', findings:['capeLoss']},
-  rf: {name:'Reticular activating system', short:'RF', does:'Paramedian reticular formation projecting through the thalamus to keep the cortex awake.', lesion:'Drowsiness or coma, usually with eye movement or pupil signs from neighbouring nuclei.', findings:['consciousness']},
+  rf: {name:'Reticular activating system', short:'RF', does:'Paramedian reticular formation projecting through the thalamus to keep the cortex awake; nearby pontine neurons shape the rhythm of breathing.', lesion:'Drowsiness or coma, usually with eye movement or pupil signs from neighbouring nuclei; sustained hyperventilation or apneustic breathing.', findings:['consciousness','hyperventilation','apneustic']},
+  resp: {name:'Medullary respiratory centres', short:'Resp', does:'The ventral and dorsal respiratory groups set the rhythm of breathing; neighbouring vasomotor neurons hold the blood pressure and heart rate.', lesion:'Ataxic breathing and apnoea; compression from above produces the Cushing response.', findings:['ataxicBreathing','slowBreathing','cushing']},
   tectum: {name:'Tectum and pretectal area', short:'SC', does:'Superior colliculi, posterior commissure and pretectal nuclei for vertical gaze and the pupillary light reflex.', lesion:'Parinaud syndrome: upgaze palsy, light–near dissociation, convergence–retraction nystagmus, lid retraction.', findings:['upgaze','lightNear','convergenceRetraction','lidRetraction']}
 };
 
@@ -209,12 +210,14 @@ const SECTIONS = [
       stt: '<ellipse cx="81" cy="124" rx="8" ry="8.5"/>',
       symp: '<ellipse cx="94" cy="135" rx="4.5" ry="4"/>',
       sp5: '<ellipse cx="70" cy="148" rx="9.5" ry="11"/>',
-      icp: '<ellipse cx="74" cy="171" rx="12" ry="9"/>'
+      icp: '<ellipse cx="74" cy="171" rx="12" ry="9"/>',
+      resp: '<ellipse cx="121" cy="132" rx="6" ry="7"/>'
     },
-    labels: {cst:[[145,49.5,'middle']], ml:[[150,86.5,'middle']], mlf:[[144,128,'end']], xii:[[147,159.5,'middle']], dmx:[[131,166,'middle']], nts:[[116,156,'middle']], vest:[[99,174.5,'middle']], olive:[[103,77,'middle']], na:[[104,120.5,'middle']], stt:[[81,126.5,'middle']], symp:[[94,144,'middle']], sp5:[[70,150.5,'middle']], icp:[[74,173.5,'middle']]},
+    labels: {cst:[[145,49.5,'middle']], ml:[[150,86.5,'middle']], mlf:[[144,128,'end']], xii:[[147,159.5,'middle']], dmx:[[131,166,'middle']], nts:[[116,156,'middle']], vest:[[99,174.5,'middle']], olive:[[103,77,'middle']], na:[[104,120.5,'middle']], stt:[[81,126.5,'middle']], symp:[[94,144,'middle']], sp5:[[70,150.5,'middle']], icp:[[74,173.5,'middle']], resp:[[121,134.5,'middle']]},
     zones: {
       'medulla-medial': 'M160 47C156 39 152 33 145 33C137 33 131 38 129 47L139 171C146 173 153 171 160 168Z',
-      'medulla-lateral': 'M76 88C90 96 108 100 122 100L127 174C112 180 96 190 81 185C67 178 58 165 56 149C54 133 59 117 69 109C72 104 75 96 76 88Z'
+      'medulla-lateral': 'M76 88C90 96 108 100 122 100L127 174C112 180 96 190 81 185C67 178 58 165 56 149C54 133 59 117 69 109C72 104 75 96 76 88Z',
+      'foramen-magnum': 'M160 47C156 39 152 33 145 33C137 33 131 38 129 47C120 43 103 42 92 49C80 57 74 73 76 88C77 98 73 105 69 109C59 117 54 133 56 149C58 165 67 178 81 185C96 190 112 180 127 174C138 170 148 174 160 168Z'
     }
   },
   {
@@ -250,7 +253,7 @@ const STRUCTURE_STYLE = {
   vii:['nucleus','VII nucleus'], coch:['nucleus','Cochlear n.'], vsens:['nucleus','Sensory V'], vmot:['nucleus','Motor V'],
   scp:['tract','Sup. peduncle'], iii:['nucleus','III nucleus'], rn:['nucleus','Red nucleus'], sn:['nucleus','S. nigra'],
   tectum:['nucleus','Sup. colliculus'], lcst:['tract','Lat. CST'], dc:['tract','Dorsal columns'], alst:['tract','Spinothalamic'],
-  ah:['nucleus','Anterior horn'], awc:['tract','Commissure'], rf:['nucleus','Reticular form.']
+  ah:['nucleus','Anterior horn'], awc:['tract','Commissure'], rf:['nucleus','Reticular form.'], resp:['nucleus','Respiratory ctr.']
 };
 for(const [id,[kind,tag]] of Object.entries(STRUCTURE_STYLE))Object.assign(STRUCTURES[id],{kind,tag});
 /* The fourth ventricle sits behind the pons and medulla; the tissue outline hides its front half. */
@@ -259,7 +262,7 @@ const VENTRICLES = {'pons-mid':[160,186,32,10],'pons-caudal':[160,186,58,13],med
 function sectionForSite(site){
   if(site.zone.startsWith('midbrain-'))return 'midbrain';
   if(site.zone.startsWith('pons-'))return site.id==='lateral-midpons'?'pons-mid':'pons-caudal';
-  if(site.zone.startsWith('medulla-'))return 'medulla';
+  if(site.zone.startsWith('medulla-')||site.zone==='foramen-magnum')return 'medulla';
   if(site.zone.startsWith('cord-'))return 'cord';
   return null;
 }
@@ -384,5 +387,52 @@ function levelGlyph(level,exit){
     ${part('medulla','M25.5 40.5C27 43.5 28 45.5 29.5 47.5L35 47C35 45 36 42.5 37 40.5C32.5 42.5 27.5 42.5 25.5 40.5Z')}
     ${part('cord','M29.5 47.5L30.5 57H35.5L35 47Z')}
     ${exit?`<circle class="glyph-exit" cx="${exit[0]}" cy="${exit[1]}" r="2.1"/>`:''}
+  </svg>`;
+}
+
+/* ---- Coma diagrams ---- */
+/* Both pupils as the examiner sees them: the patient's right eye is on the left. */
+const PUPIL_SIZES = {pinpoint:[1.1,1.1], small:[2.3,2.3], mid:[4,4], fixed:[5,5], blown:[6,2.8], normal:[3,3]};
+function pupilPair(kind){
+  const [right,left]=PUPIL_SIZES[kind];
+  const eye=(cx,r)=>`<path class="eye-white" d="M${cx-16} 14C${cx-8} 4 ${cx+8} 4 ${cx+16} 14C${cx+8} 24 ${cx-8} 24 ${cx-16} 14Z"/><circle class="iris" cx="${cx}" cy="14" r="7.4"/><circle class="pupil" cx="${cx}" cy="14" r="${r}"/>`;
+  return `<svg class="pupil-pair" viewBox="0 0 80 32" aria-hidden="true" focusable="false">${eye(20,right)}${eye(60,left)}<text x="20" y="31">R</text><text x="60" y="31">L</text></svg>`;
+}
+/* A minute or so of breathing as a chest-movement trace; breaths are [start, width, height, hold]. */
+function breathPattern(kind){
+  const repeat=(width,make)=>{const out=[];for(let x=3;x+width<=147;x+=width)out.push(...make(x));return out;};
+  switch(kind){
+    case 'cheyne':return repeat(72,x=>[3,6,10,12,10,6,3].map((h,i)=>[x+i*7,6,h,0]));
+    case 'cnh':return repeat(7,x=>[[x,6,12,0]]);
+    case 'apneustic':return repeat(23,x=>[[x,5,11,8]]);
+    case 'ataxic':return [[3,7,5,0],[13,6,11,0],[21,9,3,0],[44,6,8,0],[53,5,4,0],[78,9,10,0],[93,6,3,0],[101,7,7,0],[127,6,5,0]];
+    case 'slow':return repeat(34,x=>[[x,11,4,0]]);
+    default:return repeat(15,x=>[[x,10,7,0]]);
+  }
+}
+function breathTrace(kind){
+  const base=25;let d=`M0 ${base}`;
+  for(const [x,w,h,hold] of breathPattern(kind)){
+    const up=w/2;
+    d+=`L${x} ${base}C${x+up*.4} ${base-h} ${x+up*.7} ${base-h} ${x+up} ${base-h}`;
+    if(hold)d+=`L${x+up+hold} ${base-h}`;
+    d+=`C${x+up+hold+up*.3} ${base-h} ${x+up+hold+up*.6} ${base} ${x+w+hold} ${base}`;
+  }
+  return `<svg class="breath-trace" viewBox="0 0 150 30" aria-hidden="true" focusable="false"><path class="breath-base" d="M0 ${base}H150"/><path class="breath-line" d="${d}L150 ${base}"/></svg>`;
+}
+/* A reflex loop: afferent nerve in, centre at one brainstem level, efferent nerve out. */
+const REFLEX_LEVEL_Y = {midbrain:24, pons:50, medulla:78};
+function reflexArc(r){
+  const y=REFLEX_LEVEL_Y[r.level];
+  const part=(name,d)=>`<path class="arc-part${r.level===name?' on':''}" d="${d}"/>`;
+  const edge={midbrain:[103,137], pons:[97,143], medulla:[105,135]}[r.level];
+  return `<svg class="reflex-arc" viewBox="0 0 240 104" role="img" aria-label="${r.name}: ${r.afferent} in, centre in the ${r.level}, ${r.efferent} out">
+    ${part('midbrain','M104 12C114 9 126 9 136 12L137 36C126 38 114 38 103 36Z')}
+    ${part('pons','M103 36C114 38 126 38 137 36C146 42 147 58 137 64C126 66 114 66 103 64C93 58 94 42 103 36Z')}
+    ${part('medulla','M103 64C114 66 126 66 137 64L134 90C130 94 110 94 106 90Z')}
+    ${[['midbrain',27,'Mid'],['pons',53,'Pons'],['medulla',81,'Med']].map(([name,ty,text])=>`<text class="arc-level${r.level===name?' on':''}" x="120" y="${ty}">${text}</text>`).join('')}
+    <path class="arc-in" d="M10 ${y-6}H${edge[0]-4}"/><path class="arc-in-head" d="M${edge[0]-10} ${y-10}L${edge[0]-3} ${y-6}L${edge[0]-10} ${y-2}Z"/>
+    <path class="arc-out" d="M${edge[1]+3} ${y+6}H228"/><path class="arc-out-head" d="M222 ${y+2}L230 ${y+6}L222 ${y+10}Z"/>
+    <text class="arc-label in" x="12" y="${y-11}">${r.afferent}</text><text class="arc-label out" x="228" y="${y+20}" text-anchor="end">${r.efferent}</text>
   </svg>`;
 }
