@@ -1,0 +1,34 @@
+# NeuroLocalize 1.2.0
+
+Offline neurological-localization study app (Android WebView shell + HTML/JS content).
+This folder holds the unpacked 1.1.0 APK, the 1.2.0 enhancements and a reproducible build.
+
+## What's new in 1.2.0
+- **14 new diagrams** (25 total), generated from `tools/diagrams.py`:
+  UMN vs LMN signs · distribution body maps · aphasia decision tree · cortical arterial territories ·
+  visual-field lesion sites 1–6 · brainstem "rule of 4" · horizontal gaze circuit / INO ·
+  central vs peripheral facial palsy · Horner three-neuron pathway · five cord syndromes ·
+  dorsal column vs spinothalamic crossings · key root signatures (C5–S1) · brachial plexus ·
+  myasthenia vs Lambert–Eaton.
+- **Visual atlas**: region filters, search, prev/next stepping, 1×/2×/3× zoom, drag-to-pan,
+  double-tap zoom, arrow-key navigation, "open lesson" link.
+- **Lessons** show every diagram for the region ("More visuals" strip).
+- **Pattern Finder**: tick findings, see candidate levels ranked with "fits / argues against"
+  reasoning, close-call and multifocal warnings, and links to the lesson and diagram.
+- **21 new recall cards** tied to the new diagrams (66 total).
+- **Progress**: 12-week study heatmap, accuracy by question type, "Revisit my misses" session.
+
+## Layout
+- `web/` – app assets (packaged as `assets/` in the APK)
+- `base/` – original native shell: manifest, dex, resources (unchanged except version)
+- `tools/diagrams.py` – diagram generator · `tools/build_apk.py` + `tools/signer/` – packaging/signing
+- `dist/NeuroLocalize-1.2.0.apk` – built, v2-signed APK
+
+## Build
+```
+python3 tools/diagrams.py web/assets/atlas
+python3 tools/build_apk.py --apksig apksig-2.3.0.jar   # from Maven Central: com.android.tools.build:apksig
+```
+A signing key is created in `signing/` (git-ignored) on first build. Keep it: future updates must
+be signed with the same key. Because 1.1.0 was signed with a different key, Android requires
+uninstalling 1.1.0 before installing 1.2.0 (local study progress is removed with it).
