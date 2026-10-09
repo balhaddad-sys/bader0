@@ -1,7 +1,19 @@
-# NeuroLocalize 1.9.0
+# NeuroLocalize 2.0.0
 
 Offline neurological-localization study app (Android WebView shell + HTML/JS content).
 This folder holds the unpacked 1.1.0 APK, the 1.2 and 1.3 enhancements and a reproducible build.
+
+## What's new in 2.0.0
+- **Board-style question bank (all 120 cases)** in `web/cases-v3.js`, replacing `web/cases-v2.js`:
+  each case is a full patient vignette (history, then labelled examination findings), one clear
+  lead-in, five homogeneous options and an explanation for every option, plus what each finding
+  tells you, the anatomy, reasoning steps and an educational objective. Lead-ins vary: lesion site,
+  artery, nerve, root, structure, expected finding, diagnosis, or the finding that separates two
+  possibilities. Case ids are unchanged; earlier answers are marked for another try.
+- **Rapid drills with hand-picked choices**: every drill item has curated wrong answers from the same
+  family (no more random options), and a new "Mixed localization" deck replaces the auto-generated
+  worked examples.
+- **Exam timing** now allows 2 min or 90 s per question to suit the longer vignettes.
 
 ## What's new in 1.9.0
 - **Rewritten case bank (all 120 cases)** in `web/cases-v2.js`: every case is now a plain-language
@@ -87,7 +99,7 @@ This folder holds the unpacked 1.1.0 APK, the 1.2 and 1.3 enhancements and a rep
 - `web/` – app assets (packaged as `assets/` in the APK)
 - `base/` – original native shell: manifest, dex, resources (the build sets the app ID and version)
 - `tools/diagrams.py` – diagram generator · `tools/build_apk.py` + `tools/signer/` – packaging/signing
-- `dist/NeuroLocalize-1.9.0.apk` – built, v2-signed APK
+- `dist/NeuroLocalize-2.0.0.apk` – built, v2-signed APK
 
 ## Build
 ```
