@@ -248,3 +248,13 @@ test('IGE syndromes add a presumed-genetic etiology hint', () => {
   const hints = E.etiologyHints(ex, E.evaluate(ex, SYN));
   assert.ok(hints.some((h) => /presumed/.test(h.cat)));
 });
+
+test('Flags: IESS shows one time-critical spasms alert (no duplicate); spasms without IESS still flagged', () => {
+  const iess = EXAMPLES.find((e) => e.id === 'iess').patient;
+  const fl = E.clinicalFlags(iess, E.evaluate(iess, SYN)).filter((f) => f.level === 'urgent' && /spasms/i.test(f.text));
+  assert.equal(fl.length, 1);
+  const late = P({ onsetMonths: 60, findings: { 'sz.spasms': true } }); // onset 5y: not IESS
+  const res = E.evaluate(late, SYN);
+  assert.ok(!res.some((r) => r.id === 'IESS' && r.status !== 'excluded'));
+  assert.equal(E.clinicalFlags(late, res).filter((f) => /spasms/i.test(f.text)).length, 1);
+});

@@ -51,12 +51,14 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 // true = we handled it (by ignoring it) unless it is a bundled asset
-                return !url.startsWith(ASSET_PREFIX);
+                return !(url.startsWith(ASSET_PREFIX) || url.startsWith("data:"));
             }
 
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                if (!request.getUrl().toString().startsWith(ASSET_PREFIX)) {
+                String u = request.getUrl().toString();
+                // bundled assets and inline data: URIs (the embedded font) only
+                if (!u.startsWith(ASSET_PREFIX) && !u.startsWith("data:")) {
                     return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(new byte[0]));
                 }
                 return null;

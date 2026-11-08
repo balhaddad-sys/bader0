@@ -327,7 +327,7 @@
     'sz.atonic': ['Generalized', 'Generalized atonic seizure'],
     'sz.tonic': ['Generalized', 'Generalized tonic seizure'],
     'sz.clonic': ['Generalized', 'Generalized clonic seizure'],
-    'sz.spasms': ['Epileptic spasms', 'Epileptic spasms (focal, generalized or unknown — see ILAE 2025 Fig. 3)'],
+    'sz.spasms': ['Epileptic spasms', 'Epileptic spasms'],
     'sz.reflex_myoclonic_orofacial': ['Generalized', 'Reflex orofacial myoclonic seizure (language-induced)'],
   };
 

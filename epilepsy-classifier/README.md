@@ -50,6 +50,14 @@ sudo apt-get install -y default-jdk-headless aapt apksigner zipalign dalvik-exch
 * **Bundled files** are exactly `index.html`, `styles.css` and `src/*.js` — the code covered by `npm test`.
 * Targets API 34, min API 21 (Android 5.0+). Not distributable on Google Play as-is (needs an upload key, listing, and — because it presents clinical decision support — a regulatory/medical-device review).
 
+## Design notes
+
+* **Layout:** input on the left, a sticky *Assessment* panel on the right that mirrors the ILAE ladder — **1 Seizure type → 2 Epilepsy type → 3 Syndrome → 4 Etiology** — with the best-fitting syndrome as a hero card (mandatory-criteria meter, alerts, unchecked exclusions) and a criterion-by-criterion checklist. On phones the panel sits below the form with a bottom bar showing the leading syndrome.
+* **Speed:** the *Filter findings* box searches all ~150 findings; answered rows are highlighted; every entered finding can be removed with one tap from the *Findings entered* chips.
+* **Accessibility:** WCAG AA contrast in light and dark themes (checked numerically), keyboard-operable controls with visible focus, status conveyed by icon *and* text (never colour alone), `prefers-reduced-motion` respected.
+* **No external assets:** icons are an inline SVG sprite; the Inter typeface (SIL OFL, `fonts-OFL.txt`) is embedded as a data URI in `fonts.css` (regenerate with `tools/make-fonts-css.sh`). No inline styles/scripts, so the strict CSP in `vercel.json` holds.
+* **Print / PDF:** a purpose-built report layout (about 3 pages): leading syndrome's full checklist, ruled-out syndromes as one-liners.
+
 ## How a syndrome is scored
 
 Every finding is **tri-state**: present / absent / not assessed. Missing information is *never* treated as absence — unless you tick a section's **"reviewed — treat unticked as absent"** box (this is how you tell the app "I looked, and these were not present").

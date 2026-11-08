@@ -373,13 +373,14 @@
     const flags = [];
     const seen = new Set();
     const add = (level, text, src) => { const k = level + text; if (!seen.has(k)) { seen.add(k); flags.push({ level, text, src }); } };
-    if (ctx.get('sz.spasms') === true) {
-      add('urgent', 'Epileptic spasms: early recognition and prompt spasms-specific treatment is time-critical — delay is associated with poorer developmental outcome. Urgent specialist assessment and EEG.', 'ILAE 2025 seizure classification; ILAE 2022 neonatal/infant syndromes');
-    }
     if (ctx.get('st.superrefractory_se') === true) {
       add('urgent', 'Super-refractory status epilepticus: medical emergency requiring intensive care and urgent aetiological work-up (including autoimmune and infectious causes).', 'ILAE 2022 (FIRES)');
     }
     (results || []).filter((r) => r.status !== 'excluded').forEach((r) => (r.flags || []).forEach((fl) => add(fl.level, fl.text, r.abbr + ' — ' + r.source)));
+    // Generic seizure-level flag — suppressed when a syndrome-level flag (e.g. IESS) already says the same thing.
+    if (ctx.get('sz.spasms') === true && !flags.some((f) => f.level === 'urgent' && /spasms/i.test(f.text))) {
+      flags.unshift({ level: 'urgent', text: 'Epileptic spasms: early recognition and prompt spasms-specific treatment is time-critical — delay is associated with poorer developmental outcome. Urgent specialist assessment and EEG.', src: 'ILAE 2025 seizure classification; ILAE 2022 neonatal/infant syndromes' });
+    }
     return flags;
   }
 

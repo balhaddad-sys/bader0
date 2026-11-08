@@ -19,8 +19,8 @@ B="$HERE/build"
 ANDROID_JAR="${ANDROID_JAR:-/usr/lib/android-sdk/platforms/android-23/android.jar}"
 BT="${BUILD_TOOLS:-/usr/lib/android-sdk/build-tools/debian}"
 DX="${DX:-$(command -v dalvik-exchange || echo "$BT/dx")}"
-VERSION_CODE="${VERSION_CODE:-1}"
-VERSION_NAME="${VERSION_NAME:-0.1.0}"
+VERSION_CODE="${VERSION_CODE:-2}"
+VERSION_NAME="${VERSION_NAME:-0.2.0}"
 
 for t in aapt zipalign apksigner javac keytool; do command -v "$t" >/dev/null || { echo "missing tool: $t" >&2; exit 1; }; done
 [ -f "$ANDROID_JAR" ] || { echo "android.jar not found at $ANDROID_JAR" >&2; exit 1; }
@@ -28,7 +28,7 @@ for t in aapt zipalign apksigner javac keytool; do command -v "$t" >/dev/null ||
 rm -rf "$B"; mkdir -p "$B/assets/www/src" "$B/classes"
 
 # 1. Bundle exactly the files the web app needs (no tests, README, deploy config).
-cp "$WEB/index.html" "$WEB/styles.css" "$B/assets/www/"
+cp "$WEB/index.html" "$WEB/styles.css" "$WEB/fonts.css" "$B/assets/www/"
 cp "$WEB"/src/{vocab,kb,engine,examples,app}.js "$B/assets/www/src/"
 
 # 2. Compile the Java shell against the API 23 framework, then convert to dex.
