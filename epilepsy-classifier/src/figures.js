@@ -118,17 +118,21 @@
   }
 
   /* ---------- sequence of frames -> one SVG ---------- */
+  let SEQ = 0; // each drawing gets its own arrow-marker id, so a hidden copy elsewhere in the page can never break another
   function framesSvg(frames, label, opts) {
-    const n = frames.length, W = n * FW + (n - 1) * 26;
+    const thumb = !!(opts && opts.thumb), n = frames.length, W = n * FW + (n - 1) * 26, TH = FH - 34;
     let g = '';
     frames.forEach((f, i) => {
       const ox = i * (FW + 26), isFace = f.kind === 'face', isCustom = f.kind === 'custom';
       g += `<g transform="translate(${ox + (isFace || isCustom ? 0 : 5)} ${isFace || isCustom ? 18 : 6})">${isFace ? face(f.spec) : isCustom ? custom(f.spec.key) : body(f.spec, opts)}</g>`;
-      g += `<text class="pf-ti" x="${ox + FW / 2}" y="${FH - 20}" text-anchor="middle">${String(f.title || '').split('|').map((s, k) => `<tspan x="${ox + FW / 2}" dy="${k ? 13 : 0}">${esc(s)}</tspan>`).join('')}</text>`;
-      if (i < n - 1) g += `<path class="pf-seq" d="M${ox + FW + 5} ${FH / 2 - 20}l10 8l-10 8"/>`;
+      if (!thumb) g += `<text class="pf-ti" x="${ox + FW / 2}" y="${FH - 20}" text-anchor="middle">${String(f.title || '').split('|').map((s, k) => `<tspan x="${ox + FW / 2}" dy="${k ? 13 : 0}">${esc(s)}</tspan>`).join('')}</text>`;
+      if (!thumb && i < n - 1) g += `<path class="pf-seq" d="M${ox + FW + 5} ${FH / 2 - 20}l10 8l-10 8"/>`;
     });
-    return `<svg class="pose" width="${Math.round(W * 1.1)}" height="${Math.round(FH * 1.1)}" viewBox="0 0 ${W} ${FH}" role="img" aria-label="Schematic: ${esc(label || 'movement')}" xmlns="http://www.w3.org/2000/svg"><title>Schematic: ${esc(label || 'movement')}</title>
-      <defs><marker id="pfah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="pf-head2" d="M0 0L10 5L0 10z"/></marker></defs>${g}</svg>`;
+    const mid = 'pfah' + (++SEQ);
+    g = g.replace(/#pfah\b/g, '#' + mid);
+    const size = thumb ? '' : ` width="${Math.round(W * 1.1)}" height="${Math.round(FH * 1.1)}"`;
+    return `<svg class="pose${thumb ? ' thumb' : ''}"${size} viewBox="0 0 ${W} ${thumb ? TH : FH}" role="img" aria-label="Schematic: ${esc(label || 'movement')}" xmlns="http://www.w3.org/2000/svg"><title>Schematic: ${esc(label || 'movement')}</title>
+      <defs><marker id="${mid}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="pf-head2" d="M0 0L10 5L0 10z"/></marker></defs>${g}</svg>`;
   }
 
   return { framesSvg, body, face, ik, custom, AGES, FW, FH };

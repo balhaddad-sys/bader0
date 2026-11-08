@@ -66,7 +66,8 @@ test('Body proportions: infant/child/adult scale about the ground line; head gro
   assert.match(i, /r="29"/); assert.match(c, /r="21"/); assert.match(a, /r="17"/);
   assert.notEqual(F.framesSvg([{ kind: 'body', title: 't', spec: {} }], 'x', { age: 'child' }), F.framesSvg([{ kind: 'body', title: 't', spec: {} }], 'x', { age: 'adult' }));
   // an explicit age on a frame overrides the page-level body size
-  assert.equal(F.framesSvg([{ kind: 'body', title: 't', spec: { age: 'infant' } }], 'x', { age: 'adult' }), F.framesSvg([{ kind: 'body', title: 't', spec: { age: 'infant' } }], 'x', { age: 'child' }));
+  const norm = (svg) => svg.replace(/pfah\d+/g, 'pfah'); // each drawing carries a unique arrow-marker id
+  assert.equal(norm(F.framesSvg([{ kind: 'body', title: 't', spec: { age: 'infant' } }], 'x', { age: 'adult' })), norm(F.framesSvg([{ kind: 'body', title: 't', spec: { age: 'infant' } }], 'x', { age: 'child' })));
   assert.equal(F.body({ infant: true }), F.body({ age: 'infant' })); // backward-compatible alias
 });
 

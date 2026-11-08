@@ -108,7 +108,7 @@
     $('#dg-onset').innerHTML = D.timelineSvg(rows, { width: 820, labelW: 92, rowH: 18, marker: onset, label: 'Age at seizure onset for each of the 38 syndromes, as encoded from the ILAE criteria' });
     $('#dg-tree').innerHTML = D.seizureTreeHtml();
     $('#dg-flow').innerHTML = D.scoringFlowSvg();
-    $('#dg-onset-note').textContent = onset === null ? 'Enter an onset age on the Assess tab to see where it falls.' : (shown.size ? 'Highlighted: syndromes currently meeting or approaching their criteria.' : 'Your onset age is marked; no syndrome is highlighted yet.');
+    $('#dg-onset-note').textContent = onset === null ? 'Enter an onset age in the guided assessment or the full checklist to see where it falls.' : (shown.size ? 'Highlighted: syndromes currently meeting or approaching their criteria.' : 'Your onset age is marked; no syndrome is highlighted yet.');
   }
 
   /* ---------- body size toggle + proportions ---------- */
@@ -126,21 +126,44 @@
     });
   }
 
+  /* ---------- library hub ---------- */
+  function renderLibrary() {
+    const el = $('#lib'); if (!el || el.dataset.done) return; el.dataset.done = '1';
+    const cards = [
+      ['#/movements', 'figure', 'Movements & poses', S.ITEMS.length + ' drawings of what the body does during a seizure — stiffening, jerking, spasms, drops, automatisms, the face and eyes.'],
+      ['#/physical', 'user', 'Physical signs', P.ITEMS.length + ' examination findings: head and face, skin signs, tone and strength, vision, movement — and how body proportions change from infant to adult.'],
+      ['#/atlas', 'activity', 'EEG atlas', M.ITEMS.length + ' EEG patterns drawn as schematic traces, with where each appears and what it can be mistaken for.'],
+      ['#/diagrams', 'chart', 'Diagrams', 'Age at onset for every syndrome, the ILAE 2025 seizure classification, and how a syndrome is scored.'],
+    ];
+    el.innerHTML = cards.map((c) => `<a class="lib-card" href="${c[0]}"><span class="lib-ic">${IC(c[1])}</span><h3>${esc(c[2])}</h3><p>${esc(c[3])}</p><span class="lib-go">Open ${IC('arrow')}</span></a>`).join('');
+  }
+
   /* ---------- router ---------- */
+  const VIEWS = ['guided', 'assess', 'library', 'atlas', 'movements', 'physical', 'diagrams'];
+  const TAB_OF = { atlas: 'library', movements: 'library', physical: 'library', diagrams: 'library' };
   function route() {
-    const m = /^#\/(\w+)/.exec(location.hash), v = m && ['assess', 'atlas', 'movements', 'physical', 'diagrams'].includes(m[1]) ? m[1] : (m ? 'assess' : (document.body.dataset.view || 'assess'));
+    const m = /^#\/(\w+)/.exec(location.hash), v = m && VIEWS.includes(m[1]) ? m[1] : (m ? 'guided' : (document.body.dataset.view || 'guided'));
     document.body.dataset.view = v;
-    ['assess', 'atlas', 'movements', 'physical', 'diagrams'].forEach((k) => { $('#view-' + k).hidden = k !== v; });
-    $$('.tab').forEach((t) => { if (t.dataset.view === v) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current'); });
+    VIEWS.forEach((k) => { $('#view-' + k).hidden = k !== v; });
+    $$('.tab').forEach((t) => { if (t.dataset.view === (TAB_OF[v] || v)) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current'); });
     if (v === 'atlas') buildList('atlas');
     if (v === 'movements') buildList('movements');
     if (v === 'physical') { buildList('physical'); renderProportions(); }
     if (v === 'diagrams') renderDiagrams();
+    if (v === 'library') renderLibrary();
+    if (ctx.onView) ctx.onView(v);
     if (m) window.scrollTo({ top: 0 });
   }
 
   window.EpiViews = {
-    init(c) { ctx = c; wireDialog(); wireAge(); window.addEventListener('hashchange', route); route(); },
+    init(c) {
+      ctx = c; wireDialog(); wireAge(); window.addEventListener('hashchange', route);
+      document.addEventListener('click', (e) => { // skip link: move focus into the visible view
+        if (!e.target.closest('.skip')) return;
+        e.preventDefault(); const mn = $('main:not([hidden])'); if (mn) mn.focus();
+      });
+      route();
+    },
     hasMorph: (id) => !!entry(id),
     morphName: (id) => (entry(id) || {}).name,
     iconFor: (id) => (S.byId[id] || P.byId[id] ? 'figure' : 'activity'),

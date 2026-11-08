@@ -31,10 +31,19 @@
     <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
     <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
     <symbol id="i-figure" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2.5"/><path d="M12 7.5v7M6 10.5l6 1.5 6-1.5M12 14.5l-3.5 6M12 14.5l3.5 6"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-ear" viewBox="0 0 24 24"><path d="M6 8.5a6.5 6.5 0 1 1 13 0c0 6-6 6-6 10a3.5 3.5 0 1 1-7 0"/><path d="M15 8.5a2.5 2.5 0 0 0-5 0v1a2 2 0 1 1 0 4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+    <symbol id="i-thermometer" viewBox="0 0 24 24"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M12 20V10M18 20V4M6 20v-4"/></symbol>
     <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
   </svg>
 
-  <a class="skip" href="#results">Skip to assessment</a>
+  <a class="skip" href="#content">Skip to content</a>
 
   <header class="appbar">
     <div class="wrap bar">
@@ -54,17 +63,15 @@
     </div>
     <nav class="tabs" aria-label="Sections">
       <div class="wrap tabs-in">
-        <a class="tab" href="#/assess" data-view="assess">Assess</a>
-        <a class="tab" href="#/movements" data-view="movements">Movements &amp; poses</a>
-        <a class="tab" href="#/physical" data-view="physical">Physical signs</a>
-        <a class="tab" href="#/atlas" data-view="atlas">EEG atlas</a>
-        <a class="tab" href="#/diagrams" data-view="diagrams">Diagrams</a>
+        <a class="tab" href="#/guided" data-view="guided">Guided assessment</a>
+        <a class="tab" href="#/assess" data-view="assess">Full checklist</a>
+        <a class="tab" href="#/library" data-view="library">Library</a>
       </div>
     </nav>
     <div class="strip">
       <div class="wrap strip-in">
         <svg class="ic"><use href="#i-shield"/></svg>
-        <p><strong>Clinical decision support — not a diagnostic device.</strong> Not clinically validated; specialist judgement prevails. Runs entirely on this device: no data is sent or stored.</p>
+        <p><strong>Clinical decision support — not a diagnostic device.</strong> <span class="strip-more">Not clinically validated; specialist judgement prevails. </span>Runs entirely on this device: no data is sent or stored.</p>
       </div>
     </div>
   </header>
@@ -74,8 +81,21 @@
     <p>Generated <span id="print-date"></span> · rule-based, per ILAE 2025 / 2017 / 2022 · not a diagnosis</p>
   </div>
 
-  <main id="view-assess" class="wrap layout">
+  <main id="view-guided" class="wrap wz" tabindex="-1">
+    <div id="wz-root"></div>
+  </main>
+
+  <main id="view-library" class="wrap page" hidden tabindex="-1">
+    <header class="page-h">
+      <h2>Library</h2>
+      <p>Look things up while you assess: what the seizure movements, examination signs and EEG patterns look like, and how the classification fits together. Each entry says which ILAE criteria use it and what it can be mistaken for.</p>
+    </header>
+    <div id="lib" class="lib"></div>
+  </main>
+
+  <main id="view-assess" class="wrap layout" hidden tabindex="-1">
     <form id="form" class="form" autocomplete="off" aria-label="Clinical findings">
+      <aside class="banner"><svg class="ic"><use href="#i-info"/></svg><p><b>For clinicians who want to enter every finding directly.</b> New here? The <a href="#/guided">guided assessment</a> asks the same questions with pictures and plain language, and fills this checklist in as you go.</p></aside>
       <div class="search">
         <svg class="ic"><use href="#i-search"/></svg>
         <input id="filter" type="search" placeholder="Filter findings — e.g. myoclonic, hypsarrhythmia, SCN1A" aria-label="Filter findings">
@@ -143,7 +163,8 @@
     </aside>
   </main>
 
-  <main id="view-physical" class="wrap page" hidden>
+  <main id="view-physical" class="wrap page" hidden tabindex="-1">
+    <a class="crumb" href="#/library"><svg class="ic flip"><use href="#i-arrow"/></svg>Library</a>
     <header class="page-h">
       <h2>Physical signs</h2>
       <p>Examination findings that point toward a syndrome or a cause: <b>facial and head features</b>, <b>neurocutaneous skin signs</b>, <b>tone, strength and vision</b>, and <b>movement and coordination</b>. Each entry shows the sign, which ILAE criteria use it, what it can be mistaken for, and where the wording comes from (ILAE papers, international consensus criteria, or standard clinical teaching). Drawings are schematic and skin signs look different across skin tones and ages.</p>
@@ -162,7 +183,8 @@
     </section>
   </main>
 
-  <main id="view-movements" class="wrap page" hidden>
+  <main id="view-movements" class="wrap page" hidden tabindex="-1">
+    <a class="crumb" href="#/library"><svg class="ic flip"><use href="#i-arrow"/></svg>Library</a>
     <header class="page-h">
       <h2>Seizure movements &amp; poses</h2>
       <p>What the body does during a seizure, drawn frame by frame: tonic and fencing postures, the figure-of-4 sign, version, clonic jerking, spasms, drops, hyperkinetic movements, automatisms and the face and eyes. The <b>patient's right is on the viewer's left</b>; orange limbs are the moving or posturing parts. Drawings are stylised teaching schematics, not clinical photographs, and each entry states whether its wording comes from the ILAE papers or from standard semiology teaching.</p>
@@ -177,7 +199,8 @@
     <p id="mv-none" class="empty" hidden>No movements match your search.</p>
   </main>
 
-  <main id="view-atlas" class="wrap page" hidden>
+  <main id="view-atlas" class="wrap page" hidden tabindex="-1">
+    <a class="crumb" href="#/library"><svg class="ic flip"><use href="#i-arrow"/></svg>Library</a>
     <header class="page-h">
       <h2>EEG morphology atlas</h2>
       <p>What each pattern looks like, where and when it appears, which ILAE syndrome criteria use it, and what mimics it. Drawings are <b>stylised schematics</b> generated for teaching, not recordings. Every entry states whether its wording comes from the ILAE papers or from standard EEG teaching.</p>
@@ -191,7 +214,8 @@
     <p id="atlas-none" class="empty" hidden>No patterns match your search.</p>
   </main>
 
-  <main id="view-diagrams" class="wrap page" hidden>
+  <main id="view-diagrams" class="wrap page" hidden tabindex="-1">
+    <a class="crumb" href="#/library"><svg class="ic flip"><use href="#i-arrow"/></svg>Library</a>
     <header class="page-h">
       <h2>Diagrams</h2>
       <p>Reference diagrams generated from the same knowledge base the scorer uses, so they cannot disagree with it.</p>
@@ -227,7 +251,7 @@
       <ul id="sources"></ul>
       <p>Each syndrome is scored against the ILAE <em>Mandatory / Alert / Exclusionary</em> tables. Missing information is never treated as absence unless you mark a section as reviewed. The knowledge base is human-readable in <code>src/kb.js</code> and covered by an automated test suite. See the README for scope, interpretation choices and limits.</p>
     </details>
-    <p class="fine">Epilepsy Classifier v0.5 · Inter typeface © The Inter Project Authors (SIL OFL 1.1)</p>
+    <p class="fine">Epilepsy Classifier v0.6 · Inter typeface © The Inter Project Authors (SIL OFL 1.1)</p>
   </footer>
 
   <script src="src/vocab.js"></script>
@@ -239,6 +263,8 @@
   <script src="src/figures.js"></script>
   <script src="src/semio.js"></script>
   <script src="src/physical.js"></script>
+  <script src="src/plain.js"></script>
+  <script src="src/wizard.js"></script>
   <script src="src/views.js"></script>
   <script src="src/app.js"></script>
 </body>

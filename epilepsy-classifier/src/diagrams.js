@@ -94,45 +94,51 @@
   };
 
   /* ---------------- waveform -> SVG ---------------- */
-  function waveformSvg(key, label) {
+  function waveformSvg(key, label, opts) {
     const spec = FIG[key] && FIG[key]();
     if (!spec) return '';
-    const W = 740, L = 78, Rg = 600, top = 24, rowH = 24, scale = 0.145;
+    const thumb = !!(opts && opts.thumb);
+    // Thumbnail: the same signal on a compact canvas — no channel names, tags, band captions or axis — for picture cards.
+    const W = thumb ? 300 : 740, L = thumb ? 4 : 78, Rg = thumb ? 296 : 600, top = thumb ? 5 : 24, rowH = thumb ? 15 : 24, scale = 0.145 * rowH / 24, clampV = rowH * 0.8;
     const n = spec.montage.length + (spec.photic ? 1 : 0);
-    const H = top + n * rowH + 40, plotW = Rg - L, pxs = plotW / spec.dur;
-    const N = Math.min(1000, Math.max(60, Math.round(spec.dur * 110))); // cap resolution: keeps long figures light
+    const H = thumb ? top + n * rowH + 5 : top + n * rowH + 40, plotW = Rg - L, pxs = plotW / spec.dur;
+    const N = thumb ? Math.min(130, Math.max(60, Math.round(spec.dur * 36))) : Math.min(1000, Math.max(60, Math.round(spec.dur * 110))); // cap resolution: keeps long figures light
     let g = '';
     (spec.bands || []).forEach((b) => {
       const x = L + b.t0 * pxs, w = (b.t1 - b.t0) * pxs;
       g += `<rect class="fb ${b.cls || ''}" x="${x.toFixed(1)}" y="${top - 2}" width="${w.toFixed(1)}" height="${n * rowH + 2}"/>`;
-      if (b.label) g += `<text class="fbl" x="${(x + 4).toFixed(1)}" y="${top - 8}">${esc(b.label)}</text>`;
+      if (b.label && !thumb) g += `<text class="fbl" x="${(x + 4).toFixed(1)}" y="${top - 8}">${esc(b.label)}</text>`;
     });
     spec.montage.forEach((name, i) => {
       const cy = top + i * rowH + rowH / 2, fn = spec.ch(i);
       let d = '';
       for (let j = 0; j <= N; j++) {
-        const t = (j / N) * spec.dur; let v = fn(t) * scale * (spec.scale ? 1 : 1);
-        v = 19 * Math.tanh(v / 19); // soft saturation: no artificial flat tops
-        d += (j ? 'L' : 'M') + (L + t * pxs).toFixed(1) + ' ' + (cy - v).toFixed(1);
+        const t = (j / N) * spec.dur; let v = fn(t) * scale;
+        v = clampV * Math.tanh(v / clampV); // soft saturation: no artificial flat tops
+        d += (j ? 'L' : 'M') + (L + t * pxs).toFixed(thumb ? 0 : 1) + ' ' + (cy - v).toFixed(1);
       }
-      g += `<text class="fl" x="${L - 8}" y="${cy + 3.5}" text-anchor="end">${esc(name)}</text><path class="fw" d="${d}"/>`;
+      if (!thumb) g += `<text class="fl" x="${L - 8}" y="${cy + 3.5}" text-anchor="end">${esc(name)}</text>`;
+      g += `<path class="fw" d="${d}"/>`;
     });
     if (spec.photic) {
       const cy = top + spec.montage.length * rowH + rowH / 2;
-      g += `<text class="fl" x="${L - 8}" y="${cy + 3.5}" text-anchor="end">Photic</text><line class="fgrid" x1="${L}" x2="${Rg}" y1="${cy}" y2="${cy}"/>`;
-      spec.photic.times.forEach((t) => { g += `<line class="fw ph" x1="${(L + t * pxs).toFixed(1)}" x2="${(L + t * pxs).toFixed(1)}" y1="${cy - 7}" y2="${cy + 7}"/>`; });
+      if (!thumb) g += `<text class="fl" x="${L - 8}" y="${cy + 3.5}" text-anchor="end">Photic</text>`;
+      g += `<line class="fgrid" x1="${L}" x2="${Rg}" y1="${cy}" y2="${cy}"/>`;
+      spec.photic.times.forEach((t) => { g += `<line class="fw ph" x1="${(L + t * pxs).toFixed(1)}" x2="${(L + t * pxs).toFixed(1)}" y1="${cy - (thumb ? 5 : 7)}" y2="${cy + (thumb ? 5 : 7)}"/>`; });
     }
-    (spec.tags || []).forEach((tg) => {
-      if (!tg.text) return;
-      const y0 = top + tg.rows[0] * rowH + 4, y1 = top + (tg.rows[1] + 1) * rowH - 4, x = Rg + 8, mid = (y0 + y1) / 2, lines = tg.text.split('|');
-      g += `<path class="tag-br" d="M${x} ${y0}V${y1}"/>`;
-      g += `<text class="tag-t" x="${x + 7}" y="${mid - ((lines.length - 1) * 6.5) + 3.5}">${lines.map((s, k) => `<tspan x="${x + 7}" dy="${k ? 13 : 0}">${esc(s)}</tspan>`).join('')}</text>`;
-    });
-    const by = top + n * rowH + 14, sec = spec.dur > 10 ? 5 : 1, bx = Rg - sec * pxs;
-    g += `<path class="axis" d="M${bx.toFixed(1)} ${by}H${Rg}M${bx.toFixed(1)} ${by - 4}V${by + 4}M${Rg} ${by - 4}V${by + 4}"/><text class="fl" x="${((bx + Rg) / 2).toFixed(1)}" y="${by + 16}" text-anchor="middle">${sec} s</text>`;
-    g += `<text class="fl sch" x="${L}" y="${by + 16}">schematic · negative up</text>`;
+    if (!thumb) {
+      (spec.tags || []).forEach((tg) => {
+        if (!tg.text) return;
+        const y0 = top + tg.rows[0] * rowH + 4, y1 = top + (tg.rows[1] + 1) * rowH - 4, x = Rg + 8, mid = (y0 + y1) / 2, lines = tg.text.split('|');
+        g += `<path class="tag-br" d="M${x} ${y0}V${y1}"/>`;
+        g += `<text class="tag-t" x="${x + 7}" y="${mid - ((lines.length - 1) * 6.5) + 3.5}">${lines.map((s, k) => `<tspan x="${x + 7}" dy="${k ? 13 : 0}">${esc(s)}</tspan>`).join('')}</text>`;
+      });
+      const by = top + n * rowH + 14, sec = spec.dur > 10 ? 5 : 1, bx = Rg - sec * pxs;
+      g += `<path class="axis" d="M${bx.toFixed(1)} ${by}H${Rg}M${bx.toFixed(1)} ${by - 4}V${by + 4}M${Rg} ${by - 4}V${by + 4}"/><text class="fl" x="${((bx + Rg) / 2).toFixed(1)}" y="${by + 16}" text-anchor="middle">${sec} s</text>`;
+      g += `<text class="fl sch" x="${L}" y="${by + 16}">schematic · negative up</text>`;
+    }
     const ttl = esc(label || key);
-    return `<svg class="wave" viewBox="0 0 ${W} ${H}" role="img" aria-label="Schematic EEG: ${ttl}" xmlns="http://www.w3.org/2000/svg"><title>Schematic EEG: ${ttl}</title>${g}</svg>`;
+    return `<svg class="wave${thumb ? ' thumb' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Schematic EEG: ${ttl}" xmlns="http://www.w3.org/2000/svg"><title>Schematic EEG: ${ttl}</title>${g}</svg>`;
   }
 
   /* ---------------- age-of-onset chart ---------------- */

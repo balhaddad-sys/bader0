@@ -19,8 +19,25 @@ It also raises time-critical flags (epileptic spasms, super-refractory status) a
 # no build step — open the file directly
 open index.html            # or: npm run serve  →  http://localhost:8080
 
-npm test                   # 63 tests (Node ≥ 20, no dependencies)
+npm test                   # 85 tests (Node ≥ 20, no dependencies)
 ```
+
+## Using it
+
+The app opens on the **Guided assessment**, built for people who do not want to fill in a clinical form:
+
+1. **About the person** — age at the first seizure (type a number, tap a unit), sex, development.
+2. **What the seizures look like** — tap the pictures that match (drawings of the movements; the figures follow the age you gave: infant, child or adult). Focal seizures ask one follow-up: does the person stay aware?
+3. **When it happens** — sleep or awake, triggers, clusters, how it is going.
+4. **EEG** — match the report to schematic traces: background rhythm, then spikes and spike-wave.
+5. **Scan, genes and other tests** — MRI, genetic testing, a few key results, family history.
+6. **Physical examination** — pictures of skin, face, tone and neurological signs.
+
+Every step can be skipped ("Skip this step"), and a live *So far: CAE · possible* line shows how the answers are being read. The **Result** is written in plain language: the best match with a one-line description, what fits, what is still missing, the seizure and epilepsy type, and what to do next — with *See every criterion* opening the full ILAE checklist. The browser Back button (and the Android back button) steps back through the questions.
+
+How answers become findings: a tapped picture is **present**. In the seizure and examination steps, pictures you did *not* tap become **absent** once you have tapped at least one ("anything you don't tap counts as not seen"); a step where you tap nothing stays *not assessed*. Everywhere else — timing, EEG, tests — un-tapped items are never treated as absent. The guided assessment and the **Full checklist** share one state, so you can switch at any time.
+
+The **Library** holds the reference material: movements & poses, physical signs, the EEG atlas, and the diagrams.
 
 ## Deploy (Vercel)
 
@@ -75,7 +92,8 @@ sudo apt-get install -y default-jdk-headless aapt apksigner zipalign dalvik-exch
 
 ## Design notes
 
-* **Layout:** input on the left, a sticky *Assessment* panel on the right that mirrors the ILAE ladder — **1 Seizure type → 2 Epilepsy type → 3 Syndrome → 4 Etiology** — with the best-fitting syndrome as a hero card (mandatory-criteria meter, alerts, unchecked exclusions) and a criterion-by-criterion checklist. On phones the panel sits below the form with a bottom bar showing the leading syndrome.
+* **Guided first, checklist second:** the default screen asks one question at a time, in plain language, with pictures instead of jargon; touch targets are at least 44 px, the Back/Continue bar is always on screen, nothing is required, and the answer is written for a person ("Best match… what fits… what to do next") rather than as a score sheet. The ILAE checklist remains one tap away for clinicians who want every criterion.
+* **Layout (full checklist):** input on the left, a sticky *Assessment* panel on the right that mirrors the ILAE ladder — **1 Seizure type → 2 Epilepsy type → 3 Syndrome → 4 Etiology** — with the best-fitting syndrome as a hero card (mandatory-criteria meter, alerts, unchecked exclusions) and a criterion-by-criterion checklist. On phones the panel sits below the form with a bottom bar showing the leading syndrome.
 * **Speed:** the *Filter findings* box searches all ~150 findings; answered rows are highlighted; every entered finding can be removed with one tap from the *Findings entered* chips.
 * **Accessibility:** WCAG AA contrast in light and dark themes (checked numerically), keyboard-operable controls with visible focus, status conveyed by icon *and* text (never colour alone), `prefers-reduced-motion` respected.
 * **No external assets:** icons are an inline SVG sprite; the Inter typeface (SIL OFL, `fonts-OFL.txt`) is embedded as a data URI in `fonts.css` (regenerate with `tools/make-fonts-css.sh`). No inline styles/scripts, so the strict CSP in `vercel.json` holds.
@@ -152,7 +170,9 @@ src/diagrams.js  waveform / onset-chart / seizure-tree / flow diagram generators
 src/figures.js   mannequin / face figure renderer (inverse kinematics)
 src/semio.js     movements & poses content (25 entries)
 src/physical.js  physical-signs content (11 entries)
-src/views.js     EEG atlas, movements page, diagrams page, dialog, router
+src/plain.js     one-line plain-language description of each syndrome
+src/wizard.js    guided assessment: step definitions, picture cards → findings, plain-language result
+src/views.js     library lists, diagrams page, dialog, router
 src/app.js       UI
 tests/           node:test suite
 ```

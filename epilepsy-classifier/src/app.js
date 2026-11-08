@@ -25,9 +25,10 @@
   V.SECTIONS.forEach((s) => s.groups.forEach((g) => g.items.forEach((i) => { LABELS[i[0]] = i[1]; })));
   V.IMAGING_ITEMS.forEach((i) => { LABELS[i[0]] = 'MRI: ' + i[1]; });
 
-  const fresh = () => ({ onsetValue: '', onsetUnit: 'y', nowValue: '', nowUnit: 'y', sex: '', mri: '', devOnset: null, devNow: null, findings: {}, reviewed: {} });
+  const fresh = () => ({ onsetValue: '', onsetUnit: 'y', nowValue: '', nowUnit: 'y', sex: '', mri: '', devOnset: null, devNow: null, findings: {}, reviewed: {}, ui: {} });
   let state = fresh();
   let lastShown = [];
+  let dirty = false; // the checklist view is re-rendered lazily when the guided view changed the data
   const toggled = new Map(); // <details> open-state chosen by the user, preserved across live re-renders
 
   /* ---------- state <-> engine patient ---------- */
@@ -152,7 +153,8 @@
     loadPatient(ex.patient); $('#filter').value = ''; applyFilter(); syncForm(); toggled.clear(); render();
     $('#example').value = id;
     $$('details.sec').forEach((d) => { const c = $('[data-count]', d); d.open = !!c && !c.hidden; });
-    if (window.matchMedia('(max-width: 1019px)').matches) $('#results').scrollIntoView({ behavior: 'smooth' });
+    if (document.body.dataset.view === 'guided') { window.EpiWizard.forget(); window.EpiWizard.go(window.EpiWizard.RESULT); }
+    else if (window.matchMedia('(max-width: 1019px)').matches) $('#results').scrollIntoView({ behavior: 'smooth' });
   }
 
   /* ---------- results rendering ---------- */
@@ -264,7 +266,10 @@
     const fids = Object.keys(p.findings).filter((id) => LABELS[id]);
     h += `<section class="res-sec"><h3>Findings entered</h3>`;
     const pl = patientLine(); if (pl) h += `<p class="pt-line">${pl}</p>`;
-    h += fids.length ? `<div class="fchips">${fids.map((id) => `<button type="button" class="fchip ${p.findings[id] ? 'y' : 'n'}" data-remove="${id}" title="Remove this finding" aria-label="Remove: ${esc(LABELS[id])} (${p.findings[id] ? 'present' : 'absent'})">${esc(LABELS[id])}${IC('x')}</button>`).join('')}</div>` : '<p class="muted">None yet.</p>';
+    const chipBtn = (id) => `<button type="button" class="fchip ${p.findings[id] ? 'y' : 'n'}" data-remove="${id}" title="Remove this finding" aria-label="Remove: ${esc(LABELS[id])} (${p.findings[id] ? 'present' : 'absent'})">${esc(LABELS[id])}${IC('x')}</button>`;
+    const present = fids.filter((id) => p.findings[id]), absent = fids.filter((id) => !p.findings[id]);
+    h += fids.length ? (present.length ? `<div class="fchips">${present.map(chipBtn).join('')}</div>` : '')
+      + (absent.length ? `<details class="abs-box" data-key="absent"${isOpen('absent', false) ? ' open' : ''}><summary>${absent.length} marked absent${IC('chevron', 'chev')}</summary><div class="fchips">${absent.map(chipBtn).join('')}</div></details>` : '') : '<p class="muted">None yet.</p>';
     h += `</section><div class="actions"><button type="button" class="btn btn-primary" id="copy">${IC('copy')}Copy summary</button><button type="button" class="btn" id="print2">${IC('printer')}Print / PDF</button></div>`;
     h += `<p class="disc">Rule-based support derived from the published ILAE criteria. It does not diagnose; verify against the source papers and apply clinical judgement.</p>`;
     $('#out').innerHTML = h;
@@ -289,7 +294,36 @@
   }
 
   /* ---------- init ---------- */
-  window.EpiViews.init({ onsetMonths: () => toMonths(state.onsetValue, state.onsetUnit), shown: () => lastShown });
+  function hasInput() {
+    const p = toPatient();
+    return p.onsetMonths !== null || Object.keys(p.findings).length > 0 || !!p.mri || p.devOnset !== null || p.devNow !== null;
+  }
+  function doReset() {
+    state = fresh(); toggled.clear(); $('#example').value = ''; $('#filter').value = ''; applyFilter(); syncForm(); render(); window.scrollTo({ top: 0 });
+  }
+  function flush() { if (dirty) { dirty = false; syncForm(); render(); } }
+  // The guided assessment drives the same state; it renders the checklist lazily, only when that view is shown.
+  window.EpiApp = {
+    state: () => state,
+    hasInput,
+    hasFindings: () => Object.keys(state.findings).length > 0,
+    evaluate() {
+      const p = toPatient(), results = E.evaluate(p, SYN);
+      return { p, results, sz: E.classifySeizures(p), et: E.epilepsyType(p), flags: E.clinicalFlags(p, results), hints: E.etiologyHints(p, results), steps: E.nextSteps(p, results) };
+    },
+    changed() { dirty = true; if (document.body.dataset.view === 'assess') flush(); },
+    examples: () => EX,
+    loadExample,
+    reset: doReset,
+    copy(btn) { const p = toPatient(); copyText(E.summarize(p, E.evaluate(p, SYN)), btn); },
+    setLive(t) { $('#live').textContent = t; },
+    syndromeCount: () => SYN.length,
+  };
+  window.EpiWizard.mount(window.EpiApp);
+  window.EpiViews.init({
+    onsetMonths: () => toMonths(state.onsetValue, state.onsetUnit), shown: () => lastShown,
+    onView(v) { if (v !== 'guided') window.EpiWizard.leave(); if (v === 'assess') flush(); else if (v === 'guided') window.EpiWizard.show(); },
+  });
   buildForm(); syncForm(); render();
   const out = $('#out');
   $('#form').addEventListener('submit', (e) => e.preventDefault());
@@ -300,7 +334,7 @@
     if (rm) { delete state.findings[rm.dataset.remove]; syncForm(); render(); }
     else if (ex) loadExample(ex.dataset.ex);
   });
-  $('#reset').addEventListener('click', () => { state = fresh(); toggled.clear(); $('#example').value = ''; $('#filter').value = ''; applyFilter(); syncForm(); render(); window.scrollTo({ top: 0 }); });
+  $('#reset').addEventListener('click', () => { window.EpiWizard.forget(); doReset(); if (document.body.dataset.view === 'guided') window.EpiWizard.go(0); });
   $('#example').addEventListener('change', (e) => loadExample(e.target.value));
   $('#print').addEventListener('click', () => window.print());
   let reopen = [];

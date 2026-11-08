@@ -1,6 +1,6 @@
 {
   "name": "epilepsy-classifier",
-  "version": "0.1.0",
+  "version": "0.6.0",
   "private": true,
   "description": "Rule-based, ILAE-criteria epilepsy classification support (runs entirely in the browser).",
   "scripts": {
