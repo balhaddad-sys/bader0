@@ -56,6 +56,7 @@
       <div class="wrap tabs-in">
         <a class="tab" href="#/assess" data-view="assess">Assess</a>
         <a class="tab" href="#/movements" data-view="movements">Movements &amp; poses</a>
+        <a class="tab" href="#/physical" data-view="physical">Physical signs</a>
         <a class="tab" href="#/atlas" data-view="atlas">EEG atlas</a>
         <a class="tab" href="#/diagrams" data-view="diagrams">Diagrams</a>
       </div>
@@ -142,6 +143,25 @@
     </aside>
   </main>
 
+  <main id="view-physical" class="wrap page" hidden>
+    <header class="page-h">
+      <h2>Physical signs</h2>
+      <p>Examination findings that point toward a syndrome or a cause: <b>facial and head features</b>, <b>neurocutaneous skin signs</b>, <b>tone, strength and vision</b>, and <b>movement and coordination</b>. Each entry shows the sign, which ILAE criteria use it, what it can be mistaken for, and where the wording comes from (ILAE papers, international consensus criteria, or standard clinical teaching). Drawings are schematic and skin signs look different across skin tones and ages.</p>
+    </header>
+    <div class="atlas-tools">
+      <div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="ph-filter" type="search" placeholder="Search signs — e.g. skin, head size, weakness, vision, gait" aria-label="Search physical signs"></div>
+      <div id="ph-groups" class="gpills" role="group" aria-label="Filter by group"></div>
+      <p id="ph-count" class="muted small" aria-live="polite"></p>
+    </div>
+    <div id="ph-list" class="atlas"></div>
+    <p id="ph-none" class="empty" hidden>No signs match your search.</p>
+    <section class="card prop">
+      <h3 class="dg-h">Body proportions by age</h3>
+      <p class="hint">The drawings can show an infant, child or adult (Movements tab). Standard anatomy: the head is about a quarter of body length at birth, about a fifth at 2 years, and about an eighth in adults — so infants have large heads, short limbs and a short trunk, and falls and postures look different.</p>
+      <div id="ph-prop"></div>
+    </section>
+  </main>
+
   <main id="view-movements" class="wrap page" hidden>
     <header class="page-h">
       <h2>Seizure movements &amp; poses</h2>
@@ -150,6 +170,7 @@
     <div class="atlas-tools">
       <div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="mv-filter" type="search" placeholder="Search movements — e.g. posture, jerk, face, drop, infant" aria-label="Search movements"></div>
       <div id="mv-groups" class="gpills" role="group" aria-label="Filter by group"></div>
+      <fieldset class="field agebar"><legend>Body size in the drawings</legend><div class="segmented" id="mv-age"><label><input type="radio" name="mvage" value="adult" checked><span>Adult</span></label><label><input type="radio" name="mvage" value="child"><span>Child</span></label><label><input type="radio" name="mvage" value="infant"><span>Infant</span></label></div></fieldset>
       <p id="mv-count" class="muted small" aria-live="polite"></p>
     </div>
     <div id="mv-list" class="atlas"></div>
@@ -206,7 +227,7 @@
       <ul id="sources"></ul>
       <p>Each syndrome is scored against the ILAE <em>Mandatory / Alert / Exclusionary</em> tables. Missing information is never treated as absence unless you mark a section as reviewed. The knowledge base is human-readable in <code>src/kb.js</code> and covered by an automated test suite. See the README for scope, interpretation choices and limits.</p>
     </details>
-    <p class="fine">Epilepsy Classifier v0.4 · Inter typeface © The Inter Project Authors (SIL OFL 1.1)</p>
+    <p class="fine">Epilepsy Classifier v0.5 · Inter typeface © The Inter Project Authors (SIL OFL 1.1)</p>
   </footer>
 
   <script src="src/vocab.js"></script>
@@ -217,6 +238,7 @@
   <script src="src/diagrams.js"></script>
   <script src="src/figures.js"></script>
   <script src="src/semio.js"></script>
+  <script src="src/physical.js"></script>
   <script src="src/views.js"></script>
   <script src="src/app.js"></script>
 </body>

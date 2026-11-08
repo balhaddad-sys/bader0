@@ -36,34 +36,38 @@
       if (m.t === 'arc') { const a0 = (m.a0 * Math.PI) / 180, a1 = (m.a1 * Math.PI) / 180; const x0 = m.x + m.r * Math.cos(a0), y0 = m.y + m.r * Math.sin(a0), x1 = m.x + m.r * Math.cos(a1), y1 = m.y + m.r * Math.sin(a1);
         return `<path class="pf-ar" d="M${f1(x0)} ${f1(y0)}A${m.r} ${m.r} 0 ${Math.abs(m.a1 - m.a0) > 180 ? 1 : 0} ${m.a1 > m.a0 ? 1 : 0} ${f1(x1)} ${f1(y1)}" marker-end="url(#pfah)"${m.both ? ' marker-start="url(#pfah)"' : ''}/>`; }
       if (m.t === 'label') return `<text class="pf-lb ${m.cls || ''}" x="${m.x}" y="${m.y}" text-anchor="${m.anchor || 'middle'}">${String(m.text).split('|').map((s, i) => `<tspan x="${m.x}" dy="${i ? 11.5 : 0}">${esc(s)}</tspan>`).join('')}</text>`;
+      if (m.t === 'shape') return `<path class="${m.cls || 'pf-lesion'}" d="${m.d}"/>`;
+      if (m.t === 'dots') return (m.pts || []).map((p) => `<circle class="${m.cls || 'pf-papule'}" cx="${p[0]}" cy="${p[1]}" r="${m.r || 2.6}"/>`).join('');
       if (m.t === 'x') return `<path class="pf-x" d="M${m.x - 6} ${m.y - 6}L${m.x + 6} ${m.y + 6}M${m.x + 6} ${m.y - 6}L${m.x - 6} ${m.y + 6}"/>`;
       return '';
     }).join('');
   }
 
   /* ---------- full-body mannequin ---------- */
-  function body(s) {
+  const AGES = { infant: { k: 0.7, head: 29, limb: 0.82 }, child: { k: 0.86, head: 21, limb: 0.93 }, adult: { k: 1, head: 17, limb: 1 } };
+  function body(s, opts) {
     s = s || {};
+    const age = s.age || (s.infant ? 'infant' : (opts && opts.age) || 'adult'), P = AGES[age] || AGES.adult, ls = s.limbScale || {};
     const hl = new Set(s.hl || []), sc = s.torso && s.torso.scale ? s.torso.scale : 1, sh = (s.torso && s.torso.shift) || 0;
     const topY = 152 - (152 - 74) * sc, dy = topY - 74;
     const sho = { R: [SH.R[0] + sh, SH.R[1] + dy], L: [SH.L[0] + sh, SH.L[1] + dy] };
     const arm = Object.assign({}, REST.arm, s.arm || {}), leg = Object.assign({}, REST.leg, s.leg || {});
-    const k = s.infant ? 0.92 : 1;
+    const k = P.limb;
     let g = '';
     ['R', 'L'].forEach((sd) => {   // legs first (behind torso)
-      const r = ik(HP[sd], leg[sd].foot, L1.th * k, L1.sh * k, leg[sd].bend);
+      const r = ik(HP[sd], leg[sd].foot, L1.th * k * (ls['leg' + sd] || 1), L1.sh * k * (ls['leg' + sd] || 1), leg[sd].bend);
       g += `<path class="pf-limb ${hl.has('leg' + sd) ? 'hl' : ''}" d="M${f1(HP[sd][0])} ${f1(HP[sd][1])}L${f1(r.E[0])} ${f1(r.E[1])}L${f1(r.T[0])} ${f1(r.T[1])}"/><ellipse class="pf-end ${hl.has('leg' + sd) ? 'hl' : ''}" cx="${f1(r.T[0] + (sd === 'R' ? -3 : 3))}" cy="${f1(r.T[1] + 2)}" rx="8" ry="4.5"/>`;
     });
     g += `<path class="pf-torso ${hl.has('torso') ? 'hl' : ''}" d="M${f1(sho.R[0] - 7)} ${f1(sho.R[1] - 1)}Q100 ${f1(sho.R[1] - 14)} ${f1(sho.L[0] + 7)} ${f1(sho.L[1] - 1)}C${f1(sho.L[0] + 2)} ${f1(sho.L[1] + 30)} 119 ${f1(HP.L[1] - 20)} ${f1(HP.L[0] + 9)} 154Q100 161 ${f1(HP.R[0] - 9)} 154C81 ${f1(HP.R[1] - 20)} ${f1(sho.R[0] - 2)} ${f1(sho.R[1] + 30)} ${f1(sho.R[0] - 7)} ${f1(sho.R[1] - 1)}Z"/>`;
     ['R', 'L'].forEach((sd) => {
-      const r = ik(sho[sd], arm[sd].hand, L1.ua * k, L1.fa * k, arm[sd].bend), on = hl.has('arm' + sd) ? 'hl' : '';
+      const r = ik(sho[sd], arm[sd].hand, L1.ua * k * (ls['arm' + sd] || 1), L1.fa * k * (ls['arm' + sd] || 1), arm[sd].bend), on = hl.has('arm' + sd) ? 'hl' : '';
       g += `<path class="pf-limb ${on}" d="M${f1(sho[sd][0])} ${f1(sho[sd][1])}L${f1(r.E[0])} ${f1(r.E[1])}L${f1(r.T[0])} ${f1(r.T[1])}"/><circle class="pf-end ${on}" cx="${f1(r.T[0])}" cy="${f1(r.T[1])}" r="6.5"/>`;
     });
-    const h = s.head || {}, hr = s.infant ? 21 : 17, hx = 100 + sh + (h.dx || 0) + (h.turn || 0) * 3, hy = 42 + dy + (h.dy || 0);
+    const h = s.head || {}, hr = P.head, hx = 100 + sh + (h.dx || 0) + (h.turn || 0) * 3, hy = 42 + dy + (h.dy || 0);
     g += `<path class="pf-neck" d="M${100 + sh} ${f1(sho.R[1] - 6)}L${f1(hx)} ${f1(hy + hr - 2)}"/><circle class="pf-head ${hl.has('head') ? 'hl' : ''}" cx="${f1(hx)}" cy="${f1(hy)}" r="${hr}"/>`;
     g += faceDetail(hx, hy, hr, h);
     g += `<text class="pf-side" x="58" y="250" text-anchor="middle">R</text><text class="pf-side" x="142" y="250" text-anchor="middle">L</text>`;
-    return g + marks(s.marks);
+    return `<g class="pf-age-${age}" transform="translate(100 238) scale(${P.k}) translate(-100 -238)">${g}${marks(s.marks)}</g>`;
   }
   function faceDetail(cx, cy, r, h) {
     const t = h.turn || 0, ex = 6.2 * (r / 17), ey = cy - 2.5, shift = t * 4.5; let g = '';
@@ -94,19 +98,32 @@
     if (m === 'open') g += `<ellipse class="pf-mouth" cx="${cx}" cy="${my + 4}" rx="17" ry="${s.wide ? 15 : 11}"/>`;
     else if (m === 'smile') g += `<path class="pf-mouth" d="M${cx - 24} ${my - 4}Q${cx} ${my + 24} ${cx + 24} ${my - 4}Z"/>`;
     else if (m === 'pull') g += `<path class="pf-feat" d="M${cx - 22} ${my + 4}Q${cx - 4} ${my + 6} ${cx + 8} ${my}L${cx + 24} ${my - 14}"/>`;
+    else if (m === 'droop') g += `<path class="pf-feat" d="M${cx - 22} ${my - 8}Q${cx} ${my + 4} ${cx + 22} ${my + 8}"/>`;
     else if (m === 'chew') g += `<path class="pf-mouth" d="M${cx - 15} ${my}Q${cx} ${my + 9} ${cx + 15} ${my}Q${cx} ${my + 1} ${cx - 15} ${my}Z"/>`;
     else g += `<path class="pf-feat" d="M${cx - 15} ${my}L${cx + 15} ${my}"/>`;
     if (s.sweat) g += `<path class="pf-bu" d="M${cx + 66} ${cy - 62}q-4 8 0 12M${cx - 66} ${cy - 62}q4 8 0 12"/>`;
     return g + marks(s.marks);
   }
 
+  function custom(key) {
+    if (key === 'headsizes') {
+      const head = (cx, r, t, c) => `<circle class="pf-head" cx="${cx}" cy="112" r="${r}"/><circle class="pf-eye" cx="${cx - r * 0.33}" cy="108" r="1.9"/><circle class="pf-eye" cx="${cx + r * 0.33}" cy="108" r="1.9"/><path class="pf-feat" d="M${cx - r * 0.25} ${112 + r * 0.42}h${r * 0.5}"/><text class="pf-lb ${c}" x="${cx}" y="${112 + r + 18}" text-anchor="middle">${t}</text>`;
+      return `<ellipse class="pf-tape" cx="102" cy="104" rx="27" ry="7"/>` + head(36, 18, 'small', 'sm') + head(102, 26, 'expected', '') + head(172, 32, 'large', 'sm') + `<text class="pf-lb sm" x="105" y="56" text-anchor="middle">tape at the largest</text><text class="pf-lb sm" x="105" y="68" text-anchor="middle">circumference</text>`;
+    }
+    if (key === 'visualfield') {
+      const eye = (cx, lab) => `<circle class="pf-fieldc" cx="${cx}" cy="104" r="42"/><path class="pf-field" d="M${cx} 62A42 42 0 0 1 ${cx} 146Z"/><circle class="pf-eye" cx="${cx}" cy="104" r="3"/><text class="pf-lb sm" x="${cx}" y="164" text-anchor="middle">${lab}</text>`;
+      return eye(54, 'left eye') + eye(156, 'right eye') + `<text class="pf-lb" x="105" y="40" text-anchor="middle">right homonymous</text><text class="pf-lb" x="105" y="52" text-anchor="middle">hemianopia</text>`;
+    }
+    return '';
+  }
+
   /* ---------- sequence of frames -> one SVG ---------- */
-  function framesSvg(frames, label) {
+  function framesSvg(frames, label, opts) {
     const n = frames.length, W = n * FW + (n - 1) * 26;
     let g = '';
     frames.forEach((f, i) => {
-      const ox = i * (FW + 26), isFace = f.kind === 'face';
-      g += `<g transform="translate(${ox + (isFace ? 0 : 5)} ${isFace ? 18 : 6})">${isFace ? face(f.spec) : body(f.spec)}</g>`;
+      const ox = i * (FW + 26), isFace = f.kind === 'face', isCustom = f.kind === 'custom';
+      g += `<g transform="translate(${ox + (isFace || isCustom ? 0 : 5)} ${isFace || isCustom ? 18 : 6})">${isFace ? face(f.spec) : isCustom ? custom(f.spec.key) : body(f.spec, opts)}</g>`;
       g += `<text class="pf-ti" x="${ox + FW / 2}" y="${FH - 20}" text-anchor="middle">${String(f.title || '').split('|').map((s, k) => `<tspan x="${ox + FW / 2}" dy="${k ? 13 : 0}">${esc(s)}</tspan>`).join('')}</text>`;
       if (i < n - 1) g += `<path class="pf-seq" d="M${ox + FW + 5} ${FH / 2 - 20}l10 8l-10 8"/>`;
     });
@@ -114,5 +131,5 @@
       <defs><marker id="pfah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="pf-head2" d="M0 0L10 5L0 10z"/></marker></defs>${g}</svg>`;
   }
 
-  return { framesSvg, body, face, ik, FW, FH };
+  return { framesSvg, body, face, ik, custom, AGES, FW, FH };
 });

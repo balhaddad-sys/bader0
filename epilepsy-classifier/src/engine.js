@@ -358,6 +358,9 @@
     if (t('lab.csf_infection')) out.push({ cat: 'Infectious', text: 'CSF evidence of CNS infection' });
     if (['lab.csf_low_glucose', 'lab.pdx_markers', 'lab.pdx_response', 'lab.metabolic_documented'].some(t)) out.push({ cat: 'Metabolic', text: 'Metabolic marker/response documented (e.g. hypoglycorrhachia, pyridoxine dependency)' });
     if (t('lab.autoantibody')) out.push({ cat: 'Immune', text: 'Causal autoantibody documented' });
+    const skin = [['neuro.hypopigmented_macules', 'hypomelanotic macules'], ['neuro.angiofibromas', 'facial angiofibromas / other tuberous sclerosis skin signs'], ['neuro.cafe_au_lait', 'café-au-lait macules / freckling']].filter((x) => t(x[0])).map((x) => x[1]);
+    if (skin.length) out.push({ cat: 'Neurocutaneous clue', text: 'Skin signs entered (' + skin.join('; ') + ') — consider a neurocutaneous disorder such as tuberous sclerosis complex or neurofibromatosis type 1; MRI and genetic evaluation are indicated (international consensus criteria; not scored by the ILAE syndrome tables).' });
+    if (t('neuro.facial_angioma_v1')) out.push({ cat: 'Neurocutaneous clue', text: 'Facial capillary malformation in the V1 distribution — consider Sturge–Weber syndrome (MRI with contrast; ophthalmology review).' });
     (results || []).filter((r) => r.status !== 'excluded' && r.group === 'IGE').slice(0, 1).forEach((r) => out.push({ cat: 'Genetic (presumed)', text: r.abbr + ' is an idiopathic generalized epilepsy: a genetic basis is presumed from family/twin studies; a specific pathogenic variant need not be found (ILAE 2017; 2022).' }));
     const specific = (results || []).filter((r) => r.status === 'met' && ['KCNQ2DEE', 'CDKL5', 'PCDH19', 'GLUT1DS', 'PDDEE', 'SWS', 'HHGS'].includes(r.id));
     specific.forEach((r) => out.push({ cat: 'Etiology-specific syndrome', text: r.name + ' — the etiology defines the syndrome (ILAE 2022; extended in the 2026 ILAE Terminology Commission report).' }));
@@ -396,6 +399,10 @@
     if (!rev.gen && !Object.keys(f).some((k) => k.startsWith('gen.') && f[k] === true) && ((onset !== null && onset <= 36) || ctx.get('devo.moderate_plus') === true || ctx.get('dev.encephalopathy') === true)) {
       steps.push('Genetic testing (epilepsy gene panel / exome) is worth considering: early onset or developmental/encephalopathic features raise the chance of an etiology-specific syndrome.');
     }
+    if (ctx.get('neuro.microcephaly') === true && ctx.get('lab.csf_low_glucose') !== true && ctx.get('gen.slc2a1') !== true) {
+      steps.push('Microcephaly: the ILAE recommends testing for GLUT1 deficiency (CSF glucose and/or SLC2A1) in children with microcephaly, onset ≤3 years or intellectual disability, particularly with an absence phenotype.');
+    }
+    if (ctx.get('neuro.dysmorphism') === true) steps.push('Dysmorphic features or congenital anomalies: consider clinical genetics review and chromosomal microarray (ILAE: recommended if seizures in an IGE are drug-resistant).');
     const cands = (results || []).filter((r) => r.status !== 'excluded').slice(0, 3);
     cands.forEach((r) => {
       r.pending.slice(0, 4).forEach((p) => steps.push('To establish ' + r.abbr + ': ' + p.text + ' (' + (DOMAIN_NAMES[p.domain] || p.domain) + ').'));

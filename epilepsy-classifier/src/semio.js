@@ -135,8 +135,8 @@
         ['Duration & timing', 'Spasms last longer than 1 s (longer than myoclonus, shorter than tonic seizures), occur in clusters, and are most commonly seen shortly after waking.'],
         ['Time-critical', 'Timely recognition and spasms-specific treatment matter: delay is associated with poorer developmental outcome (ILAE 2025). In focal/unknown seizures a spasm is a descriptor (“focal epileptic spasm”).']],
       pitfall: 'Parents often describe them as startles, colic or reflux. Video of a cluster is diagnostically valuable.',
-      frames: [body('Flexor spasm|trunk & neck flex, arms to chest', { infant: true, torso: { scale: 0.8 }, head: { dy: 12, eyes: 'up' }, arm: { R: A(94, 108), L: A(106, 108) }, leg: { R: G(82, 202), L: G(118, 202) }, hl: ['armR', 'armL', 'torso'], marks: [{ t: 'arrow', p: [36, 80, 74, 108], bend: 0.2 }, { t: 'arrow', p: [164, 80, 126, 108], bend: -0.2 }] }),
-        body('Extensor spasm|arms out, back arches', { infant: true, head: { dy: -4, eyes: 'up' }, arm: { R: A(20, 56), L: A(180, 56) }, leg: { R: G(68, 238), L: G(132, 238) }, hl: ['armR', 'armL', 'legR', 'legL'], marks: [{ t: 'arrow', p: [60, 92, 24, 68], bend: 0.1 }, { t: 'arrow', p: [140, 92, 176, 68], bend: -0.1 }] }),
+      frames: [body('Flexor spasm|trunk & neck flex, arms to chest', { infant: true, torso: { scale: 0.8 }, head: { dy: 12, eyes: 'up' }, arm: { R: A(94, 108), L: A(106, 108) }, leg: { R: G(82, 202), L: G(118, 202) }, hl: ['armR', 'armL', 'torso'] }),
+        body('Extensor spasm|arms out, back arches', { infant: true, head: { dy: -4, eyes: 'up' }, arm: { R: A(20, 56), L: A(180, 56) }, leg: { R: G(68, 238), L: G(132, 238) }, hl: ['armR', 'armL', 'legR', 'legL'] }),
         body('Cluster on waking|1–2 s each, repeating', { infant: true, head: { eyes: 'up' }, arm: { R: A(60, 44), L: A(140, 44) }, leg: { R: G(86, 214), L: G(114, 214) }, hl: ['armR', 'armL', 'torso'] })] },
 
     { id: 'sz.atonic', name: 'Atonic seizure (head drop / fall)', group: GROUPS[2], basis: 'ILAE 2022 childhood paper (abrupt but brief loss of axial tone, head nods or sudden fall); posture drawing: ' + STD,
@@ -183,9 +183,9 @@
         ['Significance', 'Characteristic but not seen in all individuals with CDKL5-DEE; not yet a formal seizure type in the 2025 classification, which notes that such combinations may carry syndromic meaning.'],
         ['Context', 'Mandatory seizure criterion for CDKL5-DEE lists tonic seizures, spasms, GTC and focal seizures, with this sequence as the characteristic pattern.']],
       pitfall: 'Genetic confirmation (CDKL5 variant) is required for the diagnosis.',
-      frames: [body('1 · Hyperkinetic', { infant: true, arm: { R: A(22, 44), L: A(178, 128) }, leg: { R: G(80, 214), L: G(118, 238) }, head: { turn: 1, mouth: 'open' }, hl: ['armR', 'armL'], marks: [{ t: 'arrow', p: [40, 112, 24, 70], bend: 0.3, both: true }] }),
+      frames: [body('1 · Hyperkinetic', { infant: true, arm: { R: A(22, 44), L: A(178, 128) }, leg: { R: G(80, 214), L: G(118, 238) }, head: { turn: 1, mouth: 'open' }, hl: ['armR', 'armL'] }),
         body('2 · Tonic', { infant: true, arm: { R: A(30, 130), L: A(170, 130) }, leg: { R: G(86, 240), L: G(114, 240) }, head: { eyes: 'up' }, hl: ['torso'] }),
-        body('3 · Spasms|flexor cluster', { infant: true, torso: { scale: 0.8 }, head: { dy: 12, eyes: 'up' }, arm: { R: A(94, 108), L: A(106, 108) }, leg: { R: G(82, 202), L: G(118, 202) }, hl: ['armR', 'armL'], marks: [{ t: 'burst', x: 100, y: 22, a: -90 }] })] },
+        body('3 · Spasms|flexor cluster', { infant: true, torso: { scale: 0.8 }, head: { dy: 12, eyes: 'up' }, arm: { R: A(94, 108), L: A(106, 108) }, leg: { R: G(82, 202), L: G(118, 202) }, hl: ['armR', 'armL'] })] },
 
     { id: 'sem.automatism', name: 'Automatisms (oral, manual, gestural)', group: GROUPS[3], basis: 'ILAE 2022 variable-age and IGE papers (oral, vocal and gestural automatisms; behavioural arrest); further detail: ' + STD,
       summary: 'Stereotyped, semi-purposeful movements — chewing, lip-smacking, fumbling — during a seizure with impaired awareness.',

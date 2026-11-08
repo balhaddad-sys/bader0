@@ -1,7 +1,8 @@
 /* Views: EEG atlas, diagrams page, morphology dialog and hash router. No network, no storage. */
 (function () {
   'use strict';
-  const E = window.EpiEngine, KB = window.EpiKB, M = window.EpiMorph, D = window.EpiDiagrams, S = window.EpiSemio, F = window.EpiFigures;
+  const E = window.EpiEngine, KB = window.EpiKB, M = window.EpiMorph, D = window.EpiDiagrams, S = window.EpiSemio, P = window.EpiPhysical, F = window.EpiFigures;
+  let bodyAge = 'adult';
   const SYN = E.parseKB(KB.TEXT);
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
@@ -30,7 +31,7 @@
       + '<p class="muted small">Many criteria accept this pattern as one of several alternatives (“or”); the criteria checklist shows each exact rule.</p>';
   };
 
-  const entry = (id) => M.byId[id] || S.byId[id];
+  const entry = (id) => M.byId[id] || S.byId[id] || P.byId[id];
   const isSem = (m) => !!m.frames;
   function morphBody(m, withFig) {
     const fig = !withFig ? '' : isSem(m) ? `<div class="fig pose-fig" data-sem="${m.id}" data-label="${esc(m.name)}"></div>` : `<div class="fig" data-fig="${m.fig}" data-label="${esc(m.name)}"></div>`;
@@ -43,13 +44,14 @@
   }
   const fillFigs = (root) => $$('.fig:not([data-done])', root).forEach((el) => {
     if (el.dataset.fig) el.innerHTML = D.waveformSvg(el.dataset.fig, el.dataset.label);
-    else if (el.dataset.sem) el.innerHTML = F.framesSvg(S.byId[el.dataset.sem].frames, el.dataset.label);
+    else if (el.dataset.sem) el.innerHTML = F.framesSvg((S.byId[el.dataset.sem] || P.byId[el.dataset.sem]).frames, el.dataset.label, { age: bodyAge });
     el.dataset.done = '1';
   });
 
   /* ---------- searchable, filterable card lists (EEG atlas + movements) ---------- */
   const LISTS = {
     atlas: { items: M.ITEMS, groups: M.GROUPS, list: '#atlas-list', filter: '#atlas-filter', pills: '#atlas-groups', count: '#atlas-count', none: '#atlas-none', prefix: 'm-', noun: 'patterns', built: false },
+    physical: { items: P.ITEMS, groups: P.GROUPS, list: '#ph-list', filter: '#ph-filter', pills: '#ph-groups', count: '#ph-count', none: '#ph-none', prefix: 'p-', noun: 'signs', built: false },
     movements: { items: S.ITEMS, groups: S.GROUPS, list: '#mv-list', filter: '#mv-filter', pills: '#mv-groups', count: '#mv-count', none: '#mv-none', prefix: 's-', noun: 'movements', built: false },
   };
   const cardId = (cfg, id) => cfg.prefix + id.replace(/\./g, '-');
@@ -72,7 +74,7 @@
     apply();
   }
   function showInList(id) {
-    const key = S.byId[id] ? 'movements' : 'atlas', cfg = LISTS[key], m = entry(id);
+    const key = S.byId[id] ? 'movements' : P.byId[id] ? 'physical' : 'atlas', cfg = LISTS[key], m = entry(id);
     buildList(key);
     $(cfg.filter).value = ''; $$('.gpill', $(cfg.pills)).forEach((x, i) => x.classList.toggle('on', i === 0)); $(cfg.filter).dispatchEvent(new Event('input'));
     const d = $('#' + cardId(cfg, m.id)); if (!d) return;
@@ -85,7 +87,7 @@
     const sem = isSem(m);
     $('#md-body').innerHTML = `<header class="dlg-h"><div><span class="m-g">${esc(m.group)}</span><h3 id="md-title">${esc(m.name)}</h3><p>${esc(m.summary)}</p></div>
       <button type="button" class="btn dlg-x" data-close aria-label="Close">${IC('x')}</button></header><div class="dlg-b">${morphBody(m, true)}
-      <p class="dlg-f"><button type="button" class="btn" data-atlas="${m.id}">${IC('book')}Open in ${sem ? 'movements' : 'EEG'} atlas</button></p></div>`;
+      <p class="dlg-f"><button type="button" class="btn" data-atlas="${m.id}">${IC('book')}Open in ${S.byId[m.id] ? 'movements' : P.byId[m.id] ? 'physical signs' : 'EEG'} atlas</button></p></div>`;
     fillFigs($('#md-body'));
     const dlg = $('#morph-dialog'); if (!dlg.open) dlg.showModal();
   }
@@ -93,7 +95,7 @@
     const dlg = $('#morph-dialog');
     dlg.addEventListener('click', (e) => {
       if (e.target === dlg || e.target.closest('[data-close]')) dlg.close();
-      const a = e.target.closest('[data-atlas]'); if (a) { dlg.close(); location.hash = S.byId[a.dataset.atlas] ? '#/movements' : '#/atlas'; setTimeout(() => showInList(a.dataset.atlas), 60); }
+      const a = e.target.closest('[data-atlas]'); if (a) { dlg.close(); location.hash = S.byId[a.dataset.atlas] ? '#/movements' : P.byId[a.dataset.atlas] ? '#/physical' : '#/atlas'; setTimeout(() => showInList(a.dataset.atlas), 60); }
     });
     document.addEventListener('click', (e) => { const b = e.target.closest('[data-morph]'); if (b) openMorph(b.dataset.morph); });
   }
@@ -109,23 +111,39 @@
     $('#dg-onset-note').textContent = onset === null ? 'Enter an onset age on the Assess tab to see where it falls.' : (shown.size ? 'Highlighted: syndromes currently meeting or approaching their criteria.' : 'Your onset age is marked; no syndrome is highlighted yet.');
   }
 
+  /* ---------- body size toggle + proportions ---------- */
+  function renderProportions() {
+    const el = $('#ph-prop'); if (!el || el.dataset.done) return; el.dataset.done = '1';
+    const fr = ['infant', 'child', 'adult'].map((a) => ({ kind: 'body', title: { infant: 'Infant (newborn)|head ≈ ¼ of length', child: 'Child (≈6 years)|head ≈ ⅙', adult: 'Adult|head ≈ ⅛' }[a], spec: { age: a } }));
+    el.innerHTML = F.framesSvg(fr, 'Body proportions of an infant, a child and an adult');
+  }
+  function wireAge() {
+    const bar = $('#mv-age'); if (!bar) return;
+    bar.addEventListener('change', (e) => {
+      bodyAge = e.target.value;
+      $$('#mv-list .pose-fig, #ph-list .pose-fig').forEach((f) => { delete f.dataset.done; f.innerHTML = ''; });
+      fillFigs($('#mv-list')); fillFigs($('#ph-list'));
+    });
+  }
+
   /* ---------- router ---------- */
   function route() {
-    const m = /^#\/(\w+)/.exec(location.hash), v = m && ['assess', 'atlas', 'movements', 'diagrams'].includes(m[1]) ? m[1] : (m ? 'assess' : (document.body.dataset.view || 'assess'));
+    const m = /^#\/(\w+)/.exec(location.hash), v = m && ['assess', 'atlas', 'movements', 'physical', 'diagrams'].includes(m[1]) ? m[1] : (m ? 'assess' : (document.body.dataset.view || 'assess'));
     document.body.dataset.view = v;
-    ['assess', 'atlas', 'movements', 'diagrams'].forEach((k) => { $('#view-' + k).hidden = k !== v; });
+    ['assess', 'atlas', 'movements', 'physical', 'diagrams'].forEach((k) => { $('#view-' + k).hidden = k !== v; });
     $$('.tab').forEach((t) => { if (t.dataset.view === v) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current'); });
     if (v === 'atlas') buildList('atlas');
     if (v === 'movements') buildList('movements');
+    if (v === 'physical') { buildList('physical'); renderProportions(); }
     if (v === 'diagrams') renderDiagrams();
     if (m) window.scrollTo({ top: 0 });
   }
 
   window.EpiViews = {
-    init(c) { ctx = c; wireDialog(); window.addEventListener('hashchange', route); route(); },
+    init(c) { ctx = c; wireDialog(); wireAge(); window.addEventListener('hashchange', route); route(); },
     hasMorph: (id) => !!entry(id),
     morphName: (id) => (entry(id) || {}).name,
-    iconFor: (id) => (S.byId[id] ? 'figure' : 'activity'),
+    iconFor: (id) => (S.byId[id] || P.byId[id] ? 'figure' : 'activity'),
     onsetMini(id, onsetMonths) {
       const s = SYN.find((x) => x.id === id); if (!s) return '';
       const w = E.onsetWindows(s);

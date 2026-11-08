@@ -19,7 +19,7 @@ It also raises time-critical flags (epileptic spasms, super-refractory status) a
 # no build step — open the file directly
 open index.html            # or: npm run serve  →  http://localhost:8080
 
-npm test                   # 54 tests (Node ≥ 20, no dependencies)
+npm test                   # 63 tests (Node ≥ 20, no dependencies)
 ```
 
 ## Deploy (Vercel)
@@ -49,6 +49,14 @@ sudo apt-get install -y default-jdk-headless aapt apksigner zipalign dalvik-exch
 * **Signing:** the script generates a throw-away key in `android/.signing/` (git-ignored). An update only installs over an existing copy if signed with the **same key**, so for a long-lived app create your own key once (`keytool -genkeypair …`) and run `KEYSTORE=… KS_ALIAS=… KS_PASS=… ./android/build.sh`.
 * **Bundled files** are exactly `index.html`, `styles.css` and `src/*.js` — the code covered by `npm test`.
 * Targets API 34, min API 21 (Android 5.0+). Not distributable on Google Play as-is (needs an upload key, listing, and — because it presents clinical decision support — a regulatory/medical-device review).
+
+## Physical signs and body size
+
+* **Physical signs** (`#/physical`): 11 examination findings with labelled drawings — facial capillary malformation (port-wine stain) in V1 with the trigeminal territories, microcephaly (head-size schematic), dysmorphology survey, facial asymmetry; hypomelanotic (ash-leaf) macules, facial angiofibromas and café-au-lait macules; hypotonia (typical vs hypotonic posture, head lag), hemiparesis / hemiatrophy / Todd paresis, visual-field deficit (homonymous hemianopia); ataxia and paroxysmal dyskinesia. Each shows which ILAE criteria use the sign (derived from the knowledge base), a pitfall, and a basis line.
+* **Sources differ by entry, and each says so.** ILAE-sourced: the V1 capillary malformation (Sturge–Weber alert; HHE and Rasmussen criteria), microcephaly → SLC2A1/GLUT1 testing, dysmorphism → chromosomal disorder (MEI exclusion; microarray in drug-resistant IGE), central hypotonia / cortical visual impairment in early DEE, hemiparesis and hemianopia (HHE, Rasmussen), contralateral facial weakness (MTLE-HS), movement disorders (GLUT1DS, PRRT2). **The skin signs of tuberous sclerosis and neurofibromatosis are not described in the ILAE syndrome papers**; they follow the international consensus criteria (Northrup 2021, *Pediatr Neurol* 123:50–66; Legius 2021, *Genet Med* 23:1506–1513, both confirmed in PubMed) and are not scored.
+* **In the assessment:** new optional findings (microcephaly, facial asymmetry, hypomelanotic macules, angiofibromas, café-au-lait) feed *Etiology clues* (neurocutaneous disorder; Sturge–Weber) and *Next steps* (GLUT1 testing with microcephaly; genetics review with dysmorphism). Every examination finding has a figure button.
+* **Body size:** the Movements tab can draw every figure as an **infant, child or adult** (head ≈ ¼, ⅙, ⅛ of body length; limbs and trunk scale about the ground line). Entries that are infant-specific (spasms) keep infant proportions. Standard anatomy, not ILAE content.
+* Skin signs vary with skin tone and age, and drawings are schematic; they are no substitute for dermatological examination.
 
 ## Movements & poses
 
@@ -143,6 +151,7 @@ src/morph.js     EEG morphology atlas content (23 patterns)
 src/diagrams.js  waveform / onset-chart / seizure-tree / flow diagram generators
 src/figures.js   mannequin / face figure renderer (inverse kinematics)
 src/semio.js     movements & poses content (25 entries)
+src/physical.js  physical-signs content (11 entries)
 src/views.js     EEG atlas, movements page, diagrams page, dialog, router
 src/app.js       UI
 tests/           node:test suite

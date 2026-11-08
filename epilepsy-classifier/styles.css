@@ -487,3 +487,18 @@ dialog.dlg::backdrop { background: rgba(8, 18, 31, .6); }
 .pf-ti { font: 650 12px var(--font); fill: var(--ink); }
 .pf-seq { fill: none; stroke: var(--faint); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .tab { font-size: 13px; padding-left: 12px; padding-right: 12px; }
+
+/* ==========================================================================
+   v0.5 — physical signs, skin overlays, body-size control
+   ========================================================================== */
+.pf-lesion { fill: rgba(176, 42, 70, .5); }
+.pf-v1 { fill: rgba(176, 42, 70, .34); } .pf-v2 { fill: rgba(43, 122, 209, .26); } .pf-v3 { fill: rgba(31, 157, 115, .3); }
+.pf-lbw { font: 700 10px var(--font); fill: #fff; paint-order: stroke; stroke: rgba(120, 20, 50, .8); stroke-width: 2.5px; }
+.pf-macule { fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.4; stroke-dasharray: 3 2; }
+.pf-cal { fill: #b5835a; opacity: .8; } .pf-dot { fill: #8c5a3c; }
+.pf-papule { fill: #c0392b; opacity: .9; }
+.pf-num { fill: var(--primary); } .pf-numt { font: 700 10px var(--font); fill: var(--on-primary); }
+.pf-tape { fill: none; stroke: var(--warn); stroke-width: 2; stroke-dasharray: 5 3; }
+.pf-field { fill: var(--ink); opacity: .85; } .pf-fieldc { fill: var(--surface); stroke: var(--ink-2); stroke-width: 2; }
+.pf-age-infant .pf-limb { stroke-width: 15; } .pf-age-child .pf-limb { stroke-width: 12.5; }
+.agebar { margin-top: 12px; } .prop { margin-top: 18px; } #ph-prop { overflow-x: auto; }
