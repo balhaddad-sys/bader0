@@ -35,6 +35,7 @@
             ['sz.gtc', 'Generalized tonic–clonic', 'Includes tonic–clonic of unknown onset'],
             ['sz.mtc', 'Myoclonic–tonic–clonic', 'Myoclonic jerks, then tonic–clonic'],
             ['sz.myoclonic', 'Myoclonic', 'Brief, shock-like jerks'],
+            ['sz.neg_myoclonus', 'Negative myoclonus', 'Brief loss of tone in an actively held posture'],
             ['sz.myoatonic', 'Myoclonic–atonic', 'Jerk followed by sudden loss of tone (drop)'],
             ['sz.atonic', 'Atonic', 'Sudden loss of tone'],
             ['sz.tonic', 'Tonic (generalized)', 'Sustained stiffening, often in sleep'],
@@ -63,6 +64,11 @@
             ['sem.hkt_spasms', 'Hyperkinetic → tonic → spasms sequence'],
             ['sem.unifocal', 'Consistently unifocal onset (same body part, same side)'],
             ['sem.myoclonus_sleep_only', 'Myoclonus predominantly / exclusively during sleep'],
+            ['sem.fencing', 'Fencing posture', 'One arm extended, the other flexed beside the head, head turned toward the extended arm'],
+            ['sem.figure4', 'Figure-of-4 sign', 'One elbow extended, the other flexed, in the tonic phase of a tonic–clonic seizure'],
+            ['sem.dystonic', 'Dystonic limb posturing', 'Sustained unilateral twisting posture of an arm or hand'],
+            ['sem.automatism', 'Automatisms (oral / manual)', 'Chewing, lip-smacking, fumbling'],
+            ['sem.ictal_paresis', 'Ictal paresis', 'Weakness of a limb during the seizure'],
           ],
         },
         {
@@ -323,6 +329,7 @@
     'sz.gtc': ['Generalized', 'Generalized tonic–clonic seizure'],
     'sz.mtc': ['Generalized', 'Generalized myoclonic–tonic–clonic seizure'],
     'sz.myoclonic': ['Generalized', 'Generalized myoclonic seizure'],
+    'sz.neg_myoclonus': ['Generalized', 'Generalized negative myoclonus'],
     'sz.myoatonic': ['Generalized', 'Generalized myoclonic–atonic seizure'],
     'sz.atonic': ['Generalized', 'Generalized atonic seizure'],
     'sz.tonic': ['Generalized', 'Generalized tonic seizure'],
@@ -334,13 +341,14 @@
   const FOCAL_IDS = ['sz.focal_aware', 'sz.focal_impaired', 'sz.focal_btc'];
   const GENERALIZED_IDS = [
     'sz.abs_typical', 'sz.abs_atypical', 'sz.abs_myoclonic', 'sz.eyelid_myoclonia', 'sz.gtc', 'sz.mtc',
-    'sz.myoclonic', 'sz.myoatonic', 'sz.atonic', 'sz.tonic', 'sz.clonic', 'sz.reflex_myoclonic_orofacial',
+    'sz.myoclonic', 'sz.neg_myoclonus', 'sz.myoatonic', 'sz.atonic', 'sz.tonic', 'sz.clonic', 'sz.reflex_myoclonic_orofacial',
   ];
   // Semiology that can only occur in focal seizures (ILAE 2025: focal tonic/clonic/hyperkinetic etc. are focal seizures).
   const FOCAL_SEMIOLOGY_IDS = [
     'sem.tonic_focal', 'sem.clonic_focal', 'sem.hemiclonic', 'sem.version', 'sem.hypermotor', 'sem.oral_speech',
     'sem.visual_elementary', 'sem.auditory', 'sem.receptive_aphasia', 'sem.cog_dejavu', 'sem.sensory_other',
     'sem.mesial_temporal', 'sem.gustatory_fear', 'sem.gelastic', 'sem.fearful_scream', 'sem.epc_progressive',
+    'sem.fencing', 'sem.dystonic', 'sem.automatism', 'sem.ictal_paresis',
   ];
   const ALL_SEIZURE_IDS = FOCAL_IDS.concat(GENERALIZED_IDS, ['sz.spasms']);
 

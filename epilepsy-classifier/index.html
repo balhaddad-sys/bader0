@@ -30,6 +30,7 @@
     <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
     <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
     <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+    <symbol id="i-figure" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2.5"/><path d="M12 7.5v7M6 10.5l6 1.5 6-1.5M12 14.5l-3.5 6M12 14.5l3.5 6"/></symbol>
     <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
   </svg>
 
@@ -54,6 +55,7 @@
     <nav class="tabs" aria-label="Sections">
       <div class="wrap tabs-in">
         <a class="tab" href="#/assess" data-view="assess">Assess</a>
+        <a class="tab" href="#/movements" data-view="movements">Movements &amp; poses</a>
         <a class="tab" href="#/atlas" data-view="atlas">EEG atlas</a>
         <a class="tab" href="#/diagrams" data-view="diagrams">Diagrams</a>
       </div>
@@ -140,6 +142,20 @@
     </aside>
   </main>
 
+  <main id="view-movements" class="wrap page" hidden>
+    <header class="page-h">
+      <h2>Seizure movements &amp; poses</h2>
+      <p>What the body does during a seizure, drawn frame by frame: tonic and fencing postures, the figure-of-4 sign, version, clonic jerking, spasms, drops, hyperkinetic movements, automatisms and the face and eyes. The <b>patient's right is on the viewer's left</b>; orange limbs are the moving or posturing parts. Drawings are stylised teaching schematics, not clinical photographs, and each entry states whether its wording comes from the ILAE papers or from standard semiology teaching.</p>
+    </header>
+    <div class="atlas-tools">
+      <div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="mv-filter" type="search" placeholder="Search movements — e.g. posture, jerk, face, drop, infant" aria-label="Search movements"></div>
+      <div id="mv-groups" class="gpills" role="group" aria-label="Filter by group"></div>
+      <p id="mv-count" class="muted small" aria-live="polite"></p>
+    </div>
+    <div id="mv-list" class="atlas"></div>
+    <p id="mv-none" class="empty" hidden>No movements match your search.</p>
+  </main>
+
   <main id="view-atlas" class="wrap page" hidden>
     <header class="page-h">
       <h2>EEG morphology atlas</h2>
@@ -190,7 +206,7 @@
       <ul id="sources"></ul>
       <p>Each syndrome is scored against the ILAE <em>Mandatory / Alert / Exclusionary</em> tables. Missing information is never treated as absence unless you mark a section as reviewed. The knowledge base is human-readable in <code>src/kb.js</code> and covered by an automated test suite. See the README for scope, interpretation choices and limits.</p>
     </details>
-    <p class="fine">Epilepsy Classifier v0.3 · Inter typeface © The Inter Project Authors (SIL OFL 1.1)</p>
+    <p class="fine">Epilepsy Classifier v0.4 · Inter typeface © The Inter Project Authors (SIL OFL 1.1)</p>
   </footer>
 
   <script src="src/vocab.js"></script>
@@ -199,6 +215,8 @@
   <script src="src/examples.js"></script>
   <script src="src/morph.js"></script>
   <script src="src/diagrams.js"></script>
+  <script src="src/figures.js"></script>
+  <script src="src/semio.js"></script>
   <script src="src/views.js"></script>
   <script src="src/app.js"></script>
 </body>

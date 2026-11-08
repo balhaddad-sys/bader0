@@ -57,7 +57,7 @@
   function triRow(id, label, hint) {
     return `<div class="row" data-id="${id}" data-q="${esc((label + ' ' + (hint || '') + ' ' + id).toLowerCase())}">
       <span class="lbl" id="l-${id}">${esc(label)}${hint ? `<small>${esc(hint)}</small>` : ''}</span>
-      <div class="row-r">${window.EpiViews.hasMorph(id) ? `<button type="button" class="info-btn" data-morph="${id}" aria-label="About this EEG pattern: ${esc(label)}" title="What does this look like?">${IC('activity')}</button>` : ''}<div class="tri" role="radiogroup" aria-labelledby="l-${id}">${ROW_BTN(id, 'y', 't-y', 'check', 'Present')}${ROW_BTN(id, 'n', 't-n', 'x', 'Absent')}${ROW_BTN(id, 'u', 't-u', 'minus', 'Not assessed')}</div></div></div>`;
+      <div class="row-r">${window.EpiViews.hasMorph(id) ? `<button type="button" class="info-btn" data-morph="${id}" aria-label="About this EEG pattern: ${esc(label)}" title="What does this look like?">${IC(window.EpiViews.iconFor(id))}</button>` : ''}<div class="tri" role="radiogroup" aria-labelledby="l-${id}">${ROW_BTN(id, 'y', 't-y', 'check', 'Present')}${ROW_BTN(id, 'n', 't-n', 'x', 'Absent')}${ROW_BTN(id, 'u', 't-u', 'minus', 'Not assessed')}</div></div></div>`;
   }
   function buildForm() {
     $('#sections').innerHTML = V.SECTIONS.map((s, i) => `
@@ -177,7 +177,7 @@
       return `<div class="crit-h"><span>${LEVEL_TITLE[lv]}</span><span>${right}</span></div>` + rows.map((x) => {
         const ui = STATE_UI[lv][x.state];
         const links = x.expr ? [...E.collectIds(x.expr, new Set())].filter((id) => window.EpiViews.hasMorph(id)).slice(0, 3) : [];
-        return `<div class="crit">${IC(ui[0], ui[1])}<span>${esc(x.text)}<span class="tag">${esc(E.DOMAIN_NAMES[x.domain] || x.domain)} · ${ui[2]}${x.core ? ' · defining' : ''}</span>${links.length ? `<span class="mlinks">${links.map((id) => `<button type="button" class="mlink" data-morph="${id}">${IC('activity')}${esc(window.EpiViews.morphName(id))}</button>`).join('')}</span>` : ''}</span></div>`;
+        return `<div class="crit">${IC(ui[0], ui[1])}<span>${esc(x.text)}<span class="tag">${esc(E.DOMAIN_NAMES[x.domain] || x.domain)} · ${ui[2]}${x.core ? ' · defining' : ''}</span>${links.length ? `<span class="mlinks">${links.map((id) => `<button type="button" class="mlink" data-morph="${id}">${IC(window.EpiViews.iconFor(id))}${esc(window.EpiViews.morphName(id))}</button>`).join('')}</span>` : ''}</span></div>`;
       }).join('');
     }).join('');
     return `<div class="crit-body">${body}${r.notes.length ? `<p class="src">${r.notes.map(esc).join('<br>')}</p>` : ''}

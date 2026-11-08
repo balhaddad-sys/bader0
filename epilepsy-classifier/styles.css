@@ -459,3 +459,31 @@ dialog.dlg::backdrop { background: rgba(8, 18, 31, .6); }
 .page { overflow-x: clip; }
 
 @media (max-width: 640px) { .use-l { min-width: 100%; } }
+
+/* ==========================================================================
+   v0.4 — movements & poses figures
+   ========================================================================== */
+.pose { width: auto; max-width: 100%; min-width: 0; height: auto; display: block; margin: 0 auto; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 6px 4px; }
+.pose-fig { overflow-x: auto; }
+.pf-limb { fill: none; stroke: var(--ink-2); stroke-width: 11; stroke-linecap: round; stroke-linejoin: round; }
+.pf-limb.hl { stroke: #d9822b; }
+.pf-end { fill: var(--ink-2); } .pf-end.hl { fill: #d9822b; }
+.pf-torso { fill: var(--surface-3); stroke: var(--line-strong); stroke-width: 2; stroke-linejoin: round; }
+.pf-torso.hl { fill: var(--warn-soft); stroke: #d9822b; }
+.pf-head { fill: var(--surface); stroke: var(--ink-2); stroke-width: 2.6; }
+.pf-head.hl { stroke: #d9822b; stroke-width: 3.6; }
+.pf-neck { fill: none; stroke: var(--ink-2); stroke-width: 6; stroke-linecap: round; }
+.pf-eye { fill: var(--ink); }
+.pf-eyeball { fill: var(--surface); stroke: var(--ink-2); stroke-width: 2; }
+.pf-feat { fill: none; stroke: var(--ink-2); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.pf-mouth { fill: var(--bad-soft); stroke: var(--ink-2); stroke-width: 2; stroke-linejoin: round; }
+.pf-ar { fill: none; stroke: var(--primary); stroke-width: 2.4; stroke-linecap: round; }
+.pf-head2 { fill: var(--primary); }
+.pf-bu { fill: none; stroke: var(--primary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pf-x { stroke: var(--bad); stroke-width: 2.8; stroke-linecap: round; }
+.pf-lb { font: 650 10.5px var(--font); fill: var(--primary); }
+.pf-lb.sm { font-weight: 500; fill: var(--muted); }
+.pf-side { font: 700 10px var(--font); fill: var(--faint); }
+.pf-ti { font: 650 12px var(--font); fill: var(--ink); }
+.pf-seq { fill: none; stroke: var(--faint); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.tab { font-size: 13px; padding-left: 12px; padding-right: 12px; }
