@@ -19,7 +19,7 @@ It also raises time-critical flags (epileptic spasms, super-refractory status) a
 # no build step — open the file directly
 open index.html            # or: npm run serve  →  http://localhost:8080
 
-npm test                   # 36 tests (Node ≥ 20, no dependencies)
+npm test                   # 48 tests (Node ≥ 20, no dependencies)
 ```
 
 ## Deploy (Vercel)
@@ -49,6 +49,13 @@ sudo apt-get install -y default-jdk-headless aapt apksigner zipalign dalvik-exch
 * **Signing:** the script generates a throw-away key in `android/.signing/` (git-ignored). An update only installs over an existing copy if signed with the **same key**, so for a long-lived app create your own key once (`keytool -genkeypair …`) and run `KEYSTORE=… KS_ALIAS=… KS_PASS=… ./android/build.sh`.
 * **Bundled files** are exactly `index.html`, `styles.css` and `src/*.js` — the code covered by `npm test`.
 * Targets API 34, min API 21 (Android 5.0+). Not distributable on Google Play as-is (needs an upload key, listing, and — because it presents clinical decision support — a regulatory/medical-device review).
+
+## EEG atlas and diagrams
+
+* **EEG atlas** (`#/atlas`): 23 EEG morphologies — background, burst/chaotic, generalized, focal and provoked/ictal patterns. Each has a labelled multichannel **schematic waveform**, features (frequency, field, state, significance), the syndrome criteria that use it, a common pitfall, and a *basis* line saying whether the wording comes from the ILAE papers or from standard EEG teaching. Every EEG finding in the form has an activity-icon button that opens the same card in a dialog, and checklist rows link to the patterns they reference.
+* **Diagrams** (`#/diagrams`): (1) age-at-onset window for all 38 syndromes, **derived from the knowledge base's own age criteria** (so it cannot disagree with the scorer), with alert ranges and the patient's onset marked; (2) the ILAE 2025 seizure classification tree (4 classes, 21 types); (3) a flow diagram of how mandatory / alert / exclusionary criteria combine. A one-row onset window also appears in the leading-syndrome card.
+* **Honesty about the figures:** waveforms are *stylised schematics* generated deterministically from a seeded model (negative up), not recordings. The "used by" lists are computed from `src/kb.js` and are polarity-aware (e.g. "alert when absent"). Two patterns (`eeg.ppr`, `eeg.temporal_spikes`) are reference-only: no ILAE syndrome table scores them.
+* **Not covered yet:** MRI/imaging morphology diagrams and seizure-semiology diagrams.
 
 ## Design notes
 
@@ -124,6 +131,9 @@ src/vocab.js     finding vocabulary (inputs) + ILAE 2025 seizure mapping
 src/kb.js        the 38 syndrome criteria tables
 src/engine.js    expression parser, tri-state evaluator, scoring, epilepsy type, flags, next steps
 src/examples.js  eight teaching vignettes (also regression fixtures)
+src/morph.js     EEG morphology atlas content (23 patterns)
+src/diagrams.js  waveform / onset-chart / seizure-tree / flow diagram generators
+src/views.js     atlas page, diagrams page, morphology dialog, router
 src/app.js       UI
 tests/           node:test suite
 ```

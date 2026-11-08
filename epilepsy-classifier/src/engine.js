@@ -423,5 +423,26 @@
     return lines.join('\n');
   }
 
-  return { parseExpr, evalNode, parseKB, collectIds, makeContext, evaluate, evaluateSyndrome, classifySeizures, epilepsyType, etiologyHints, clinicalFlags, nextSteps, summarize, DOMAIN_NAMES };
+  /* ------------------------------------------------------------------ */
+  /* Age-of-onset windows, derived from the syndrome's own criteria       */
+  /* ------------------------------------------------------------------ */
+  // Samples onset age on a log grid (1 day … ~92 y) and evaluates only the age-based
+  // criteria. windows = ages passing every mandatory onset criterion and no exclusionary one;
+  // alerts = ages where an onset alert fires. Sex-dependent windows (PCDH19) are the union.
+  function onsetWindows(s) {
+    const rows = s.criteria.filter((c) => c.domain === 'onset' && c.expr);
+    if (!rows.length) return { none: true, windows: [], alerts: [] };
+    const N = 520, lo = Math.log10(0.03), hi = Math.log10(1100);
+    const grid = []; for (let i = 0; i <= N; i++) grid.push(Math.pow(10, lo + ((hi - lo) * i) / N));
+    const okAt = (t, female) => {
+      const ctx = { get: (id) => (id === 'pt.female' ? female : null), onsetMonths: t, nowMonths: null };
+      return rows.every((c) => { const v = evalNode(c.expr, ctx); return c.level === 'M' ? v === true : c.level === 'E' ? v !== true : true; });
+    };
+    const inWindow = (t) => okAt(t, true) || okAt(t, false);
+    const alertAt = (t) => inWindow(t) && rows.some((c) => c.level === 'A' && [true, false].some((f) => evalNode(c.expr, { get: (id) => (id === 'pt.female' ? f : null), onsetMonths: t, nowMonths: null }) === true));
+    const runs = (fn) => { const out = []; let a = null; grid.forEach((t, i) => { const on = fn(t); if (on && a === null) a = t; if ((!on || i === grid.length - 1) && a !== null) { out.push([a, on ? t : grid[i - 1]]); a = null; } }); return out; };
+    return { none: false, windows: runs(inWindow), alerts: runs(alertAt) };
+  }
+
+  return { parseExpr, evalNode, parseKB, collectIds, makeContext, evaluate, evaluateSyndrome, classifySeizures, epilepsyType, etiologyHints, clinicalFlags, nextSteps, summarize, onsetWindows, DOMAIN_NAMES };
 });

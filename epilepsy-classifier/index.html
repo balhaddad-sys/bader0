@@ -51,6 +51,13 @@
         <button id="print" type="button" class="btn btn-inv" aria-label="Print or save as PDF"><svg class="ic"><use href="#i-printer"/></svg><span class="btn-t">Print</span></button>
       </div>
     </div>
+    <nav class="tabs" aria-label="Sections">
+      <div class="wrap tabs-in">
+        <a class="tab" href="#/assess" data-view="assess">Assess</a>
+        <a class="tab" href="#/atlas" data-view="atlas">EEG atlas</a>
+        <a class="tab" href="#/diagrams" data-view="diagrams">Diagrams</a>
+      </div>
+    </nav>
     <div class="strip">
       <div class="wrap strip-in">
         <svg class="ic"><use href="#i-shield"/></svg>
@@ -64,7 +71,7 @@
     <p>Generated <span id="print-date"></span> · rule-based, per ILAE 2025 / 2017 / 2022 · not a diagnosis</p>
   </div>
 
-  <main class="wrap layout">
+  <main id="view-assess" class="wrap layout">
     <form id="form" class="form" autocomplete="off" aria-label="Clinical findings">
       <div class="search">
         <svg class="ic"><use href="#i-search"/></svg>
@@ -133,6 +140,45 @@
     </aside>
   </main>
 
+  <main id="view-atlas" class="wrap page" hidden>
+    <header class="page-h">
+      <h2>EEG morphology atlas</h2>
+      <p>What each pattern looks like, where and when it appears, which ILAE syndrome criteria use it, and what mimics it. Drawings are <b>stylised schematics</b> generated for teaching, not recordings. Every entry states whether its wording comes from the ILAE papers or from standard EEG teaching.</p>
+    </header>
+    <div class="atlas-tools">
+      <div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="atlas-filter" type="search" placeholder="Search patterns — e.g. spike-wave, sleep, occipital, CLN2" aria-label="Search EEG patterns"></div>
+      <div id="atlas-groups" class="gpills" role="group" aria-label="Filter by group"></div>
+      <p id="atlas-count" class="muted small" aria-live="polite"></p>
+    </div>
+    <div id="atlas-list" class="atlas"></div>
+    <p id="atlas-none" class="empty" hidden>No patterns match your search.</p>
+  </main>
+
+  <main id="view-diagrams" class="wrap page" hidden>
+    <header class="page-h">
+      <h2>Diagrams</h2>
+      <p>Reference diagrams generated from the same knowledge base the scorer uses, so they cannot disagree with it.</p>
+    </header>
+    <section class="card">
+      <h3 class="dg-h">Age at onset, by syndrome</h3>
+      <p class="hint">Bars show the onset ages the scorer accepts, derived from each syndrome's mandatory and exclusionary age criteria. Dashed outlines mark ages where an alert fires; a dashed grey bar means the ILAE table sets no age criterion. The scale is logarithmic.</p>
+      <div class="legend-g"><span class="gk g1">Neonate–infant</span><span class="gk g2">Childhood</span><span class="gk g3">Idiopathic generalized</span><span class="gk g4">Variable age</span></div>
+      <div id="dg-onset"></div>
+      <p id="dg-onset-note" class="hint"></p>
+    </section>
+    <section class="card">
+      <h3 class="dg-h">ILAE 2025 seizure classification</h3>
+      <div id="dg-tree"></div>
+    </section>
+    <section class="card">
+      <h3 class="dg-h">How a syndrome is scored</h3>
+      <p class="hint">Missing information never counts as absence: unassessed items are shown and only listed as “possible”.</p>
+      <div id="dg-flow"></div>
+    </section>
+  </main>
+
+  <dialog id="morph-dialog" class="dlg" aria-labelledby="md-title"><div id="md-body"></div></dialog>
+
   <div id="dock" class="dock" hidden>
     <span id="dock-label" class="dock-label"></span>
     <a href="#results" class="btn btn-primary">Assessment <svg class="ic"><use href="#i-arrow"/></svg></a>
@@ -144,13 +190,16 @@
       <ul id="sources"></ul>
       <p>Each syndrome is scored against the ILAE <em>Mandatory / Alert / Exclusionary</em> tables. Missing information is never treated as absence unless you mark a section as reviewed. The knowledge base is human-readable in <code>src/kb.js</code> and covered by an automated test suite. See the README for scope, interpretation choices and limits.</p>
     </details>
-    <p class="fine">Epilepsy Classifier v0.2 · Inter typeface © The Inter Project Authors (SIL OFL 1.1)</p>
+    <p class="fine">Epilepsy Classifier v0.3 · Inter typeface © The Inter Project Authors (SIL OFL 1.1)</p>
   </footer>
 
   <script src="src/vocab.js"></script>
   <script src="src/kb.js"></script>
   <script src="src/engine.js"></script>
   <script src="src/examples.js"></script>
+  <script src="src/morph.js"></script>
+  <script src="src/diagrams.js"></script>
+  <script src="src/views.js"></script>
   <script src="src/app.js"></script>
 </body>
 </html>

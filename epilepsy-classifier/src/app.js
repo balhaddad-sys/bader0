@@ -27,6 +27,7 @@
 
   const fresh = () => ({ onsetValue: '', onsetUnit: 'y', nowValue: '', nowUnit: 'y', sex: '', mri: '', devOnset: null, devNow: null, findings: {}, reviewed: {} });
   let state = fresh();
+  let lastShown = [];
   const toggled = new Map(); // <details> open-state chosen by the user, preserved across live re-renders
 
   /* ---------- state <-> engine patient ---------- */
@@ -56,7 +57,7 @@
   function triRow(id, label, hint) {
     return `<div class="row" data-id="${id}" data-q="${esc((label + ' ' + (hint || '') + ' ' + id).toLowerCase())}">
       <span class="lbl" id="l-${id}">${esc(label)}${hint ? `<small>${esc(hint)}</small>` : ''}</span>
-      <div class="tri" role="radiogroup" aria-labelledby="l-${id}">${ROW_BTN(id, 'y', 't-y', 'check', 'Present')}${ROW_BTN(id, 'n', 't-n', 'x', 'Absent')}${ROW_BTN(id, 'u', 't-u', 'minus', 'Not assessed')}</div></div>`;
+      <div class="row-r">${window.EpiViews.hasMorph(id) ? `<button type="button" class="info-btn" data-morph="${id}" aria-label="About this EEG pattern: ${esc(label)}" title="What does this look like?">${IC('activity')}</button>` : ''}<div class="tri" role="radiogroup" aria-labelledby="l-${id}">${ROW_BTN(id, 'y', 't-y', 'check', 'Present')}${ROW_BTN(id, 'n', 't-n', 'x', 'Absent')}${ROW_BTN(id, 'u', 't-u', 'minus', 'Not assessed')}</div></div></div>`;
   }
   function buildForm() {
     $('#sections').innerHTML = V.SECTIONS.map((s, i) => `
@@ -175,7 +176,8 @@
         : `${rows.filter((x) => x.state === (lv === 'A' ? 'alert' : 'excluded')).length} present`;
       return `<div class="crit-h"><span>${LEVEL_TITLE[lv]}</span><span>${right}</span></div>` + rows.map((x) => {
         const ui = STATE_UI[lv][x.state];
-        return `<div class="crit">${IC(ui[0], ui[1])}<span>${esc(x.text)}<span class="tag">${esc(E.DOMAIN_NAMES[x.domain] || x.domain)} · ${ui[2]}${x.core ? ' · defining' : ''}</span></span></div>`;
+        const links = x.expr ? [...E.collectIds(x.expr, new Set())].filter((id) => window.EpiViews.hasMorph(id)).slice(0, 3) : [];
+        return `<div class="crit">${IC(ui[0], ui[1])}<span>${esc(x.text)}<span class="tag">${esc(E.DOMAIN_NAMES[x.domain] || x.domain)} · ${ui[2]}${x.core ? ' · defining' : ''}</span>${links.length ? `<span class="mlinks">${links.map((id) => `<button type="button" class="mlink" data-morph="${id}">${IC('activity')}${esc(window.EpiViews.morphName(id))}</button>`).join('')}</span>` : ''}</span></div>`;
       }).join('');
     }).join('');
     return `<div class="crit-body">${body}${r.notes.length ? `<p class="src">${r.notes.map(esc).join('<br>')}</p>` : ''}
@@ -195,7 +197,7 @@
           <div class="stat"><span class="stat-k">Mandatory met</span><span class="stat-v ${c.mandatoryMet === c.mandatoryTotal ? 'good' : 'warn'}">${c.mandatoryMet}/${c.mandatoryTotal}</span>${cells(r)}</div>
           <div class="stat"><span class="stat-k">Alerts present</span><span class="stat-v ${c.alerts ? 'warn' : 'good'}">${c.alerts}</span></div>
           <div class="stat"><span class="stat-k">Exclusions not yet checked</span><span class="stat-v ${c.unassessedExclusions ? 'warn' : 'good'}">${c.unassessedExclusions}</span></div>
-        </div>${todo}</div>
+        </div>${todo}<div class="onset-mini"><span class="eyebrow">Onset-age window (as encoded)</span>${window.EpiViews.onsetMini(r.id, toMonths(state.onsetValue, state.onsetUnit))}</div></div>
       <details class="crit-box" data-key="crit:${r.id}"${isOpen('crit:' + r.id, true) ? ' open' : ''}><summary><span>Criteria checklist</span>${IC('chevron', 'chev')}</summary>${critBody(r)}</details></div>`;
   }
   function candCard(r, excluded) {
@@ -267,6 +269,7 @@
     h += `<p class="disc">Rule-based support derived from the published ILAE criteria. It does not diagnose; verify against the source papers and apply clinical judgement.</p>`;
     $('#out').innerHTML = h;
 
+    lastShown = shown.map((r) => r.id);
     const top = shown[0];
     $('#dock-label').textContent = top ? `${top.abbr} — ${STATUS[top.status][1].toLowerCase()}` : 'No syndrome identified yet';
     $('#dock').hidden = false;
@@ -286,6 +289,7 @@
   }
 
   /* ---------- init ---------- */
+  window.EpiViews.init({ onsetMonths: () => toMonths(state.onsetValue, state.onsetUnit), shown: () => lastShown });
   buildForm(); syncForm(); render();
   const out = $('#out');
   $('#form').addEventListener('submit', (e) => e.preventDefault());
