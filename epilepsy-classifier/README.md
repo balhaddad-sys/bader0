@@ -35,6 +35,21 @@ Or import the GitHub repo in the Vercel dashboard → *Root Directory* = `epilep
 
 `vercel.json` sets a strict Content-Security-Policy (`default-src 'none'`, `connect-src 'none'`, no inline script/style) plus `nosniff`, `no-referrer`, `X-Frame-Options: DENY`. This makes the privacy claim enforceable by the browser: the page **cannot** make any network request, so no patient data can leave the device. Keep it that way if you add features (no analytics, no remote fonts/CDNs).
 
+## Android app (APK)
+
+`android/` wraps the same offline web app in a minimal native shell — **no Gradle/Android Studio needed**:
+
+```bash
+sudo apt-get install -y default-jdk-headless aapt apksigner zipalign dalvik-exchange libandroid-23-java android-sdk-platform-23
+./android/build.sh          # → android/build/epilepsy-classifier.apk  (~70 KB)
+```
+
+* **Install:** copy the APK to the phone, open it, and allow *Install unknown apps* for your file manager/browser. Play Protect may warn because the app is not from the Play Store.
+* **Privacy by construction:** the manifest declares **no permissions** (no `INTERNET`), so Android itself blocks all network access; the WebView additionally disables network loads and only serves bundled assets. Nothing is stored (no DOM storage, cache or form data).
+* **Signing:** the script generates a throw-away key in `android/.signing/` (git-ignored). An update only installs over an existing copy if signed with the **same key**, so for a long-lived app create your own key once (`keytool -genkeypair …`) and run `KEYSTORE=… KS_ALIAS=… KS_PASS=… ./android/build.sh`.
+* **Bundled files** are exactly `index.html`, `styles.css` and `src/*.js` — the code covered by `npm test`.
+* Targets API 34, min API 21 (Android 5.0+). Not distributable on Google Play as-is (needs an upload key, listing, and — because it presents clinical decision support — a regulatory/medical-device review).
+
 ## How a syndrome is scored
 
 Every finding is **tri-state**: present / absent / not assessed. Missing information is *never* treated as absence — unless you tick a section's **"reviewed — treat unticked as absent"** box (this is how you tell the app "I looked, and these were not present").
