@@ -1,0 +1,93 @@
+# Epilepsy Classifier
+
+Clinician-facing decision support that takes seizure types, semiology, EEG, MRI, genetics, development and course, and maps them to the **current ILAE frameworks**:
+
+| Step | Framework | What the app does |
+|---|---|---|
+| 1. Seizure type | **ILAE 2025** seizure classification (Beniczky et al.) | Names the class/type of each seizure entered (focal / generalized / epileptic spasms), applies the *consciousness = awareness + responsiveness* rule, flags unknown-onset tonic–clonic |
+| 2. Epilepsy type | **ILAE 2017** (Scheffer et al.) | Generalized · focal · combined generalized-and-focal · unknown, with the reasoning |
+| 3. Syndrome | **ILAE 2022** syndrome papers (Wirrell, Zuberi, Specchio, Riney, Hirsch) | Scores **38 syndromes** against their published *Mandatory / Alert / Exclusionary* tables |
+| 4. Etiology | ILAE 2017 categories; 2022 etiology-specific syndromes; 2026 Terminology Commission | Structural / genetic / infectious / metabolic / immune clues from the data |
+
+It also raises time-critical flags (epileptic spasms, super-refractory status) and suggests next investigations.
+
+> **Not a medical device and not clinically validated.** It is a transparent aid for clinicians and trainees. It does not diagnose, and specialist judgement always prevails. Everything runs in the browser; nothing is transmitted or stored.
+
+## Run
+
+```bash
+# no build step — open the file directly
+open index.html            # or: npm run serve  →  http://localhost:8080
+
+npm test                   # 36 tests (Node ≥ 20, no dependencies)
+```
+
+## How a syndrome is scored
+
+Every finding is **tri-state**: present / absent / not assessed. Missing information is *never* treated as absence — unless you tick a section's **"reviewed — treat unticked as absent"** box (this is how you tell the app "I looked, and these were not present").
+
+For each syndrome the ILAE table is evaluated criterion by criterion:
+
+* **Mandatory** — all must be met → *"Mandatory criteria met"*. Any unmet → *not consistent*. Unknown → *"Possible — data missing"*.
+* **Exclusionary** — any present → *not consistent* (the reason is shown).
+* **Alerts** — criteria that are rare in the syndrome; they do not exclude but lower confidence ("rethink the diagnosis").
+* **Course-dependent** items (e.g. "drug-resistant epilepsy", "remission by adolescence") are marked ⏳ and never block an early diagnosis.
+* A syndrome is only considered when its **defining criterion** is met (e.g. typical absences for CAE; a KCNQ2 variant for KCNQ2-DEE), so the output is not a wall of irrelevant candidates.
+
+Ranking: criteria-met syndromes first (fewer alerts / unassessed exclusions first), then possible ones (more mandatory criteria satisfied first).
+
+## Knowledge base
+
+`src/kb.js` is a plain-text, human-auditable encoding of the ILAE tables:
+
+```
+## CAE | Childhood absence epilepsy | CAE | IGE | hirsch2022 | Table 3 | Generalized
+M sz    | Typical absence seizures                          :: sz.abs_typical @core
+M eeg   | 3 Hz (2.5–4 Hz) generalized spike-wave …          :: eeg.gsw_3hz
+A sz    | Staring spells >30 s, or postictal confusion …    :: ctx.staring_gt30s
+E onset | Onset <2 or >13 years                             :: age<2y | age>13y
+```
+
+Expressions use finding IDs from `src/vocab.js`, `& | ! ( )`, and age predicates (`age<2y`, `age[2y,3y]`, `now>4m`). A criterion with `::  -` is shown for manual checking but not scored. To change a rule, edit one line; `npm test` verifies that the file parses, that every referenced finding exists, and that eight worked vignettes (`src/examples.js`) still reach the expected syndrome.
+
+## Provenance and verification status
+
+The 38 criteria tables were extracted from the ILAE-hosted position-paper PDFs (Epilepsia 2022;63:1333–1499) and the ILAE 2025 seizure paper was read in full from PMC. The 2017 paper's text was checked for the epilepsy-type rules used here. The 2026 Terminology Commission etiology report was read at **abstract level only**.
+
+**What has and has not been checked:**
+
+* ✅ Column assignment (Mandatory/Alert/Exclusionary) was parsed by character position under each table header, then each table was read.
+* ✅ Automated tests: KB integrity, expression logic, age boundaries, tri-state behaviour, mutation-checked.
+* ⚠️ The encoding is by an AI assistant and has **not yet been reviewed line-by-line by an epileptologist**. That review is the most valuable next step.
+* ⚠️ **Not validated against real patient cohorts.** No claims of sensitivity/specificity.
+
+**Interpretation choices to be aware of**
+
+* `age>13y` means strictly older than 13.0 years; a range such as "2–3 years" is read as 2.0 to <4.0 years.
+* Where the ILAE table gives an "A **OR** B" alert about *lack of* a variant or family history (SeLNE, SeLIE), it is read as "neither present".
+* Narrative items that cannot be entered as a finding are shown for manual verification.
+* Syndromes without a formal mandatory/exclusionary table are **not** scored: GEFS+, "genetic generalized epilepsy, syndrome not specified", "focal epilepsy, syndrome not specified". The app falls back to the epilepsy type (ILAE 2017 explicitly allows this as the final diagnostic level).
+* Neonatal *seizure* classification (Pressler 2021) is outside the 2025 seizure paper's scope and is not implemented; neonatal *syndromes* are.
+
+## Sources
+
+1. Beniczky S, Trinka E, Wirrell E, et al. Updated classification of epileptic seizures: Position paper of the ILAE. *Epilepsia* 2025;66:1804–1823. doi:10.1111/epi.18338
+2. Scheffer IE, Berkovic S, Capovilla G, et al. ILAE classification of the epilepsies. *Epilepsia* 2017;58:512–521. doi:10.1111/epi.13709
+3. Wirrell EC, Nabbout R, Scheffer IE, et al. Methodology for classification and definition of epilepsy syndromes with list of syndromes. *Epilepsia* 2022;63:1333–1348. doi:10.1111/epi.17237
+4. Zuberi SM, Wirrell E, Yozawitz E, et al. … syndromes with onset in neonates and infants. *Epilepsia* 2022;63:1349–1397. doi:10.1111/epi.17239
+5. Specchio N, Wirrell EC, Scheffer IE, et al. … syndromes with onset in childhood. *Epilepsia* 2022;63:1398–1442. doi:10.1111/epi.17241
+6. Riney K, Bogacz A, Somerville E, et al. … syndromes with onset at a variable age. *Epilepsia* 2022;63:1443–1474. doi:10.1111/epi.17240
+7. Hirsch E, French J, Scheffer IE, et al. ILAE definition of the idiopathic generalized epilepsy syndromes. *Epilepsia* 2022;63:1475–1499. doi:10.1111/epi.17236
+8. Specchio N, Auvin S, Bisulli F, et al. How should etiology change the classification of the epilepsies? Report from the ILAE 2021–2025 Terminology Commission. *Epilepsia* 2026. doi:10.1002/epi.70467 (abstract only)
+
+## Layout
+
+```
+index.html  styles.css
+src/vocab.js     finding vocabulary (inputs) + ILAE 2025 seizure mapping
+src/kb.js        the 38 syndrome criteria tables
+src/engine.js    expression parser, tri-state evaluator, scoring, epilepsy type, flags, next steps
+src/examples.js  eight teaching vignettes (also regression fixtures)
+src/app.js       UI
+tests/           node:test suite
+```
