@@ -197,6 +197,7 @@
   /* ---------- init ---------- */
   buildForm(); syncForm(); render();
   const form = $('#form');
+  form.addEventListener('submit', (e) => e.preventDefault());
   form.addEventListener('change', onChange); form.addEventListener('input', onInput);
   $('#reset').addEventListener('click', () => { state = fresh(); $('#example').value = ''; syncForm(); render(); });
   $('#example').addEventListener('change', (e) => {

@@ -22,6 +22,19 @@ open index.html            # or: npm run serve  →  http://localhost:8080
 npm test                   # 36 tests (Node ≥ 20, no dependencies)
 ```
 
+## Deploy (Vercel)
+
+Static site, no build step. **The Vercel project's Root Directory must be `epilepsy-classifier`** (the repository root contains unrelated files that Vercel cannot build).
+
+```bash
+cd epilepsy-classifier
+npx vercel deploy --prod       # first run links/creates the project
+```
+
+Or import the GitHub repo in the Vercel dashboard → *Root Directory* = `epilepsy-classifier`, Framework = *Other*, leave build/install commands empty.
+
+`vercel.json` sets a strict Content-Security-Policy (`default-src 'none'`, `connect-src 'none'`, no inline script/style) plus `nosniff`, `no-referrer`, `X-Frame-Options: DENY`. This makes the privacy claim enforceable by the browser: the page **cannot** make any network request, so no patient data can leave the device. Keep it that way if you add features (no analytics, no remote fonts/CDNs).
+
 ## How a syndrome is scored
 
 Every finding is **tri-state**: present / absent / not assessed. Missing information is *never* treated as absence — unless you tick a section's **"reviewed — treat unticked as absent"** box (this is how you tell the app "I looked, and these were not present").
