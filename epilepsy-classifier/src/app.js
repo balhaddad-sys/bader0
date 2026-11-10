@@ -1,4 +1,4 @@
-/* UI for the epilepsy classifier. No network calls; no persistence of patient data. */
+/* UI for the epilepsy classifier. No network calls; no persistence of patient data (Study mode keeps only study progress, locally). */
 (function () {
   'use strict';
   const V = window.EpiVocab, E = window.EpiEngine, KB = window.EpiKB, EX = window.EpiExamples;
@@ -320,9 +320,10 @@
     syndromeCount: () => SYN.length,
   };
   window.EpiWizard.mount(window.EpiApp);
+  window.EpiStudy.mount();
   window.EpiViews.init({
     onsetMonths: () => toMonths(state.onsetValue, state.onsetUnit), shown: () => lastShown,
-    onView(v) { if (v !== 'guided') window.EpiWizard.leave(); if (v === 'assess') flush(); else if (v === 'guided') window.EpiWizard.show(); },
+    onView(v) { if (v !== 'guided') window.EpiWizard.leave(); if (v === 'assess') flush(); else if (v === 'guided') window.EpiWizard.show(); else if (v === 'study') window.EpiStudy.show(); },
   });
   buildForm(); syncForm(); render();
   const out = $('#out');

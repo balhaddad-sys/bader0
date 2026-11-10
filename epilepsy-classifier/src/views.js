@@ -139,7 +139,7 @@
   }
 
   /* ---------- router ---------- */
-  const VIEWS = ['guided', 'assess', 'library', 'atlas', 'movements', 'physical', 'diagrams'];
+  const VIEWS = ['guided', 'assess', 'library', 'study', 'atlas', 'movements', 'physical', 'diagrams'];
   const TAB_OF = { atlas: 'library', movements: 'library', physical: 'library', diagrams: 'library' };
   function route() {
     const m = /^#\/(\w+)/.exec(location.hash), v = m && VIEWS.includes(m[1]) ? m[1] : (m ? 'guided' : (document.body.dataset.view || 'guided'));

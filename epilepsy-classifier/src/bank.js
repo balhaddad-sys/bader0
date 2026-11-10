@@ -1,0 +1,373 @@
+/*
+ * Study bank: hand-written, source-labelled content for the Study mode.
+ * (Syndrome criteria, EEG patterns, movements and physical signs are NOT duplicated here — the games read
+ *  those straight from kb.js, morph.js, semio.js and physical.js so they can never disagree with the scorer.)
+ *
+ * Every FACT carries `s` (a key of SRC) and `v`:
+ *   v: 1  the figure or statement was checked against the abstract of the cited paper (PubMed) when this bank was built
+ *   v: 0  standard neurology teaching, written from textbook-level knowledge; verify against the current guideline or label
+ * Doses are those of the cited guideline and differ between jurisdictions: check your local formulary before prescribing.
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.EpiBank = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  const SRC = {
+    std: 'Standard neurology teaching (textbook level) — verify against the current guideline or product label',
+    beniczky2025: 'Beniczky S, et al. Updated classification of epileptic seizures: position paper of the ILAE. Epilepsia 2025 (PMID 40264351)',
+    scheffer2017: 'Scheffer IE, et al. ILAE classification of the epilepsies. Epilepsia 2017;58:512–521',
+    hirsch2022: 'Hirsch E, et al. ILAE definition of the idiopathic generalized epilepsy syndromes. Epilepsia 2022;63:1475–1499',
+    zuberi2022: 'Zuberi SM, et al. ILAE classification and definition of epilepsy syndromes with onset in neonates and infants. Epilepsia 2022;63:1349–1397',
+    fisher2014: 'Fisher RS, et al. ILAE official report: a practical clinical definition of epilepsy. Epilepsia 2014;55:475–482 (PMID 24730690)',
+    kwan2010: 'Kwan P, et al. Definition of drug resistant epilepsy: consensus proposal by the ILAE Task Force. Epilepsia 2010;51:1069–1077 (PMID 19889013)',
+    trinka2015: 'Trinka E, et al. A definition and classification of status epilepticus — report of the ILAE Task Force. Epilepsia 2015;56:1515–1523 (PMID 26336950)',
+    glauser2016: 'Glauser T, et al. Evidence-based guideline: treatment of convulsive status epilepticus in children and adults (AES). Epilepsy Curr 2016;16:48–61 (PMID 26900382)',
+    kapur2019: 'Kapur J, et al. Randomized trial of three anticonvulsant medications for status epilepticus (ESETT). N Engl J Med 2019;381:2103–2113 (PMID 31774955)',
+    silbergleit2012: 'Silbergleit R, et al. Intramuscular versus intravenous therapy for prehospital status epilepticus (RAMPART). N Engl J Med 2012;366:591–600 (PMID 22335736)',
+    hirsch2018: 'Hirsch LJ, et al. Proposed consensus definitions for new-onset refractory status epilepticus (NORSE), febrile infection-related epilepsy syndrome (FIRES). Epilepsia 2018;59:739–744',
+    glauser2010: 'Glauser TA, et al. Ethosuximide, valproic acid, and lamotrigine in childhood absence epilepsy. N Engl J Med 2010;362:790–799 (PMID 20200383)',
+    marson2021a: 'Marson A, et al. SANAD II: levetiracetam, zonisamide or lamotrigine for newly diagnosed focal epilepsy. Lancet 2021;397:1363–1374 (PMID 33838757)',
+    marson2021b: 'Marson A, et al. SANAD II: valproate versus levetiracetam for newly diagnosed generalised and unclassifiable epilepsy. Lancet 2021;397:1375–1386 (PMID 33838758)',
+    kwanbrodie2000: 'Kwan P, Brodie MJ. Early identification of refractory epilepsy. N Engl J Med 2000;342:314–319 (PMID 10660394)',
+    wiebe2001: 'Wiebe S, et al. A randomized, controlled trial of surgery for temporal-lobe epilepsy. N Engl J Med 2001;345:311–318 (PMID 11484687)',
+    engel2012: 'Engel J Jr, et al. Early surgical therapy for drug-resistant temporal lobe epilepsy: a randomized trial (ERSET). JAMA 2012;307:922–930 (PMID 22396514)',
+    ocallaghan2017: "O'Callaghan FJK, et al. Hormonal treatment versus hormonal treatment with vigabatrin for infantile spasms (ICISS). Lancet Neurol 2017;16:33–42 (PMID 27838190)",
+    ocallaghan2018: "O'Callaghan FJK, et al. ICISS 18-month outcomes. Lancet Child Adolesc Health 2018;2:715–725 (PMID 30236380)",
+    lux2004: 'Lux AL, et al. The UK Infantile Spasms Study (UKISS): vigabatrin vs prednisolone or tetracosactide at 14 days. Lancet 2004;364:1773–1778 (PMID 15541450)',
+    fisher2010: 'Fisher R, et al. Electrical stimulation of the anterior nucleus of thalamus for refractory epilepsy (SANTE). Epilepsia 2010;51:899–908 (PMID 20331461)',
+    morrell2011: 'Morrell MJ. Responsive cortical stimulation for medically intractable partial epilepsy. Neurology 2011;77:1295–1304 (PMID 21917777)',
+    french2016: 'French JA, et al. Adjunctive everolimus for TSC-associated treatment-resistant focal seizures (EXIST-3). Lancet 2016;388:2153–2163 (PMID 27613521)',
+    devinsky2017: 'Devinsky O, et al. Trial of cannabidiol for drug-resistant seizures in the Dravet syndrome. N Engl J Med 2017;376:2011–2020 (PMID 28538134)',
+    devinsky2018: 'Devinsky O, et al. Effect of cannabidiol on drop seizures in the Lennox–Gastaut syndrome. N Engl J Med 2018;378:1888–1897 (PMID 29768152)',
+    lagae2019: 'Lagae L, et al. Fenfluramine for seizures in Dravet syndrome: a randomised, double-blind, placebo-controlled trial. Lancet 2019;394:2243–2254 (PMID 31862249)',
+    harden2017: 'Harden C, et al. Practice guideline summary: SUDEP incidence rates and risk factors (AAN/AES). Neurology 2017;88:1674–1680 (PMID 28438841)',
+    blumcke2013: 'Blümcke I, et al. International consensus classification of hippocampal sclerosis in temporal lobe epilepsy: ILAE Task Force. Epilepsia 2013;54:1315–1329 (PMID 23692496)',
+    pressler2023: 'Pressler RM, et al. Treatment of seizures in the neonate: guidelines and consensus-based recommendations — ILAE Task Force on Neonatal Seizures. Epilepsia 2023 (PMID 37655702)',
+    pack2024: 'Pack AM, et al. Teratogenesis, perinatal and neurodevelopmental outcomes after in utero exposure to antiseizure medication: AAN/AES/SMFM practice guideline. Neurology 2024 (PMID 38748979)',
+    kotagal2000: 'Kotagal P, et al. Lateralizing value of asymmetric tonic limb posturing in secondarily generalized tonic–clonic seizures. Epilepsia 2000;41:457–462',
+  };
+
+  const TOPICS = [
+    { key: 'class', name: 'Classification & definitions', icon: 'book' },
+    { key: 'syn', name: 'Syndromes', icon: 'layers' },
+    { key: 'eeg', name: 'EEG', icon: 'activity' },
+    { key: 'sem', name: 'Semiology & mimics', icon: 'figure' },
+    { key: 'sign', name: 'Physical signs', icon: 'user' },
+    { key: 'gene', name: 'Genetics', icon: 'dna' },
+    { key: 'asm', name: 'Antiseizure medications', icon: 'pill' },
+    { key: 'se', name: 'Status epilepticus', icon: 'alert' },
+    { key: 'trial', name: 'Trials & evidence', icon: 'chart' },
+    { key: 'surg', name: 'Surgery, devices & diet', icon: 'target' },
+    { key: 'etio', name: 'Etiology, immune & imaging', icon: 'search' },
+    { key: 'spec', name: 'Special populations & SUDEP', icon: 'shield' },
+  ];
+
+  /* ------------------------------------------------------------------ ASMs
+     bin: the mechanism group used by the sorting game; tells: statements that identify ONE drug in this table. */
+  const BINS_ASM = { na: 'Sodium-channel blocker', sv2a: 'SV2A ligand', gaba: 'GABAergic', ca: 'Calcium-channel ligand', glut: 'Glutamate-receptor antagonist', multi: 'Several mechanisms' };
+  const ASM = [
+    { id: 'carbamazepine', name: 'Carbamazepine', bin: 'na', mech: 'Blocks voltage-gated sodium channels (use-dependent, fast inactivation)',
+      tells: ['Autoinduces its own metabolism (CYP3A4)', 'HLA-B*15:02 carriers of Han Chinese, Thai or Malay ancestry have a markedly higher SJS/TEN risk'],
+      tox: 'SJS/TEN (HLA-B*15:02), DRESS/hypersensitivity (HLA-A*31:01 in European and Japanese patients), hyponatraemia (SIADH), aplastic anaemia, neural-tube defects',
+      pearl: 'Aggravates absence and myoclonic seizures; also first-line for trigeminal neuralgia.' },
+    { id: 'oxcarbazepine', name: 'Oxcarbazepine', bin: 'na', mech: 'Sodium-channel blocker; prodrug converted to the monohydroxy derivative (licarbazepine)',
+      tells: ['Keto-analogue of carbamazepine converted to 10-monohydroxy derivative (MHD)'],
+      tox: 'Hyponatraemia (more often than carbamazepine); about a quarter of carbamazepine-allergic patients cross-react',
+      pearl: 'Weaker enzyme induction than carbamazepine but can still lower hormonal-contraceptive levels.' },
+    { id: 'eslicarbazepine', name: 'Eslicarbazepine acetate', bin: 'na', mech: 'Sodium-channel blocker; prodrug of S-licarbazepine, once daily',
+      tells: ['Once-daily prodrug of S-licarbazepine'], tox: 'Dizziness, hyponatraemia, PR prolongation', pearl: 'Focal seizures; less enzyme induction than carbamazepine.' },
+    { id: 'phenytoin', name: 'Phenytoin', bin: 'na', mech: 'Sodium-channel blocker (slows recovery from inactivation)',
+      tells: ['Zero-order (saturable, Michaelis–Menten) kinetics within the therapeutic range', 'Gingival hyperplasia, hirsutism and coarsened facies with chronic use'],
+      tox: 'Ataxia, cerebellar atrophy, neuropathy, osteomalacia, fetal hydantoin syndrome; IV: hypotension and arrhythmia, purple glove syndrome',
+      pearl: 'Highly protein-bound: check a free level in hypoalbuminaemia or uraemia. Fosphenytoin is the water-soluble prodrug (doses in phenytoin equivalents, PE).' },
+    { id: 'lamotrigine', name: 'Lamotrigine', bin: 'na', mech: 'Sodium-channel blocker that also reduces glutamate release',
+      tells: ['Valproate co-therapy doubles its half-life, so the starting dose is halved and titration is slowed', 'Levels fall in pregnancy and with oestrogen-containing contraceptives'],
+      tox: 'SJS/TEN (rapid titration, valproate), HLH (rare), class IB antiarrhythmic effect (caution in structural or conduction heart disease)',
+      pearl: 'Broad spectrum (focal, GTC, absence, LGS); can aggravate myoclonic seizures in JME and Dravet syndrome.' },
+    { id: 'lacosamide', name: 'Lacosamide', bin: 'na', mech: 'Enhances slow inactivation of voltage-gated sodium channels',
+      tells: ['Selectively enhances SLOW inactivation of sodium channels'], tox: 'Dizziness, diplopia, dose-related PR prolongation and AV block', pearl: 'IV formulation available; check ECG in conduction disease.' },
+    { id: 'rufinamide', name: 'Rufinamide', bin: 'na', mech: 'Prolongs the inactive state of sodium channels',
+      tells: ['Triazole derivative licensed for LGS that SHORTENS the QT interval'], tox: 'Somnolence, vomiting, QT shortening (contraindicated in familial short-QT syndrome)', pearl: 'Useful for tonic–atonic seizures in LGS.' },
+    { id: 'levetiracetam', name: 'Levetiracetam', bin: 'sv2a', mech: 'Binds synaptic vesicle protein SV2A',
+      tells: ['Binds synaptic vesicle glycoprotein SV2A', 'Renally cleared with almost no interactions, but irritability, depression and psychosis are the signature adverse effects'],
+      tox: 'Irritability, aggression, depression, psychosis, somnolence', pearl: 'Broad spectrum (focal, GTC, myoclonic); dose-reduce in renal failure; second-line option in status epilepticus.' },
+    { id: 'brivaracetam', name: 'Brivaracetam', bin: 'sv2a', mech: 'SV2A ligand with 15–30-fold higher affinity than levetiracetam',
+      tells: ['SV2A ligand with about 15–30-fold higher affinity than levetiracetam'], tox: 'Somnolence, dizziness; behavioural effects (generally fewer than levetiracetam)', pearl: 'Inhibits epoxide hydrolase (raises carbamazepine-10,11-epoxide).' },
+    { id: 'phenobarbital', name: 'Phenobarbital', bin: 'gaba', mech: 'GABA-A receptor positive modulator that prolongs chloride-channel opening',
+      tells: ['Barbiturate that PROLONGS GABA-A channel opening', 'First-line ASM for neonatal seizures in the ILAE 2023 guideline (unless a channelopathy is likely)'],
+      tox: 'Sedation, cognitive and behavioural effects in children, enzyme induction, osteomalacia, respiratory depression (IV)', pearl: 'Cheap and widely available; abrupt withdrawal can precipitate seizures.' },
+    { id: 'primidone', name: 'Primidone', bin: 'gaba', mech: 'Metabolised to phenobarbital and phenylethylmalonamide (PEMA)',
+      tells: ['Metabolised to phenobarbital and PEMA'], tox: 'Sedation; marked first-dose nausea and ataxia', pearl: 'Also used for essential tremor.' },
+    { id: 'clobazam', name: 'Clobazam', bin: 'gaba', mech: '1,5-benzodiazepine; GABA-A positive allosteric modulator',
+      tells: ['1,5-benzodiazepine whose active metabolite N-desmethylclobazam is cleared by CYP2C19'], tox: 'Sedation, drooling, tolerance, withdrawal seizures', pearl: 'Metabolite levels rise with cannabidiol, stiripentol and CYP2C19 poor metabolisers; LGS and Dravet adjunct.' },
+    { id: 'vigabatrin', name: 'Vigabatrin', bin: 'gaba', mech: 'Irreversible inhibitor of GABA transaminase',
+      tells: ['Irreversible GABA-transaminase inhibitor', 'Causes irreversible bilateral concentric visual-field constriction'],
+      tox: 'Permanent peripheral visual-field loss; reversible MRI signal change in infants; psychosis, depression', pearl: 'First-line for infantile spasms from TSC; can aggravate myoclonic and absence seizures.' },
+    { id: 'tiagabine', name: 'Tiagabine', bin: 'gaba', mech: 'Selective GAT-1 inhibitor (blocks neuronal and glial GABA reuptake)',
+      tells: ['Selective GAT-1 GABA-reuptake inhibitor'], tox: 'Dizziness, tremor; can precipitate non-convulsive status in generalized epilepsy', pearl: 'Avoid in generalized epilepsies.' },
+    { id: 'stiripentol', name: 'Stiripentol', bin: 'gaba', mech: 'GABA-A positive allosteric modulator and CYP inhibitor (CYP1A2, 2C19, 3A4)',
+      tells: ['Licensed for Dravet syndrome with clobazam and valproate; inhibits CYP2C19 and CYP3A4'], tox: 'Anorexia, weight loss, somnolence, neutropenia; raises levels of co-medications', pearl: 'Usually requires a reduction in clobazam dose.' },
+    { id: 'ganaxolone', name: 'Ganaxolone', bin: 'gaba', mech: 'Neuroactive-steroid (allopregnanolone analogue) GABA-A positive modulator',
+      tells: ['Neuroactive steroid licensed for seizures in CDKL5 deficiency disorder'], tox: 'Somnolence, pyrexia, salivary hypersecretion', pearl: 'Approved for CDKL5 deficiency disorder (US, 2022).' },
+    { id: 'ethosuximide', name: 'Ethosuximide', bin: 'ca', mech: 'Blocks low-threshold T-type calcium channels in thalamic neurons',
+      tells: ['Narrow-spectrum drug effective only against absence seizures', 'Blocks thalamic T-type calcium channels'],
+      tox: 'GI upset, hiccups, sleep disturbance, behavioural change; rare blood dyscrasias', pearl: 'First-line for childhood absence epilepsy without GTCS; does not protect against tonic–clonic seizures.' },
+    { id: 'gabapentin', name: 'Gabapentin', bin: 'ca', mech: 'Binds the α2δ subunit of voltage-gated calcium channels',
+      tells: ['α2δ ligand with saturable intestinal absorption and unchanged renal elimination'], tox: 'Dizziness, ataxia, weight gain, oedema, myoclonus, misuse potential', pearl: 'Focal seizures and neuropathic pain; can aggravate myoclonic and absence seizures.' },
+    { id: 'pregabalin', name: 'Pregabalin', bin: 'ca', mech: 'Binds the α2δ subunit of voltage-gated calcium channels',
+      tells: ['α2δ ligand with linear pharmacokinetics, used for neuropathic pain, GAD and focal seizures'], tox: 'Weight gain, oedema, dizziness, myoclonus', pearl: 'Adjunct for focal seizures; renally cleared.' },
+    { id: 'perampanel', name: 'Perampanel', bin: 'glut', mech: 'Non-competitive AMPA-receptor antagonist',
+      tells: ['Non-competitive AMPA antagonist with a half-life of about 100 hours and a boxed psychiatric warning'], tox: 'Irritability, aggression, hostility (boxed warning), dizziness, falls, weight gain', pearl: 'Once-daily bedtime dosing; interacts with enzyme inducers.' },
+    { id: 'felbamate', name: 'Felbamate', bin: 'glut', mech: 'NMDA-receptor (glycine-site) antagonist; also enhances GABA',
+      tells: ['Reserved for refractory LGS because of aplastic anaemia and hepatic failure'], tox: 'Aplastic anaemia, hepatic failure, insomnia, weight loss', pearl: 'Requires informed consent and haematological and liver monitoring.' },
+    { id: 'valproate', name: 'Valproate', bin: 'multi', mech: 'Several: raises GABA (inhibits GABA transaminase), sodium-channel and T-type calcium modulation',
+      tells: ['Contraindicated in POLG-related mitochondrial disease (Alpers–Huttenlocher) because of fatal liver failure', 'Carbapenems sharply lower its serum level; it raises lamotrigine levels by inhibiting glucuronidation'],
+      tox: 'Hepatotoxicity (highest <2 years, polytherapy, mitochondrial disease), pancreatitis, hyperammonaemia, thrombocytopenia, tremor, weight gain, PCOS; teratogenic (neural-tube defects, lower IQ, autism)',
+      pearl: 'Broadest spectrum; most effective in IGE but to be avoided in people of childbearing potential if clinically feasible.' },
+    { id: 'topiramate', name: 'Topiramate', bin: 'multi', mech: 'Several: sodium-channel block, GABA-A enhancement, AMPA/kainate antagonism, carbonic-anhydrase inhibition',
+      tells: ['Carbonic-anhydrase-inhibiting ASM causing paraesthesia, kidney stones and word-finding difficulty'], tox: 'Nephrolithiasis, metabolic acidosis, weight loss, paraesthesia, word-finding difficulty, angle-closure glaucoma, oligohidrosis; oral clefts and small-for-gestational-age babies', pearl: 'Also used for migraine prophylaxis.' },
+    { id: 'zonisamide', name: 'Zonisamide', bin: 'multi', mech: 'Sodium-channel and T-type calcium block; weak carbonic-anhydrase inhibition',
+      tells: ['Sulfonamide-derived ASM with a half-life of about 60 hours'], tox: 'Kidney stones, oligohidrosis and hyperthermia in children, weight loss, rash (sulfonamide), metabolic acidosis', pearl: 'Contraindicated in sulfonamide allergy.' },
+    { id: 'cenobamate', name: 'Cenobamate', bin: 'multi', mech: 'Dual: inhibits persistent sodium current and is a GABA-A positive allosteric modulator',
+      tells: ['Requires slow titration because of DRESS risk and shortens the QT interval'], tox: 'DRESS if titrated rapidly, somnolence, dizziness, QT shortening (contraindicated in familial short QT)', pearl: 'Raises phenytoin and phenobarbital levels; high seizure-freedom rates in drug-resistant focal epilepsy.' },
+    { id: 'cannabidiol', name: 'Cannabidiol', bin: 'other', mech: 'Mechanism incompletely understood (GPR55 antagonism, TRPV1 desensitisation, adenosine-uptake inhibition)',
+      tells: ['Purified plant cannabinoid licensed for LGS, Dravet syndrome and TSC; raises transaminases, especially with valproate'], tox: 'Transaminase elevation (esp. with valproate), somnolence, diarrhoea, reduced appetite', pearl: 'Raises N-desmethylclobazam levels.' },
+    { id: 'fenfluramine', name: 'Fenfluramine', bin: 'other', mech: 'Serotonin release and 5-HT2 receptor agonism (plus sigma-1 activity)',
+      tells: ['Serotonergic ASM for Dravet syndrome and LGS that needs echocardiographic monitoring for valvulopathy and pulmonary hypertension'], tox: 'Reduced appetite and weight loss, valvular heart disease and pulmonary arterial hypertension (echo monitoring), somnolence', pearl: 'Available through a restricted-distribution programme in some countries.' },
+    { id: 'everolimus', name: 'Everolimus', bin: 'other', mech: 'mTORC1 inhibitor',
+      tells: ['mTOR inhibitor used for TSC-associated seizures, SEGA and angiomyolipoma'], tox: 'Stomatitis, infections, hyperlipidaemia, non-infectious pneumonitis', pearl: 'Evidence from the EXIST-3 trial.' },
+    { id: 'acth', name: 'ACTH / prednisolone', bin: 'other', mech: 'Hormonal therapy (mechanism uncertain)',
+      tells: ['First-line hormonal therapies for infantile epileptic spasms syndrome (ACTH or high-dose prednisolone)'], tox: 'Hypertension, irritability, infections, hyperglycaemia, adrenal suppression', pearl: 'Hormonal therapy usually stops spasms faster than vigabatrin, except in TSC.' },
+    { id: 'retigabine', name: 'Retigabine (ezogabine)', bin: 'other', mech: 'Opens neuronal Kv7 (KCNQ2–5) potassium channels',
+      tells: ['First-in-class Kv7 (KCNQ) channel opener; boxed warning for retinal abnormalities and blue-grey skin discolouration'], tox: 'Retinal pigment abnormalities, skin discolouration, urinary retention', pearl: 'Withdrawn from the market in 2017.' },
+  ];
+
+  /* ------------------------------------------------------------------ Genes
+     syn: syndrome ids in kb.js that the gene is associated with */
+  const GENES = [
+    { g: 'SCN1A', fn: 'Nav1.1 sodium channel on inhibitory interneurons (loss of function)', syn: ['DRAVET'], tells: ['Nav1.1 loss of function in GABAergic interneurons'],
+      pearl: 'De novo loss of function → Dravet syndrome; milder missense variants → GEFS+. Sodium-channel blockers (carbamazepine, phenytoin, lamotrigine) can worsen Dravet syndrome.' },
+    { g: 'SCN2A', fn: 'Nav1.2 sodium channel (gain of function early onset; loss of function later onset)', syn: ['EIDEE', 'SELIE'], tells: ['Early-onset (<3 months) gain of function responds to sodium-channel blockers; loss of function causes later-onset seizures with autism/ID'],
+      pearl: 'Gain of function → neonatal-infantile epilepsy that responds to sodium-channel blockers; loss of function → autism/ID, sodium-channel blockers may worsen.' },
+    { g: 'SCN8A', fn: 'Nav1.6 sodium channel (gain of function)', syn: ['EIDEE'], tells: ['Nav1.6 gain-of-function DEE that responds to high-dose sodium-channel blockers'], pearl: 'DEE with early onset; high-dose phenytoin, carbamazepine or oxcarbazepine can be effective.' },
+    { g: 'KCNQ2', fn: 'Kv7.2 potassium channel (M-current)', syn: ['SELNE', 'KCNQ2DEE'], tells: ['Kv7.2 M-current channel: haploinsufficiency gives self-limited neonatal seizures; dominant-negative missense gives a DEE'],
+      pearl: 'Haploinsufficiency → SeLNE; dominant-negative missense variants → KCNQ2-DEE. Sodium-channel blockers are often effective in early life.' },
+    { g: 'KCNQ3', fn: 'Kv7.3 potassium channel', syn: ['SELNE'], tells: ['Kv7.3 partner of KCNQ2, milder familial neonatal seizures'], pearl: 'Usually milder than KCNQ2.' },
+    { g: 'KCNT1', fn: 'KNa1.1 (Slack) sodium-activated potassium channel (gain of function)', syn: ['EIMFS', 'SHE'], tells: ['Sodium-activated potassium channel gain of function causing migrating focal seizures'], pearl: 'EIMFS and sleep-related hypermotor epilepsy; quinidine has had limited success.' },
+    { g: 'STXBP1', fn: 'Munc18-1 (synaptic vesicle fusion)', syn: ['EIDEE'], tells: ['Munc18-1 haploinsufficiency: early infantile DEE (Ohtahara) with tremor'], pearl: 'Early infantile DEE, tremor and intellectual disability.' },
+    { g: 'CDKL5', fn: 'X-linked serine/threonine kinase', syn: ['CDKL5'], tells: ['X-linked kinase gene: seizures from the first weeks, hyperkinetic–tonic–spasms sequence, cortical visual impairment'], pearl: 'Ganaxolone is approved for CDKL5 deficiency disorder.' },
+    { g: 'PCDH19', fn: 'X-linked protocadherin-19 (cellular interference in mosaic females)', syn: ['PCDH19'], tells: ['X-linked gene in which heterozygous females and mosaic males are affected while hemizygous males are spared'], pearl: 'Fever-sensitive clusters, fearful screaming, mostly in girls.' },
+    { g: 'ARX', fn: 'X-linked aristaless-related homeobox transcription factor', syn: ['IESS', 'EIDEE'], tells: ['X-linked homeobox gene: lissencephaly with abnormal genitalia (XLAG), infantile spasms, Ohtahara syndrome'], pearl: 'Cortical malformation, infantile spasms, dystonia.' },
+    { g: 'SLC2A1', fn: 'GLUT1 glucose transporter', syn: ['GLUT1DS'], tells: ['Low CSF glucose with normal blood glucose; ketogenic diet is the treatment of choice'], pearl: 'Hypoglycorrhachia, paroxysmal exertional dyskinesia, absences; the ketogenic diet is treatment of choice.' },
+    { g: 'ALDH7A1', fn: 'Antiquitin (α-aminoadipic semialdehyde dehydrogenase)', syn: ['PDDEE'], tells: ['Pyridoxine-dependent epilepsy with raised α-AASA and pipecolic acid'], pearl: 'Pyridoxine; lysine restriction ± arginine supplementation.' },
+    { g: 'PNPO', fn: 'Pyridox(am)ine-5′-phosphate oxidase', syn: ['PDDEE'], tells: ['Pyridoxal-5′-phosphate–responsive epilepsy (may not respond to pyridoxine)'], pearl: 'Treat with pyridoxal-5′-phosphate rather than pyridoxine.' },
+    { g: 'TSC1 / TSC2', fn: 'Hamartin / tuberin, negative regulators of mTORC1', syn: [], tells: ['Tuberous sclerosis: vigabatrin first for infantile spasms, everolimus adjunct'], pearl: 'Vigabatrin first-line for IESS in TSC; everolimus (EXIST-3), cannabidiol, surgery.' },
+    { g: 'DEPDC5 / NPRL2 / NPRL3', fn: 'GATOR1 complex, negative regulators of mTORC1', syn: ['FFEVF', 'SHE'], tells: ['GATOR1 genes: familial focal epilepsy with variable foci, sleep-related hypermotor epilepsy and focal cortical dysplasia'], pearl: 'Germline loss of function with a somatic second hit in focal cortical dysplasia.' },
+    { g: 'CHRNA4 / CHRNB2 / CHRNA2', fn: 'Neuronal nicotinic acetylcholine-receptor subunits', syn: ['SHE'], tells: ['Nicotinic receptor subunit genes in autosomal dominant sleep-related hypermotor epilepsy'], pearl: 'ADSHE (formerly ADNFLE).' },
+    { g: 'LGI1', fn: 'Secreted synaptic protein (ADAM22/23 ligand)', syn: ['EAF'], tells: ['Secreted protein mutated in autosomal dominant lateral temporal lobe epilepsy with auditory features'], pearl: 'Distinct from LGI1 autoantibody limbic encephalitis.' },
+    { g: 'PRRT2', fn: 'Proline-rich transmembrane protein 2', syn: ['SELIE', 'SELFNIE'], tells: ['Benign familial infantile seizures, paroxysmal kinesigenic dyskinesia and hemiplegic migraine; carbamazepine-responsive'], pearl: 'Infantile seizures typically remit; kinesigenic dyskinesia later.' },
+    { g: 'GRIN2A', fn: 'NMDA-receptor GluN2A subunit', syn: ['SWAS', 'SELECTS'], tells: ['NMDA-receptor subunit gene in the epilepsy–aphasia spectrum (Landau–Kleffner, DEE-SWAS)'], pearl: 'Epilepsy–aphasia spectrum.' },
+    { g: 'CHD2', fn: 'Chromodomain helicase DNA-binding protein 2', syn: ['EEM'], tells: ['Chromatin remodeller linked to photosensitive myoclonic epilepsy and intellectual disability'], pearl: 'Photosensitivity and myoclonic seizures.' },
+    { g: 'SLC6A1', fn: 'GAT-1 GABA transporter', syn: ['EMATS'], tells: ['GABA transporter gene linked to myoclonic–atonic epilepsy with intellectual disability'], pearl: 'Myoclonic–atonic epilepsy (Doose).' },
+    { g: 'GABRG2', fn: 'GABA-A receptor γ2 subunit', syn: [], tells: ['GABA-A γ2 subunit in GEFS+ and febrile seizures'], pearl: 'Febrile seizures plus.' },
+    { g: 'CSTB', fn: 'Cystatin B (dodecamer promoter repeat expansion)', syn: ['PME'], tells: ['Dodecamer repeat expansion causing Unverricht–Lundborg disease (EPM1)'], pearl: 'Stimulus-sensitive myoclonus with relatively preserved cognition; phenytoin worsens.' },
+    { g: 'EPM2A / NHLRC1', fn: 'Laforin / malin (glycogen metabolism)', syn: ['PME'], tells: ['Laforin or malin deficiency causing Lafora disease with polyglucosan bodies and visual seizures'], pearl: 'Teenage onset PME with occipital seizures and rapid decline.' },
+    { g: 'CLN2 (TPP1)', fn: 'Tripeptidyl peptidase 1 (lysosomal)', syn: ['PME'], tells: ['Late-infantile NCL with photoparoxysmal response at low flash rates; treated with intraventricular cerliponase alfa'], pearl: 'Cerliponase alfa enzyme replacement.' },
+    { g: 'KCNC1', fn: 'Kv3.1 potassium channel', syn: ['PME'], tells: ['Kv3.1 channel recurrent variant causing myoclonus epilepsy and ataxia (MEAK)'], pearl: 'MEAK.' },
+    { g: 'NEU1', fn: 'Neuraminidase 1 (lysosomal)', syn: ['PME'], tells: ['Lysosomal neuraminidase deficiency: cherry-red spot–myoclonus syndrome (sialidosis)'], pearl: 'Cherry-red macular spot with myoclonus.' },
+    { g: 'POLG', fn: 'Mitochondrial DNA polymerase γ', syn: [], tells: ['Mitochondrial polymerase gene: Alpers–Huttenlocher syndrome, occipital seizures; valproate contraindicated'], pearl: 'Valproate can trigger fatal liver failure.' },
+    { g: 'UBE3A', fn: 'Maternally expressed E3 ubiquitin ligase (15q11–q13)', syn: [], tells: ['Maternal 15q11–q13 loss: Angelman syndrome with happy demeanour, absent speech and atypical absences'], pearl: 'Angelman syndrome; EEG shows high-amplitude rhythmic delta.' },
+    { g: 'GNAQ (somatic R183Q)', fn: 'G-protein α-q subunit (somatic mosaic activating variant)', syn: ['SWS'], tells: ['Somatic mosaic activating variant in Sturge–Weber syndrome and port-wine birthmarks'], pearl: 'Sturge–Weber syndrome.' },
+  ];
+
+  /* ------------------------------------------------------------------ Free facts
+     Multiple-choice: `a` is the right answer, `w` three plausible wrong answers, `x` the teaching point. */
+  const F = (id, t, q, a, w, x, s, v) => ({ id, t, q, a, w, x, s, v: v === undefined ? 1 : v });
+  const FACTS = [
+    /* ---- classification & definitions ---- */
+    F('cl1', 'class', 'Under the ILAE 2014 practical definition, which scenario after ONE unprovoked seizure is already epilepsy?', 'A probability of further seizures of at least 60% over the next 10 years', ['Any abnormal interictal EEG', 'Any seizure that occurs during sleep', 'A recurrence risk of at least 30% over 5 years'], 'The threshold is the general recurrence risk after two unprovoked seizures (≥60% over 10 years), e.g. an unprovoked seizure with a remote structural lesion.', 'fisher2014'),
+    F('cl2', 'class', 'The ILAE 2014 definition says epilepsy is “resolved” when…', 'seizure-free for ≥10 years with no ASM for at least the last 5 years (or past the age of an age-dependent syndrome)', ['seizure-free for 2 years on stable ASM', 'seizure-free for 5 years after stopping ASM', 'a normal EEG and MRI after 3 seizure-free years'], 'Resolved is not the same as “cured” or “in remission”.', 'fisher2014'),
+    F('cl3', 'class', 'ILAE 2010 definition of drug-resistant epilepsy:', 'Failure of adequate trials of two tolerated, appropriately chosen and used ASM schedules (mono- or combination) to achieve sustained seizure freedom', ['Failure of three ASM monotherapies at maximum tolerated dose', 'More than one seizure per month despite one ASM', 'Failure of any two ASMs, whether tolerated or not'], 'Both trials must be adequate and tolerated; failure because of intolerance does not count.', 'kwan2010'),
+    F('cl4', 'class', '“Sustained seizure freedom” (Kwan 2010) means freedom for…', '12 months or three times the longest pre-intervention seizure-free interval, whichever is longer', ['6 months', '24 months', '12 months regardless of the pre-treatment interval'], 'The “3× longest interval” rule stops a lucky quiet stretch being counted as response.', 'kwan2010', 0),
+    F('cl5', 'class', 'How many main seizure classes does the ILAE 2025 classification keep?', 'Four: focal, generalized, unknown, unclassified', ['Two: focal and generalized', 'Three: focal, generalized, unknown', 'Five, adding “epileptic spasms”'], 'Position paper: Beniczky et al. 2025.', 'beniczky2025'),
+    F('cl6', 'class', 'In ILAE 2025, consciousness is defined operationally through…', 'awareness and responsiveness', ['recall and motor activity', 'awareness only', 'responsiveness only'], 'If consciousness cannot be determined, the seizure stays under the parent term (focal or unknown-onset seizure).', 'beniczky2025'),
+    F('cl7', 'class', 'Which ILAE 2025 seizure classes are further classified by consciousness?', 'Focal and unknown-onset seizures', ['Generalized seizures only', 'Focal seizures only', 'All four classes'], 'Generalized seizures are not subdivided by consciousness.', 'beniczky2025'),
+    F('cl8', 'class', 'The four epilepsy types in the ILAE 2017 classification are…', 'focal, generalized, combined generalized and focal, unknown', ['focal, generalized, symptomatic, cryptogenic', 'partial, generalized, mixed, unclassified', 'idiopathic, symptomatic, cryptogenic, unknown'], 'The 2017 report replaced “idiopathic/symptomatic/cryptogenic” with etiological groups.', 'scheffer2017', 0),
+    F('cl9', 'class', 'The six etiological categories of ILAE 2017 are…', 'structural, genetic, infectious, metabolic, immune, unknown', ['structural, genetic, infectious, metabolic, traumatic, unknown', 'structural, genetic, vascular, metabolic, immune, unknown', 'idiopathic, symptomatic, cryptogenic, genetic, immune, unknown'], 'Etiologies are not mutually exclusive.', 'scheffer2017', 0),
+    F('cl10', 'class', 'Developmental and epileptic encephalopathy (DEE) means developmental impairment…', 'results from both the underlying etiology and the epileptic activity', ['results from the underlying etiology only', 'results from epileptic activity only', 'results from ASM side effects'], 'If epileptic activity alone is thought to cause the impairment it is an “epileptic encephalopathy”.', 'scheffer2017', 0),
+    F('cl11', 'class', 'Which four syndromes make up idiopathic generalized epilepsy in the ILAE 2022 definition?', 'CAE, JAE, JME, GTCA', ['CAE, JAE, JME, EEM', 'CAE, EMA, JME, GTCA', 'CAE, JAE, EMAtS, GTCA'], 'Epilepsy with eyelid myoclonia and with myoclonic absences are separate generalized syndromes.', 'hirsch2022'),
+    F('cl12', 'class', 'The 2017 ILAE report proposed “self-limited” in place of which term?', 'Benign', ['Idiopathic', 'Cryptogenic', 'Pharmacoresponsive'], 'Self-limited and pharmacoresponsive were meant to replace “benign”, which understated comorbidity.', 'scheffer2017', 0),
+
+    /* ---- status epilepticus ---- */
+    F('se1', 'se', 'ILAE 2015: for convulsive (tonic–clonic) SE, t1 and t2 are…', 't1 = 5 minutes, t2 = 30 minutes', ['t1 = 10 minutes, t2 = 60 minutes', 't1 = 5 minutes, t2 = 60 minutes', 't1 = 15 minutes, t2 = 30 minutes'], 't1 = when seizures should be regarded as prolonged (treat); t2 = when long-term consequences become likely.', 'trinka2015'),
+    F('se2', 'se', 'ILAE 2015 time points for focal SE with impaired consciousness:', 't1 = 10 min, t2 > 60 min', ['t1 = 5 min, t2 = 30 min', 't1 = 10 min, t2 = 30 min', 't1 = 30 min, t2 > 120 min'], 'Absence SE: t1 = 10–15 min, t2 unknown.', 'trinka2015', 0),
+    F('se3', 'se', 'AES 2016: first-line IM midazolam dose for a patient >40 kg in convulsive SE', '10 mg, single dose', ['5 mg, single dose', '20 mg, single dose', '0.2 mg/kg, maximum 10 mg'], '5 mg for 13–40 kg. IM midazolam, IV lorazepam and IV diazepam are equivalent first-line choices.', 'glauser2016'),
+    F('se4', 'se', 'AES 2016: IV lorazepam dosing in convulsive SE', '0.1 mg/kg/dose, maximum 4 mg; may repeat once', ['0.05 mg/kg, maximum 2 mg; do not repeat', '0.2 mg/kg, maximum 10 mg; may repeat twice', '4 mg/kg, maximum 1 g; single dose'], 'IV diazepam is 0.15–0.2 mg/kg (maximum 10 mg), may repeat once.', 'glauser2016'),
+    F('se5', 'se', 'AES 2016 second-line doses: fosphenytoin / valproate / levetiracetam', '20 mg PE/kg / 40 mg/kg / 60 mg/kg', ['10 mg PE/kg / 20 mg/kg / 30 mg/kg', '30 mg PE/kg / 60 mg/kg / 40 mg/kg', '15 mg PE/kg / 40 mg/kg / 20 mg/kg'], 'Maximum single doses: 1500 mg PE, 3000 mg and 4500 mg respectively. Phenobarbital 15 mg/kg is the alternative.', 'glauser2016'),
+    F('se6', 'se', 'ESETT (levetiracetam vs fosphenytoin vs valproate for benzodiazepine-refractory SE): what was the result?', 'About 45–47% of patients in each arm responded by 60 min; no drug was superior', ['Levetiracetam clearly superior', 'Fosphenytoin clearly superior', 'Valproate clearly superior'], '47% (levetiracetam), 45% (fosphenytoin), 46% (valproate); stopped for futility.', 'kapur2019'),
+    F('se7', 'se', 'RAMPART: IM midazolam vs IV lorazepam for prehospital SE — seizure absent at ED arrival without rescue therapy in…', '73.4% vs 63.4% (IM midazolam non-inferior, and superior)', ['63.4% vs 73.4% (lorazepam superior)', '50% vs 50% (no difference)', '88% vs 41%'], 'The intramuscular route avoids the delay of obtaining IV access.', 'silbergleit2012'),
+    F('se8', 'se', 'Refractory SE is defined as seizures that persist despite…', 'an adequate benzodiazepine dose and one adequate second-line ASM', ['two benzodiazepine doses', 'three second-line ASMs', 'anaesthetic therapy for 24 hours'], 'Super-refractory SE continues or recurs ≥24 h after the start of anaesthetic therapy.', 'std', 0),
+    F('se9', 'se', 'NORSE is defined as new-onset refractory SE…', 'without active epilepsy or other pre-existing relevant disorder and without a clear acute or active structural, toxic or metabolic cause', ['occurring only in children with fever', 'with a proven autoimmune antibody', 'in patients with a known epilepsy syndrome'], 'FIRES is the NORSE subtype with a febrile infection 2 weeks to 24 hours before onset.', 'hirsch2018'),
+    F('se10', 'se', 'Prolonged seizures reduce benzodiazepine efficacy mainly because…', 'synaptic GABA-A receptors are internalised while NMDA receptors are increased at the synapse', ['GABA is depleted from presynaptic terminals', 'benzodiazepines are metabolised faster during seizures', 'the blood–brain barrier becomes impermeable'], 'Time to treatment matters: early benzodiazepine, adequate dose.', 'std', 0),
+    F('se11', 'se', 'A complication of prolonged high-dose propofol infusion in refractory SE:', 'Propofol infusion syndrome: metabolic acidosis, rhabdomyolysis, hypertriglyceridaemia, cardiac failure', ['Hepatic encephalopathy and pancreatitis', 'Hypoglycaemia and adrenal crisis', 'Aplastic anaemia'], 'Monitor lactate, CK and triglycerides.', 'std', 0),
+    F('se12', 'se', 'Which consensus EEG criteria support the diagnosis of non-convulsive SE?', 'Salzburg Consensus Criteria', ['Rodin criteria', 'Hauser criteria', 'Engel criteria'], 'They combine epileptiform discharges >2.5 Hz, rhythmic patterns with evolution, and response to ASM.', 'std', 0),
+    F('se13', 'se', 'In a neonate or infant with refractory seizures, which trial should be given under EEG monitoring?', 'IV pyridoxine (e.g. 100 mg), with pyridoxal-5′-phosphate considered next', ['IV thiamine', 'IV magnesium alone', 'IV vitamin K'], 'Pyridoxine- and PLP-dependent epilepsies are treatable and easy to miss.', 'std', 0),
+
+    /* ---- antiseizure medications ---- */
+    F('as1', 'asm', 'Which ASM is a clinically important enzyme INHIBITOR?', 'Valproate', ['Carbamazepine', 'Phenytoin', 'Phenobarbital'], 'It raises lamotrigine, phenobarbital and carbamazepine-epoxide levels.', 'std', 0),
+    F('as2', 'asm', 'Which ASM has essentially no enzyme induction or inhibition and is cleared by the kidney?', 'Levetiracetam', ['Carbamazepine', 'Valproate', 'Phenytoin'], 'Adjust the dose in renal impairment.', 'std', 0),
+    F('as3', 'asm', 'Which ASM makes combined oral contraceptives unreliable by strong enzyme induction?', 'Carbamazepine', ['Levetiracetam', 'Valproate', 'Lacosamide'], 'Also phenytoin, phenobarbital, primidone; weaker with oxcarbazepine, eslicarbazepine and high-dose topiramate.', 'std', 0),
+    F('as4', 'asm', 'HLA-B*15:02 testing before starting which ASM in patients of Han Chinese, Thai or Malay ancestry?', 'Carbamazepine', ['Levetiracetam', 'Lamotrigine', 'Valproate'], 'The association is with SJS/TEN; HLA-A*31:01 matters in European and Japanese patients.', 'std', 0),
+    F('as5', 'asm', 'Which drug class sharply lowers valproate levels?', 'Carbapenems', ['Macrolides', 'Fluoroquinolones', 'Cephalosporins'], 'Avoid the combination; seizures can recur within days.', 'std', 0),
+    F('as6', 'asm', 'Starting lamotrigine in a patient already taking valproate:', 'Halve the starting dose and titrate more slowly (valproate doubles the half-life; rash and SJS risk)', ['Use the standard titration', 'Double the starting dose', 'Start only with an IV loading dose'], 'Enzyme inducers do the opposite: lamotrigine needs a higher dose.', 'std', 0),
+    F('as7', 'asm', 'Which group of ASMs can aggravate absence and myoclonic seizures?', 'Carbamazepine, oxcarbazepine, phenytoin, vigabatrin, tiagabine, gabapentin/pregabalin', ['Valproate, ethosuximide, levetiracetam', 'Benzodiazepines, topiramate, levetiracetam', 'Clobazam, clonazepam, zonisamide'], 'In generalized epilepsies avoid narrow-spectrum sodium-channel blockers and GABAergic agents.', 'std', 0),
+    F('as8', 'asm', 'Which ASM carried a boxed warning for retinal abnormalities and blue-grey skin discolouration?', 'Retigabine (ezogabine)', ['Vigabatrin', 'Felbamate', 'Perampanel'], 'Vigabatrin causes visual-field loss without skin discolouration.', 'std', 0),
+    F('as9', 'asm', 'Which ASM class is associated with nephrolithiasis and metabolic acidosis?', 'Carbonic-anhydrase-inhibiting ASMs (topiramate, zonisamide)', ['SV2A ligands', 'AMPA antagonists', 'Hormonal therapies'], 'Also oligohidrosis in children.', 'std', 0),
+    F('as10', 'asm', 'Which pair is the correct match of ASM and monitoring requirement?', 'Fenfluramine — echocardiography', ['Vigabatrin — echocardiography', 'Felbamate — visual fields', 'Cannabidiol — QT interval'], 'Vigabatrin needs visual-field testing; felbamate needs blood counts and LFTs; cannabidiol needs LFTs.', 'std', 0),
+    F('as11', 'asm', 'ASMs that SHORTEN the QT interval and are contraindicated in familial short-QT syndrome:', 'Rufinamide and cenobamate', ['Lacosamide and carbamazepine', 'Phenytoin and valproate', 'Levetiracetam and brivaracetam'], 'Lacosamide and carbamazepine prolong PR and cause conduction block instead.', 'std', 0),
+    F('as12', 'asm', 'Which anticonvulsant requires slow titration because of a risk of DRESS?', 'Cenobamate', ['Levetiracetam', 'Perampanel', 'Ethosuximide'], 'Lamotrigine also needs slow titration (rash/SJS).', 'std', 0),
+    F('as13', 'asm', 'Phenytoin at therapeutic concentrations shows which kinetics?', 'Zero-order (saturable) kinetics: small dose increases cause disproportionate rises', ['First-order at all concentrations', 'Linear renal elimination', 'Rapid autoinduction'], 'Check free levels in hypoalbuminaemia.', 'std', 0),
+    F('as14', 'asm', 'Why do oestrogen-containing contraceptives lower lamotrigine levels?', 'Oestrogen induces glucuronidation (UGT) of lamotrigine; levels fall by about half and rebound in the pill-free week', ['Oestrogen displaces lamotrigine from albumin', 'Oestrogen inhibits CYP2C19', 'Lamotrigine induces oestrogen metabolism'], 'Dose adjustments may be needed when starting or stopping the pill; the same applies in pregnancy.', 'std', 0),
+
+    /* ---- syndromes ---- */
+    F('sy1', 'syn', 'First-line treatments for infantile epileptic spasms syndrome (IESS):', 'ACTH or oral prednisolone, or vigabatrin (vigabatrin first when due to TSC)', ['Levetiracetam or topiramate', 'Carbamazepine or phenytoin', 'Ethosuximide or valproate'], 'Treatment must start without delay.', 'std', 0),
+    F('sy2', 'syn', 'ICISS (hormonal therapy ± vigabatrin in infantile spasms): what did the 18-month follow-up show?', 'No improvement in developmental or epilepsy outcomes with combination therapy, but early response and shorter lead time to treatment predicted better outcomes', ['Combination therapy markedly improved development', 'Hormones alone were superior for development', 'Lead time to treatment made no difference'], 'The combination stopped spasms between days 14 and 42 more often, but did not change 18-month outcomes.', 'ocallaghan2018'),
+    F('sy3', 'syn', 'UKISS compared hormonal therapy with vigabatrin. At day 14…', 'hormonal therapy (prednisolone or tetracosactide) stopped spasms more often than vigabatrin', ['vigabatrin stopped spasms more often than hormones', 'there was no difference in spasm cessation', 'neither drug stopped spasms in more than 10% of infants'], 'Vigabatrin remains preferred when TSC is the cause.', 'lux2004', 0),
+    F('sy4', 'syn', 'Drugs that can WORSEN Dravet syndrome:', 'Sodium-channel blockers: carbamazepine, oxcarbazepine, phenytoin, lamotrigine', ['Valproate, clobazam, stiripentol', 'Cannabidiol and fenfluramine', 'Levetiracetam and topiramate'], 'SCN1A loss of function in inhibitory interneurons is the mechanism.', 'std', 0),
+    F('sy5', 'syn', 'Fenfluramine in Dravet syndrome (Lagae 2019): effect of 0.7 mg/kg/day on mean monthly convulsive seizure frequency vs placebo', '62.3% greater reduction', ['12% greater reduction', 'No significant difference', '95% greater reduction'], 'The 0.2 mg/kg dose also beat placebo; median reductions were 74.9%, 42.3% and 19.2%.', 'lagae2019'),
+    F('sy6', 'syn', 'Cannabidiol in Dravet syndrome (Devinsky 2017): median monthly convulsive seizures changed from 12.4 to…', '5.9 (placebo 14.9 to 14.1)', ['9.7', '3.1', '11.2'], 'Responder rate (≥50% reduction) was 43% vs 27%, not significant.', 'devinsky2017'),
+    F('sy7', 'syn', 'Cannabidiol in LGS (GWPCARE3): median reduction in drop seizures at 20 mg/kg/day vs placebo', '41.9% vs 17.2%', ['63% vs 20%', '25% vs 17%', '52% vs 11%'], 'The 10 mg/kg dose gave 37.2%.', 'devinsky2018'),
+    F('sy8', 'syn', 'In childhood absence epilepsy (Glauser 2010), freedom from treatment failure at 16 weeks was…', 'ethosuximide 53%, valproate 58%, lamotrigine 29%', ['ethosuximide 29%, valproate 53%, lamotrigine 58%', 'all three about 50%', 'ethosuximide 80%, valproate 58%, lamotrigine 29%'], 'Ethosuximide is preferred: equal to valproate in efficacy with fewer attentional adverse effects.', 'glauser2010'),
+    F('sy9', 'syn', 'First-line ASM for childhood absence epilepsy WITHOUT tonic–clonic seizures:', 'Ethosuximide', ['Carbamazepine', 'Phenytoin', 'Vigabatrin'], 'Use valproate (or lamotrigine) if GTCS coexist.', 'std', 0),
+    F('sy10', 'syn', 'Newly diagnosed generalized or unclassifiable epilepsy: SANAD II (valproate vs levetiracetam)', 'Valproate was superior for time to 12-month remission; levetiracetam was neither clinically nor cost-effective by comparison', ['Levetiracetam was superior', 'No difference in remission', 'Both failed to reach remission in most patients'], 'This informs, but does not override, the case for avoiding valproate in people who could become pregnant.', 'marson2021b'),
+    F('sy11', 'syn', 'Newly diagnosed focal epilepsy: SANAD II (lamotrigine vs levetiracetam vs zonisamide)', 'Lamotrigine remained first-line; levetiracetam and zonisamide did not show non-inferiority and were less cost-effective', ['Levetiracetam was best', 'Zonisamide was best', 'All three were equal'], 'Primary outcome: time to 12-month remission.', 'marson2021a'),
+    F('sy12', 'syn', 'In which syndrome is the ketogenic diet the treatment of choice?', 'GLUT1 deficiency syndrome (and PDH deficiency)', ['Childhood absence epilepsy', 'Juvenile myoclonic epilepsy', 'SeLECTS'], 'GLUT1DS: hypoglycorrhachia with normal blood glucose.', 'std', 0),
+    F('sy13', 'syn', 'Seizure sequence characteristic of CDKL5 deficiency disorder:', 'Hyperkinetic → tonic → spasms', ['Aura → automatism → convulsion', 'Myoclonic → atonic → absence', 'Tonic → clonic → postictal'], 'The sequence is recorded in the ILAE 2022 neonatal-infant syndrome table.', 'zuberi2022'),
+
+    /* ---- EEG ---- */
+    F('ee1', 'eeg', 'In the 10–20 system, electrodes on the LEFT hemisphere carry…', 'odd numbers (even on the right, “z” on the midline)', ['even numbers', 'letters only', 'numbers above 10'], 'F3, C3, P3, O1, F7, T3 (T7), T5 (P7) are left-sided.', 'std', 0),
+    F('ee2', 'eeg', 'Modern 10–10 names for T3, T4, T5 and T6:', 'T7, T8, P7, P8', ['F7, F8, P3, P4', 'C5, C6, P5, P6', 'T1, T2, T9, T10'], 'T3/T4 sit over the mid-temporal region.', 'std', 0),
+    F('ee3', 'eeg', 'In a bipolar longitudinal montage with negativity UP, a negative spike at the middle electrode of a chain gives…', 'deflections that point toward each other (phase reversal)', ['deflections that point away from each other', 'a deflection in one channel only', 'no deflection in either channel'], 'A positive focus reverses this: deflections point away from each other.', 'std', 0),
+    F('ee4', 'eeg', 'Frequency bands: alpha is…', '8–13 Hz', ['4–8 Hz', '13–30 Hz', '< 4 Hz'], 'Delta <4, theta 4–<8, alpha 8–13, beta >13 Hz.', 'std', 0),
+    F('ee5', 'eeg', 'Which finding is a benign variant often over-read as temporal epileptiform discharges?', 'Wicket spikes', ['Triphasic waves', 'Hypsarrhythmia', '3 Hz spike-wave'], 'Others: small sharp spikes, 14 & 6 Hz positive spikes, rhythmic mid-temporal theta, POSTS.', 'std', 0),
+    F('ee6', 'eeg', 'Extreme delta brush is characteristic of…', 'anti-NMDA-receptor encephalitis', ['Creutzfeldt–Jakob disease', 'Hepatic encephalopathy', 'Lennox–Gastaut syndrome'], 'Delta activity with superimposed beta bursts.', 'std', 0),
+    F('ee7', 'eeg', 'Triphasic waves most often indicate…', 'a toxic–metabolic encephalopathy (e.g. hepatic or uraemic)', ['Absence status', 'Rasmussen encephalitis', 'Frontal lobe epilepsy'], 'Frontal-predominant with an anterior–posterior lag.', 'std', 0),
+    F('ee8', 'eeg', 'The sensitivity of a first routine EEG for interictal epileptiform discharges in epilepsy is about…', '30–50% (rising to about 80–90% with repeated or sleep-deprived recordings)', ['> 95%', '< 10%', '65–70% regardless of repeating'], 'A normal EEG never excludes epilepsy.', 'std', 0),
+    F('ee9', 'eeg', 'Posterior dominant rhythm in a relaxed awake adult, attenuating with eye opening:', 'Alpha rhythm (Berger effect)', ['Mu rhythm', 'Lambda waves', 'Theta rhythm'], 'Mu rhythm is central and blocked by movement.', 'std', 0),
+    F('ee10', 'eeg', 'Lateralized periodic discharges (LPDs) are classically associated with…', 'acute structural lesions such as stroke or herpes simplex encephalitis', ['Absence epilepsy', 'Normal sleep', 'Benzodiazepine use'], 'ACNS 2021 terminology.', 'std', 0),
+
+    /* ---- semiology & mimics ---- */
+    F('sm1', 'sem', 'Preserved speech during a seizure with oroalimentary automatisms suggests onset in the…', 'non-dominant temporal lobe', ['dominant temporal lobe', 'occipital lobe', 'frontal midline'], 'Ictal aphasia lateralizes to the dominant hemisphere.', 'std', 0),
+    F('sm2', 'sem', 'Unilateral dystonic limb posturing in a temporal lobe seizure lateralizes the focus…', 'contralateral to the dystonic limb', ['ipsilateral to the dystonic limb', 'bilaterally', 'it has no lateralizing value'], 'Ipsilateral automatism with contralateral dystonia is the classic pair.', 'std', 0),
+    F('sm3', 'sem', 'Figure-of-4 sign: the seizure focus is…', 'contralateral to the extended arm', ['ipsilateral to the extended arm', 'in the occipital lobe', 'always in the dominant hemisphere'], 'In the cited series 35 of 39 foci were contralateral to the extended arm.', 'kotagal2000'),
+    F('sm4', 'sem', 'Late, forced head and eye version lateralizes the focus…', 'contralateral to the direction of turning', ['ipsilateral to the direction of turning', 'to the dominant hemisphere', 'to the midline'], 'An early ipsilateral head turn can occur.', 'std', 0),
+    F('sm5', 'sem', 'Postictal nose-wiping is performed mainly with the hand…', 'ipsilateral to the seizure focus', ['contralateral to the focus', 'of the dominant side', 'with either hand equally'], 'Postictal Todd paresis is contralateral.', 'std', 0),
+    F('sm6', 'sem', 'Ictal vomiting most often lateralizes to the…', 'non-dominant (usually right) temporal lobe', ['dominant temporal lobe', 'occipital lobe', 'parietal lobe'], 'Ictal vomiting also occurs in SeLEAS (Panayiotopoulos syndrome).', 'std', 0),
+    F('sm7', 'sem', 'Hypermotor seizures, often from sleep, most often arise from the…', 'frontal lobe (especially mesial or orbitofrontal)', ['occipital lobe', 'amygdala', 'cerebellum'], 'Sleep-related hypermotor epilepsy.', 'std', 0),
+    F('sm8', 'sem', 'The single most helpful sign favouring a functional (psychogenic) over an epileptic convulsion:', 'Sustained ictal eye closure', ['Tongue biting', 'Postictal confusion', 'Incontinence'], 'Epileptic seizures are usually eyes open; lateral tongue biting favours epileptic seizures.', 'std', 0),
+    F('sm9', 'sem', 'Serum prolactin to help distinguish epileptic from functional seizures should be drawn…', '10–20 minutes after the event; a raised level supports a GTC or focal impaired-awareness seizure, a normal level does not exclude one', ['Immediately during the event', 'Two hours afterwards', '24 hours afterwards'], 'Compare with a baseline value.', 'std', 0),
+    F('sm10', 'sem', 'Gold standard for diagnosing functional (psychogenic non-epileptic) seizures:', 'Video-EEG capture of a typical event', ['Routine interictal EEG', 'MRI brain', 'Serum prolactin'], 'Also remember that both can coexist.', 'std', 0),
+
+    /* ---- trials & evidence ---- */
+    F('tr1', 'trial', 'Kwan & Brodie 2000: proportion of previously untreated patients who became seizure-free on their FIRST ASM', '47%', ['25%', '66%', '85%'], 'A further 14% became seizure-free on a second or third drug and 3% needed two drugs; overall 63% were seizure-free.', 'kwanbrodie2000'),
+    F('tr2', 'trial', 'Kwan & Brodie 2000: among patients who failed their first drug, later seizure freedom was most likely when failure was due to…', 'idiosyncratic reaction (55%) or intolerance (41%), not lack of efficacy (11%)', ['lack of efficacy', 'a low serum level', 'poor adherence'], 'Failure through lack of efficacy predicts refractoriness.', 'kwanbrodie2000'),
+    F('tr3', 'trial', 'Wiebe 2001: seizure freedom (seizures impairing awareness) at one year, surgery vs medical therapy for temporal lobe epilepsy', '58% vs 8%', ['30% vs 10%', '80% vs 40%', '58% vs 38%'], 'Surgery was superior to prolonged medical therapy.', 'wiebe2001'),
+    F('tr4', 'trial', 'ERSET: early surgery for mesial TLE after two failed ASMs — seizure free in year 2', '11 of 15 operated vs 0 of 23 on continued medication', ['5 of 15 vs 2 of 23', '15 of 15 vs 10 of 23', '8 of 15 vs 8 of 23'], 'The trial stopped early because of slow accrual.', 'engel2012'),
+    F('tr5', 'trial', 'SANTE (anterior thalamic DBS): median seizure reduction at the end of the blinded phase, stimulated vs control', '40.4% vs 14.5%', ['70% vs 5%', '20% vs 18%', '55% vs 40%'], 'By 2 years, median reduction was 56%.', 'fisher2010'),
+    F('tr6', 'trial', 'Responsive neurostimulation (Morrell 2011): seizure reduction during the blinded period, treatment vs sham', '37.9% vs 17.3%', ['65% vs 10%', '25% vs 24%', '50% vs 30%'], 'The effect was sustained in open-label follow-up.', 'morrell2011'),
+    F('tr7', 'trial', 'EXIST-3 (everolimus in TSC-associated focal seizures): median reduction in seizure frequency, placebo vs low-exposure everolimus', '14.9% vs 29.3%', ['5% vs 15%', '30% vs 60%', '10% vs 12%'], 'Response rate with placebo was 15.1%.', 'french2016'),
+    F('tr8', 'trial', 'Which trial showed that levetiracetam, fosphenytoin and valproate are equally effective for benzodiazepine-refractory SE?', 'ESETT', ['RAMPART', 'SANAD II', 'EXIST-3'], 'ESETT: 384 patients, stopped for futility.', 'kapur2019'),
+
+    /* ---- surgery, devices & diet ---- */
+    F('su1', 'surg', 'Engel class I outcome means…', 'free of disabling seizures', ['≥50% seizure reduction', 'worthwhile improvement', 'no appreciable change'], 'Class II rare disabling seizures; III worthwhile improvement; IV no worthwhile improvement.', 'std', 0),
+    F('su2', 'surg', 'ILAE hippocampal sclerosis type 1 shows…', 'severe neuronal loss and gliosis predominantly in CA1 and CA4 — most often with early insult and best surgical outcome', ['CA1-predominant neuronal loss only', 'CA4-predominant loss only (end-folium sclerosis)', 'loss restricted to the dentate gyrus'], 'Type 2 = CA1-predominant; type 3 = CA4-predominant.', 'blumcke2013'),
+    F('su3', 'surg', 'Typical MRI features of hippocampal sclerosis:', 'Hippocampal atrophy, T2/FLAIR hyperintensity and loss of internal architecture', ['Gyriform enhancement', 'Cortical thickening with blurring of grey–white junction', 'Calcified subependymal nodules'], 'Look also for fornix and mammillary body atrophy.', 'std', 0),
+    F('su4', 'surg', 'Corpus callosotomy is mainly used to treat…', 'drop attacks (atonic and tonic seizures)', ['Absence seizures', 'Myoclonic seizures', 'Gelastic seizures'], 'Palliative; mostly in LGS and other generalized DEEs.', 'std', 0),
+    F('su5', 'surg', 'Hemispherotomy is a cure option in…', 'Rasmussen syndrome, hemimegalencephaly, Sturge–Weber syndrome and HHE with a non-functional hemisphere', ['Juvenile myoclonic epilepsy', 'Childhood absence epilepsy', 'SeLECTS'], 'Unilateral hemispheric disease with severe hemiparesis.', 'std', 0),
+    F('su6', 'surg', 'Which diet contraindications must be excluded before starting the ketogenic diet?', 'Fatty-acid oxidation defects, carnitine deficiency, pyruvate carboxylase deficiency and porphyria', ['GLUT1 deficiency', 'Pyruvate dehydrogenase deficiency', 'Infantile spasms'], 'GLUT1DS and PDH deficiency are indications.', 'std', 0),
+    F('su7', 'surg', 'Anterior thalamic nucleus DBS side effects reported in SANTE:', 'Depression and subjective memory complaints', ['Hepatic failure', 'Visual-field defects', 'Hypertension'], 'Stimulation is of the anterior nucleus of the thalamus.', 'fisher2010', 0),
+    F('su8', 'surg', 'Epilepsy surgery evaluation is recommended after…', 'failure of two appropriate ASMs (drug-resistant epilepsy)', ['five ASM trials', 'ten years of epilepsy', 'any generalized tonic–clonic seizure'], 'Early referral avoids avoidable disability and mortality.', 'std', 0),
+
+    /* ---- etiology, immune & imaging ---- */
+    F('et1', 'etio', 'Faciobrachial dystonic seizures are characteristic of antibodies against…', 'LGI1', ['NMDA receptor', 'CASPR2', 'GABA-B receptor'], 'Often with hyponatraemia; strong HLA-DRB1*07:01 association; responds to immunotherapy.', 'std', 0),
+    F('et2', 'etio', 'Anti-NMDAR encephalitis: typical patient and clues', 'Young woman, psychiatric onset, seizures, orofacial dyskinesias, ovarian teratoma; extreme delta brush', ['Elderly man with faciobrachial dystonic seizures', 'Child with infantile spasms', 'Adolescent with myoclonus on waking'], 'Screen for tumour; first-line immunotherapy.', 'std', 0),
+    F('et3', 'etio', 'Antibodies against intracellular antigens (e.g. GAD65, Hu) are…', 'T-cell mediated and respond less well to immunotherapy', ['Always paraneoplastic', 'Pathogenic and rapidly reversible', 'Unrelated to epilepsy'], 'Cell-surface antibodies (LGI1, NMDAR) are directly pathogenic.', 'std', 0),
+    F('et4', 'etio', 'ILAE 2010: an acute symptomatic seizure after ischaemic stroke occurs within…', '7 days', ['24 hours', '14 days', '30 days'], 'Late seizures (>7 days) carry a much higher recurrence risk and are not “acute symptomatic”.', 'std', 0),
+    F('et5', 'etio', 'Tuberous sclerosis diagnostic criteria include ≥3 hypomelanotic macules of at least…', '5 mm diameter', ['1 mm', '15 mm', '30 mm'], 'Also ≥3 angiofibromas or one fibrous cephalic plaque.', 'std', 0),
+    F('et6', 'etio', 'Neurofibromatosis type 1 criteria include café-au-lait macules numbering…', '6 or more', ['2 or more', '3 or more', '10 or more'], 'With axillary freckling, Lisch nodules, neurofibromas.', 'std', 0),
+    F('et7', 'etio', 'Which low CSF finding is characteristic of GLUT1 deficiency?', 'Low CSF glucose with normal blood glucose and low-normal lactate', ['Raised CSF glucose', 'Raised CSF lactate', 'Low CSF protein with high glucose'], 'LP after a 4–6 h fast; simultaneous blood glucose.', 'std', 0),
+    F('et8', 'etio', 'Most common identifiable cause of new-onset epilepsy in older adults:', 'Cerebrovascular disease', ['Brain tumour', 'Head trauma', 'Alzheimer disease'], 'Neurodegeneration and tumours follow.', 'std', 0),
+    F('et9', 'etio', 'Neurocysticercosis is…', 'the leading cause of acquired epilepsy in endemic regions', ['a cause of generalized epilepsy only', 'associated with HHV-6', 'seen only in immunosuppressed adults'], 'Calcified granulomas can be epileptogenic.', 'std', 0),
+
+    /* ---- special populations & SUDEP ---- */
+    F('sp1', 'spec', 'SUDEP incidence in adults with epilepsy is about…', '1.2 per 1000 patient-years (about 1 in 1000 per year); in children 0.22 per 1000 patient-years', ['12 per 1000 patient-years', '0.02 per 1000 patient-years', '5 per 1000 patient-years in both'], 'AAN/AES 2017 practice guideline summary.', 'harden2017'),
+    F('sp2', 'spec', 'The major risk factor for SUDEP is…', 'frequency of generalized tonic–clonic seizures', ['Focal aware seizures', 'Absence seizures', 'Female sex'], 'High confidence in the evidence; risk increases with GTCS frequency.', 'harden2017'),
+    F('sp3', 'spec', 'MORTEMUS: the terminal sequence in monitored SUDEP cases…', 'GTCS, then postictal generalized EEG suppression, central apnoea and asystole', ['Primary ventricular fibrillation during the aura', 'Status epilepticus lasting hours', 'Pulmonary embolism after the seizure'], 'Early postictal cardiorespiratory failure.', 'std', 0),
+    F('sp4', 'spec', 'AAN/AES/SMFM 2024: which ASMs should be considered to minimise major congenital malformations in people of childbearing potential?', 'Lamotrigine, levetiracetam or oxcarbazepine', ['Valproate or topiramate', 'Phenobarbital or phenytoin', 'Carbamazepine or primidone'], 'Choice depends on syndrome, likelihood of seizure control and comorbidities.', 'pack2024'),
+    F('sp5', 'spec', 'AAN/AES/SMFM 2024: avoid which ASM(s) to minimise risk of a small-for-gestational-age infant?', 'Valproate or topiramate', ['Lamotrigine or levetiracetam', 'Oxcarbazepine only', 'Carbamazepine only'], 'Valproate should be avoided where clinically feasible for malformations, neural-tube defects, autism and lower IQ.', 'pack2024'),
+    F('sp6', 'spec', 'AAN/AES/SMFM 2024: minimum daily folic acid for people with epilepsy taking ASMs before and during pregnancy', 'At least 0.4 mg', ['At least 4 mg', 'None, folate is not recommended', 'At least 10 mg'], 'The optimal dose is not established.', 'pack2024'),
+    F('sp7', 'spec', 'In pregnancy, lamotrigine concentrations…', 'fall markedly (clearance rises) and rebound after delivery — monitor levels and adjust', ['rise markedly and need dose reduction', 'do not change', 'fall only in the first trimester'], 'Plan postpartum dose reduction to avoid toxicity.', 'std', 0),
+    F('sp8', 'spec', 'Catamenial epilepsy patterns (Herzog) are…', 'perimenstrual (C1), periovulatory (C2), inadequate luteal phase (C3)', ['pre-ictal, ictal, postictal', 'follicular, luteal, secretory', 'early, mid, late menopause'], 'Cluster treatment options include acetazolamide or clobazam.', 'std', 0),
+    F('sp9', 'spec', 'Recurrence risk within the first 2 years after a first unprovoked seizure (AAN/AES 2015) is about…', '21–45%, highest in the first 2 years', ['5–10%', '60–80%', '90–100%'], 'Early ASM therapy reduces 2-year recurrence by about 35% but does not improve long-term remission.', 'std', 0),
+    F('sp10', 'spec', 'Approximate recurrence risk of febrile seizures after a first febrile seizure:', 'About 30%', ['About 5%', 'About 60%', 'About 90%'], 'Risk of epilepsy after a simple febrile seizure is only slightly above baseline.', 'std', 0),
+    F('sp11', 'spec', 'FDA 2008 meta-analysis of ASMs and suicidality showed…', 'about double the risk of suicidal ideation or behaviour (0.43% vs 0.22%)', ['no increase in risk', 'a tenfold increase', 'a reduction in risk'], 'Screen for depression and suicidality with all ASMs.', 'std', 0),
+    F('sp12', 'spec', 'Alcohol withdrawal seizures usually occur…', '6–48 hours after the last drink and are treated with benzodiazepines (long-term ASM is usually not needed)', ['Only during intoxication', '1–2 weeks after stopping', 'Only in people with epilepsy'], 'Think thiamine.', 'std', 0),
+
+    /* ---- genetics (free facts that are not table-driven) ---- */
+    F('ge1', 'gene', 'Which genes encode the GATOR1 complex?', 'DEPDC5, NPRL2, NPRL3', ['SCN1A, SCN2A, SCN8A', 'KCNQ2, KCNQ3, KCNT1', 'CDKL5, ARX, STXBP1'], 'They are negative regulators of mTORC1.', 'std', 0),
+    F('ge2', 'gene', 'Which of these ASMs targets the mTOR pathway?', 'Everolimus', ['Cannabidiol', 'Fenfluramine', 'Ganaxolone'], 'Sirolimus is used off-label.', 'std', 0),
+    F('ge3', 'gene', 'Which sodium-channel gene is classically associated with Dravet syndrome?', 'SCN1A', ['SCN2A', 'SCN8A', 'SCN3A'], 'Loss of function.', 'std', 0),
+    F('ge4', 'gene', 'A pathogenic KCNQ2 variant in a neonate: which ASM class is often effective?', 'Sodium-channel blockers (carbamazepine, phenytoin)', ['Valproate', 'Ethosuximide', 'Vigabatrin'], 'Retigabine (a Kv7 opener) was an alternative that has been withdrawn.', 'std', 0),
+    F('ge5', 'gene', 'Neonatal seizures: ILAE 2023 guideline first-line ASM (unless a channelopathy is likely)', 'Phenobarbital', ['Levetiracetam', 'Midazolam', 'Lidocaine'], 'If a channelopathy is likely (e.g. family history), use phenytoin or carbamazepine; second-line: phenytoin, levetiracetam, midazolam, lidocaine.', 'pressler2023'),
+  ];
+
+  /* ------------------------------------------------------------------ Sequence puzzles (put the steps in order) */
+  const SEQ = [
+    { id: 'seq_se', t: 'se', title: 'Convulsive status epilepticus — stepwise treatment', steps: [
+      'Stabilise: airway, breathing, circulation, check glucose, IV access (0–5 min)',
+      'First line: IM midazolam, IV lorazepam or IV diazepam (5–20 min)',
+      'Second line: IV fosphenytoin, valproate or levetiracetam (20–40 min)',
+      'Third line: repeat second line or anaesthetic infusion under continuous EEG (40+ min)'], s: 'glauser2016' },
+    { id: 'seq_fbtc', t: 'sem', title: 'Evolution of a focal-to-bilateral tonic–clonic seizure', steps: [
+      'Focal onset (e.g. aura or automatism)', 'Head and eye version, figure-of-4 posture', 'Bilateral tonic phase', 'Clonic phase with slowing jerks', 'Postictal stertorous breathing, generalized EEG suppression'], s: 'std' },
+    { id: 'seq_cdkl5', t: 'syn', title: 'Seizure sequence in CDKL5 deficiency disorder', steps: ['Hyperkinetic', 'Tonic', 'Epileptic spasms'], s: 'zuberi2022' },
+    { id: 'seq_dravet', t: 'syn', title: 'Natural history of Dravet syndrome', steps: [
+      'About 6 months: prolonged febrile hemiclonic or generalized seizures, normal development',
+      '1–4 years: myoclonic, atypical absence and focal seizures; development slows',
+      'Pre-school: ataxia, crouch gait and behavioural problems emerge',
+      'Adulthood: fewer, mainly nocturnal tonic–clonic seizures; persistent intellectual disability'], s: 'std' },
+    { id: 'seq_iess', t: 'syn', title: 'Managing suspected infantile spasms', steps: [
+      'Recognise clusters of spasms; arrange urgent video-EEG',
+      'Start first-line therapy without delay: hormone or vigabatrin (vigabatrin first in TSC)',
+      'Aetiological work-up: MRI, genetics, metabolic tests',
+      'Reassess clinical spasms and EEG at about 2 weeks; escalate if no response'], s: 'ocallaghan2018' },
+    { id: 'seq_surg', t: 'surg', title: 'Pre-surgical evaluation pathway', steps: [
+      'Confirm drug-resistant epilepsy (two appropriate ASM failures)',
+      'Phase I: video-EEG, epilepsy-protocol MRI, neuropsychology',
+      'Add PET, SPECT, MEG or functional MRI if concordance is unclear',
+      'Phase II: invasive recording (SEEG or subdural) if still unclear or near eloquent cortex',
+      'Multidisciplinary conference: resection, ablation or neuromodulation'], s: 'std' },
+  ];
+
+  /* ------------------------------------------------------------------ Trials (cheat-sheet table; also drives some facts) */
+  const TRIALS = [
+    ['RAMPART', 2012, 'Prehospital SE, IM midazolam vs IV lorazepam', 'Seizure-free at ED arrival without rescue: 73.4% vs 63.4%', 'silbergleit2012'],
+    ['ESETT', 2019, 'Benzodiazepine-refractory SE: levetiracetam vs fosphenytoin vs valproate', '47% / 45% / 46% responders at 60 min; no superiority', 'kapur2019'],
+    ['Kwan & Brodie', 2000, 'Newly treated epilepsy, 525 patients', '47% seizure-free on drug 1, ~14% on drug 2–3; 63% overall', 'kwanbrodie2000'],
+    ['Glauser (CAE)', 2010, 'Childhood absence epilepsy: ethosuximide vs valproate vs lamotrigine', 'Freedom from failure 53% / 58% / 29% at 16 weeks', 'glauser2010'],
+    ['SANAD II (focal)', 2021, 'Lamotrigine vs levetiracetam vs zonisamide', 'Lamotrigine stays first-line', 'marson2021a'],
+    ['SANAD II (generalized)', 2021, 'Valproate vs levetiracetam', 'Valproate superior for 12-month remission', 'marson2021b'],
+    ['UKISS', 2004, 'Infantile spasms: vigabatrin vs prednisolone or tetracosactide', 'Hormonal therapy stopped spasms more often at day 14', 'lux2004'],
+    ['ICISS', 2017, 'Infantile spasms: hormone ± vigabatrin', 'Combination better at stopping spasms (days 14–42); no benefit for 18-month outcome', 'ocallaghan2017'],
+    ['Wiebe (TLE surgery)', 2001, 'Surgery vs medical therapy in TLE', 'Seizure-free at 1 y: 58% vs 8%', 'wiebe2001'],
+    ['ERSET', 2012, 'Early surgery for mesial TLE', 'Seizure-free in year 2: 11/15 vs 0/23', 'engel2012'],
+    ['SANTE', 2010, 'Anterior thalamic DBS', 'Blinded phase median reduction 40.4% vs 14.5%; 56% at 2 y', 'fisher2010'],
+    ['RNS pivotal', 2011, 'Responsive neurostimulation', 'Blinded reduction 37.9% vs 17.3%', 'morrell2011'],
+    ['EXIST-3', 2016, 'Everolimus for TSC focal seizures', 'Median reduction 29.3% (low exposure) vs 14.9% placebo', 'french2016'],
+    ['GWPCARE3', 2018, 'Cannabidiol in LGS', 'Drop-seizure reduction 41.9% (20 mg) vs 17.2% placebo', 'devinsky2018'],
+    ['GWPCARE1', 2017, 'Cannabidiol in Dravet', 'Convulsive seizures 12.4→5.9 vs 14.9→14.1 per month', 'devinsky2017'],
+    ['Fenfluramine (Dravet)', 2019, 'Fenfluramine 0.2 / 0.7 mg/kg/day', '0.7 mg/kg: 62.3% greater reduction than placebo', 'lagae2019'],
+  ];
+
+  return { SRC, TOPICS, BINS_ASM, ASM, GENES, FACTS, SEQ, TRIALS };
+});

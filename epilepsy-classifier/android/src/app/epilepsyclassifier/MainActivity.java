@@ -18,8 +18,10 @@ import java.io.ByteArrayInputStream;
  *  2. WebView network loads are disabled.
  *  3. Only bundled assets may be loaded or navigated to; anything else is
  *     answered with an empty response.
- *  4. File-system access, content providers, DOM storage, caching, form-data
- *     saving and geolocation are all disabled — nothing is persisted.
+ *  4. File-system access, content providers, caching, form-data saving and
+ *     geolocation are disabled. The ONLY thing that persists is the Study
+ *     mode's progress (card schedule, XP, streak) in the app's private DOM
+ *     storage; patient findings are never written anywhere.
  */
 public class MainActivity extends Activity {
     private static final String ASSET_PREFIX = "file:///android_asset/";
@@ -39,7 +41,7 @@ public class MainActivity extends Activity {
         s.setAllowContentAccess(false);
         s.setAllowFileAccessFromFileURLs(false);
         s.setAllowUniversalAccessFromFileURLs(false);
-        s.setDomStorageEnabled(false);
+        s.setDomStorageEnabled(true);         // Study progress only (app-private); no patient data is ever stored
         s.setDatabaseEnabled(false);
         s.setSaveFormData(false);
         s.setGeolocationEnabled(false);

@@ -11,7 +11,7 @@ Clinician-facing decision support that takes seizure types, semiology, EEG, MRI,
 
 It also raises time-critical flags (epileptic spasms, super-refractory status) and suggests next investigations.
 
-> **Not a medical device and not clinically validated.** It is a transparent aid for clinicians and trainees. It does not diagnose, and specialist judgement always prevails. Everything runs in the browser; nothing is transmitted or stored.
+> **Not a medical device and not clinically validated.** It is a transparent aid for clinicians and trainees. It does not diagnose, and specialist judgement always prevails. Everything runs in the browser; nothing is transmitted. Patient findings are never stored; only your Study progress (flashcard schedule, XP, streak) is kept in this browser's local storage.
 
 ## Run
 
@@ -19,7 +19,7 @@ It also raises time-critical flags (epileptic spasms, super-refractory status) a
 # no build step — open the file directly
 open index.html            # or: npm run serve  →  http://localhost:8080
 
-npm test                   # 85 tests (Node ≥ 20, no dependencies)
+npm test                   # 110 tests (Node ≥ 20, no dependencies)
 ```
 
 ## Using it
@@ -38,6 +38,31 @@ Every step can be skipped ("Skip this step"), and a live *So far: CAE · possibl
 How answers become findings: a tapped picture is **present**. In the seizure and examination steps, pictures you did *not* tap become **absent** once you have tapped at least one ("anything you don't tap counts as not seen"); a step where you tap nothing stays *not assessed*. Everywhere else — timing, EEG, tests — un-tapped items are never treated as absent. The guided assessment and the **Full checklist** share one state, so you can switch at any time.
 
 The **Library** holds the reference material: movements & poses, physical signs, the EEG atlas, and the diagrams.
+
+## Study mode
+
+The **Study** tab turns the same ILAE content into games, for learning epilepsy in depth rather than looking cases up.
+
+| Game | What it trains |
+|---|---|
+| **Daily rounds** | Ten mixed questions, identical for everyone on a given day; keeps a streak |
+| **Flashcards** | Spaced repetition (an SM-2 variant): again/hard/good/easy, with next-interval previews; new-card limit per day |
+| **Quiz blitz** | Pick topics and length, or *survival* with three lives; misses are scheduled for tomorrow's review |
+| **Syndrome detective** | Clues appear one at a time, broad to narrow, worth fewer points as you reveal more. Clues are the syndrome's own mandatory (and “not present”) criteria and **every wrong option is a syndrome the rule engine rejects for the full clue set**, so each case has one defensible answer |
+| **Name that picture** | EEG patterns, seizure movements and physical signs drawn without captions or hints |
+| **Memory match** | Flip tiles: genes ↔ syndromes, abbreviations ↔ names, onset ages, EEG/movement pictures ↔ names |
+| **Sort & order** | Build the ILAE 2025 tree, sort drugs by mechanism, syndromes by group or epilepsy type, line syndromes up by onset age, order the status-epilepticus algorithm and other sequences |
+| **EEG lab** | 10–20 electrode names (tap the head map), and phase-reversal localisation in a bipolar chain |
+| **Cheat sheets** | Filterable tables of drugs, genes and trials, and a status-epilepticus card |
+
+Levels (from *Medical student* to *Back of my hand*), XP, streaks, 15 badges and a topic mastery map track progress. Progress is stored only in this browser (and, in the APK, the app's private storage); the settings page can copy it as text to back it up or move it to another device.
+
+**Where the content comes from.** Syndrome, EEG, movement and sign questions are generated from the same tables the scorer uses (`kb.js`, `morph.js`, `semio.js`, `physical.js`), so they cannot disagree with it. Hand-written content (`src/bank.js`: 114 facts, 30 drugs, 30 genes, 16 trials, 6 sequences) carries a source on every statement and a flag:
+
+* **checked source** — the figure or statement was checked against the abstract of the cited paper on PubMed when the bank was built (ILAE 2014 epilepsy definition, 2010 drug-resistance definition, 2025 seizure classification, ILAE 2015 status epilepticus, RAMPART, ESETT, Kwan & Brodie 2000, Glauser 2010 CAE trial, SANAD II, ICISS 18-month, Wiebe 2001, ERSET, SANTE, RNS, EXIST-3, cannabidiol in Dravet and LGS, fenfluramine in Dravet, AAN/AES 2017 SUDEP, AAN/AES/SMFM 2024 pregnancy guideline, ILAE 2023 neonatal guideline, ILAE hippocampal-sclerosis classification);
+* **standard teaching** — textbook-level knowledge (most pharmacology, genetics and semiology pearls), not re-verified; confirm against the current guideline or product label.
+
+Where a correct answer would be conspicuously longer than the distractors, the game asks for **recall** (think, reveal, self-grade) instead of a multiple-choice, so there is no “pick the longest” shortcut. The study content is a learning aid, not clinical guidance: doses and indications differ between jurisdictions.
 
 ## Deploy (Vercel)
 
@@ -62,7 +87,7 @@ sudo apt-get install -y default-jdk-headless aapt apksigner zipalign dalvik-exch
 ```
 
 * **Install:** copy the APK to the phone, open it, and allow *Install unknown apps* for your file manager/browser. Play Protect may warn because the app is not from the Play Store.
-* **Privacy by construction:** the manifest declares **no permissions** (no `INTERNET`), so Android itself blocks all network access; the WebView additionally disables network loads and only serves bundled assets. Nothing is stored (no DOM storage, cache or form data).
+* **Privacy by construction:** the manifest declares **no permissions** (no `INTERNET`), so Android itself blocks all network access; the WebView additionally disables network loads and only serves bundled assets. Patient findings are never stored (no cache or form data). DOM storage is enabled solely so the Study mode can keep its progress in the app's private storage.
 * **Signing:** the script generates a throw-away key in `android/.signing/` (git-ignored). An update only installs over an existing copy if signed with the **same key**, so for a long-lived app create your own key once (`keytool -genkeypair …`) and run `KEYSTORE=… KS_ALIAS=… KS_PASS=… ./android/build.sh`.
 * **Bundled files** are exactly `index.html`, `styles.css` and `src/*.js` — the code covered by `npm test`.
 * Targets API 34, min API 21 (Android 5.0+). Not distributable on Google Play as-is (needs an upload key, listing, and — because it presents clinical decision support — a regulatory/medical-device review).
@@ -172,6 +197,9 @@ src/semio.js     movements & poses content (25 entries)
 src/physical.js  physical-signs content (11 entries)
 src/plain.js     one-line plain-language description of each syndrome
 src/wizard.js    guided assessment: step definitions, picture cards → findings, plain-language result
+src/bank.js      hand-written, source-labelled study content (facts, drugs, genes, trials, sequences)
+src/quiz.js      study engine: deck, questions, detective (engine-checked), puzzles, spaced repetition, XP
+src/study.js     study UI: hub, flashcards, quizzes, puzzles, EEG lab, cheat sheets
 src/views.js     library lists, diagrams page, dialog, router
 src/app.js       UI
 tests/           node:test suite
