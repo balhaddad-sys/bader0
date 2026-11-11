@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Epilepsy Classifier — ILAE criteria</title>
-  <meta name="description" content="Clinician decision support that maps seizure types, EEG, imaging, genetics and course to the ILAE 2025 seizure classification, 2017 epilepsy types and 2022 syndrome criteria. Runs locally in the browser.">
+  <title>Epilepsy Study</title>
+  <meta name="description" content="A visual study app for epilepsy: annotated EEG, seizure-movement and sign atlases, flashcards, quizzes and puzzles built on the ILAE classifications. Runs locally in the browser.">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#0b2545">
   <link rel="stylesheet" href="fonts.css">
@@ -60,125 +60,38 @@
 
   <header class="appbar">
     <div class="wrap bar">
-      <a class="brand" href="./" aria-label="Epilepsy Classifier — home">
+      <a class="brand" href="./" aria-label="Epilepsy Study — home">
         <span class="logo"><svg class="ic"><use href="#i-activity"/></svg></span>
         <span class="brand-text">
-          <span class="brand-name">Epilepsy Classifier</span>
-          <span class="brand-sub">ILAE classification &amp; study</span>
+          <span class="brand-name">Epilepsy Study</span>
+          <span class="brand-sub">Pictures, puzzles and memory hooks</span>
         </span>
       </a>
-      <div class="bar-actions">
-        <label class="sr" for="example">Load an example case</label>
-        <select id="example" class="select-inv"><option value="">Examples…</option></select>
-        <button id="reset" type="button" class="btn btn-inv"><svg class="ic"><use href="#i-reset"/></svg><span class="btn-t">Reset</span></button>
-        <button id="print" type="button" class="btn btn-inv" aria-label="Print or save as PDF"><svg class="ic"><use href="#i-printer"/></svg><span class="btn-t">Print</span></button>
       </div>
-    </div>
     <nav class="tabs" aria-label="Sections">
       <div class="wrap tabs-in">
-        <a class="tab" href="#/guided" data-view="guided"><span class="t-long">Guided assessment</span><span class="t-short">Guided</span></a>
-        <a class="tab" href="#/assess" data-view="assess"><span class="t-long">Full checklist</span><span class="t-short">Checklist</span></a>
-        <a class="tab" href="#/library" data-view="library">Library</a>
         <a class="tab" href="#/study" data-view="study">Study</a>
+        <a class="tab" href="#/library" data-view="library">Picture atlas</a>
       </div>
     </nav>
     <div class="strip">
       <div class="wrap strip-in">
         <svg class="ic"><use href="#i-shield"/></svg>
-        <p><strong>Clinical decision support — not a diagnostic device.</strong> <span class="strip-more">Not clinically validated; specialist judgement prevails. </span>Runs entirely on this device: no patient data is sent or stored (only your study progress is saved here).</p>
+        <p><strong>Study aid — not for patient care.</strong> <span class="strip-more">Confirm doses and indications against current guidelines and labels. </span>Runs entirely on this device; only your study progress is saved here.</p>
       </div>
     </div>
   </header>
 
-  <div class="print-head">
-    <h1>Epilepsy classification support — assessment summary</h1>
-    <p>Generated <span id="print-date"></span> · rule-based, per ILAE 2025 / 2017 / 2022 · not a diagnosis</p>
-  </div>
-
-  <main id="view-guided" class="wrap wz" tabindex="-1">
-    <div id="wz-root"></div>
-  </main>
-
-  <main id="view-study" class="wrap st" hidden tabindex="-1">
+  <main id="view-study" class="wrap st" tabindex="-1">
     <div id="st-root"></div>
   </main>
 
   <main id="view-library" class="wrap page" hidden tabindex="-1">
     <header class="page-h">
       <h2>Library</h2>
-      <p>Look things up while you assess: what the seizure movements, examination signs and EEG patterns look like, and how the classification fits together. Each entry says which ILAE criteria use it and what it can be mistaken for.</p>
+      <p>Study the pictures: what the seizure movements, examination signs and EEG patterns look like, and how the classification fits together. Each entry says which ILAE criteria use it and what it can be mistaken for.</p>
     </header>
     <div id="lib" class="lib"></div>
-  </main>
-
-  <main id="view-assess" class="wrap layout" hidden tabindex="-1">
-    <form id="form" class="form" autocomplete="off" aria-label="Clinical findings">
-      <aside class="banner"><svg class="ic"><use href="#i-info"/></svg><p><b>For clinicians who want to enter every finding directly.</b> New here? The <a href="#/guided">guided assessment</a> asks the same questions with pictures and plain language, and fills this checklist in as you go.</p></aside>
-      <div class="search">
-        <svg class="ic"><use href="#i-search"/></svg>
-        <input id="filter" type="search" placeholder="Filter findings — e.g. myoclonic, hypsarrhythmia, SCN1A" aria-label="Filter findings">
-      </div>
-
-      <section class="card" id="card-patient" aria-labelledby="h-patient">
-        <header class="card-h"><span class="num">1</span><h2 id="h-patient">Patient</h2></header>
-        <div class="grid">
-          <div class="field">
-            <label for="onset-v">Age at seizure onset</label>
-            <div class="inline">
-              <input id="onset-v" type="number" min="0" step="any" inputmode="decimal" placeholder="e.g. 7">
-              <select id="onset-u" aria-label="Unit for age at onset">
-                <option value="d">days</option><option value="w">weeks</option><option value="m">months</option><option value="y" selected>years</option>
-              </select>
-            </div>
-          </div>
-          <div class="field">
-            <label for="now-v">Current age <span class="opt">optional</span></label>
-            <div class="inline">
-              <input id="now-v" type="number" min="0" step="any" inputmode="decimal" placeholder="e.g. 8">
-              <select id="now-u" aria-label="Unit for current age">
-                <option value="d">days</option><option value="w">weeks</option><option value="m">months</option><option value="y" selected>years</option>
-              </select>
-            </div>
-          </div>
-          <fieldset class="field">
-            <legend>Sex</legend>
-            <div class="segmented">
-              <label><input type="radio" name="sex" value="" checked><span>Not stated</span></label>
-              <label><input type="radio" name="sex" value="F"><span>Female</span></label>
-              <label><input type="radio" name="sex" value="M"><span>Male</span></label>
-            </div>
-          </fieldset>
-          <fieldset class="field">
-            <legend>MRI brain</legend>
-            <div class="segmented">
-              <label><input type="radio" name="mri" value="" checked><span>Not done</span></label>
-              <label><input type="radio" name="mri" value="normal"><span>Normal</span></label>
-              <label><input type="radio" name="mri" value="abnormal"><span>Abnormal</span></label>
-            </div>
-          </fieldset>
-          <div class="field">
-            <label for="devOnset">Development at seizure onset</label>
-            <select id="devOnset" class="full"></select>
-          </div>
-          <div class="field">
-            <label for="devNow">Development now (long-term)</label>
-            <select id="devNow" class="full"></select>
-          </div>
-        </div>
-        <div id="mri-detail" class="subpanel" hidden>
-          <p class="hint">Tick the MRI abnormalities present (unticked = absent).</p>
-          <div id="mri-items" class="checks"></div>
-        </div>
-      </section>
-
-      <div id="sections"></div>
-      <p id="nomatch" class="empty" hidden>No findings match your filter.</p>
-    </form>
-
-    <aside id="results" class="results" aria-label="Assessment">
-      <p id="live" class="sr" role="status"></p>
-      <div id="out"></div>
-    </aside>
   </main>
 
   <main id="view-physical" class="wrap page" hidden tabindex="-1">
@@ -258,24 +171,13 @@
 
   <dialog id="morph-dialog" class="dlg" aria-labelledby="md-title"><div id="md-body"></div></dialog>
 
-  <div id="dock" class="dock" hidden>
-    <span id="dock-label" class="dock-label"></span>
-    <a href="#results" class="btn btn-primary">Assessment <svg class="ic"><use href="#i-arrow"/></svg></a>
-  </div>
-
   <footer class="wrap foot">
-    <details class="evidence">
-      <summary><svg class="ic"><use href="#i-book"/></svg> Evidence &amp; method <svg class="ic chev"><use href="#i-chevron"/></svg></summary>
-      <ul id="sources"></ul>
-      <p>Each syndrome is scored against the ILAE <em>Mandatory / Alert / Exclusionary</em> tables. Missing information is never treated as absence unless you mark a section as reviewed. The knowledge base is human-readable in <code>src/kb.js</code> and covered by an automated test suite. See the README for scope, interpretation choices and limits.</p>
-    </details>
-    <p class="fine">Epilepsy Classifier v0.7 · Inter typeface © The Inter Project Authors (SIL OFL 1.1)</p>
+    <p class="fine">Epilepsy Study v0.8 · Inter typeface © The Inter Project Authors (SIL OFL 1.1)</p>
   </footer>
 
   <script src="src/vocab.js"></script>
   <script src="src/kb.js"></script>
   <script src="src/engine.js"></script>
-  <script src="src/examples.js"></script>
   <script src="src/morph.js"></script>
   <script src="src/diagrams.js"></script>
   <script src="src/figures.js"></script>
@@ -285,7 +187,6 @@
   <script src="src/bank.js"></script>
   <script src="src/quiz.js"></script>
   <script src="src/study.js"></script>
-  <script src="src/wizard.js"></script>
   <script src="src/views.js"></script>
   <script src="src/app.js"></script>
 </body>

@@ -24,6 +24,11 @@
   const today = () => Q.dayNumber();
   function addXp(n) { const before = Q.levelFor(profile.xp).level; profile.xp += n; if (run) run.xp = (run.xp || 0) + n; const a = Q.levelFor(profile.xp).level; if (a > before && run) run.levelUp = Q.levelFor(profile.xp).title; return n; }
 
+  function burst() { // CSS-only celebration; positions and delays come from the stylesheet
+    if (!el || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    const c = document.createElement('div'); c.className = 'confetti'; c.setAttribute('aria-hidden', 'true');
+    c.innerHTML = '<i></i>'.repeat(28); document.body.appendChild(c); setTimeout(() => c.remove(), 3200);
+  }
   /* ------------------------------------------------------------ small view helpers */
   const vbadge = (v) => (v ? '<span class="vb v1" title="Figure or statement checked against the cited paper’s abstract when this bank was built">checked source</span>' : '<span class="vb v0" title="Standard teaching — verify against the current guideline or label">standard teaching</span>');
   const bar = (label, v, max) => `<progress class="st-bar" max="${max}" value="${v}" aria-label="${esc(label)}"></progress>`;
@@ -44,7 +49,8 @@
     ['match', 'grid', 'Memory match', 'Flip tiles to pair genes with syndromes, patterns with names, abbreviations with onset ages.'],
     ['puzzle', 'sort', 'Sort & order', 'Build the ILAE tree, sort drugs by mechanism, line syndromes up by onset age, order the SE algorithm.'],
     ['eeglab', 'zap', 'EEG lab', 'Name the 10–20 electrode, then find the focus from a phase reversal.'],
-    ['ref', 'table', 'Cheat sheets', 'Drugs, genes, trials and the status epilepticus card — filterable, with sources.'],
+    ['#/library', 'book', 'Picture atlas', 'Annotated EEG traces, seizure movements and physical signs. Cover the labels to test yourself, and add your own notes.'],
+    ['ref', 'table', 'Cheat sheets', 'Drug mechanism diagrams with memory hooks, genes, trials and the status epilepticus card.'],
   ];
   function hub() {
     const lv = Q.levelFor(profile.xp), day = today(), cards = Q.buildDeck(), q = Q.queue(profile, cards, day, { newPerDay: prefs().newPerDay });
@@ -59,8 +65,16 @@
       ${canStore ? '' : '<p class="st-warn">This browser is blocking local storage, so progress will not be saved after you close the page.</p>'}
       <a class="st-daily${dailyDone ? ' done' : ''}" href="#/study/daily"><span class="st-di">${IC(dailyDone ? 'check' : 'trophy')}</span><span><b>${dailyDone ? 'Daily rounds complete — ' + profile.daily.score + '/10' : 'Today’s daily rounds'}</b><small>${dailyDone ? 'Come back tomorrow, or replay for practice.' : '10 mixed questions · +50 XP bonus · keeps your streak'}</small></span>${IC('arrow')}</a>
       ${q.due.length ? `<a class="st-daily alt" href="#/study/flash"><span class="st-di">${IC('layers')}</span><span><b>${q.due.length} card${q.due.length === 1 ? '' : 's'} due for review</b><small>${q.fresh.length ? q.fresh.length + ' new cards waiting too' : 'Reviewing now is what makes it stick.'}</small></span>${IC('arrow')}</a>` : ''}
+      <details class="st-why"><summary>${IC('book')}Why this works: how the app is built to make it stick</summary><ul>
+        <li><b>Retrieval practice.</b> Every game asks you to produce the answer before it shows it; “cover the labels” in the atlas does the same for pictures.</li>
+        <li><b>Spacing.</b> Flashcards come back just before you would forget them; misses return tomorrow.</li>
+        <li><b>Interleaving.</b> Daily rounds and quizzes mix topics instead of blocking them.</li>
+        <li><b>Dual coding.</b> Drawings, EEG traces, head maps and synapse diagrams sit beside the words.</li>
+        <li><b>Elaboration and concrete examples.</b> Each answer says why, and drugs and genes carry a vivid one-line memory hook.</li>
+        <li><b>Game mechanics.</b> Streaks, XP, levels and badges are there to keep you coming back; the evidence for gamification is for engagement, not magic.</li></ul>
+        <p class="st-fine">The first five follow Weinstein, Madan &amp; Sumeracki, <a href="https://link.springer.com/article/10.1186/s41235-017-0087-y" target="_blank" rel="noopener">Teaching the science of learning</a> (Cognitive Research: Principles and Implications, 2018). Picture mnemonics have limited independent evidence, so the hooks are an aid and not the whole method.</p></details>
       <h3 class="st-sub">Games</h3>
-      <div class="st-games">${GAMES.map((g) => `<a class="st-game" href="#/study/${g[0]}"><span class="st-gi">${IC(g[1])}</span><b>${g[2]}</b><small>${g[3]}</small></a>`).join('')}</div>
+      <div class="st-games">${GAMES.map((g) => `<a class="st-game" href="${g[0][0] === '#' ? g[0] : '#/study/' + g[0]}"><span class="st-gi">${IC(g[1])}</span><b>${g[2]}</b><small>${g[3]}</small></a>`).join('')}</div>
       <h3 class="st-sub">Mastery map${weak ? ` <small class="st-weak">weakest so far: <a href="#/study/quiz/${weak.key}">${esc(weak.name)} (${weak.acc}%)</a></small>` : ''}</h3>
       <div class="st-topics">${topics.map((t) => `<a class="st-topic" href="#/study/quiz/${t.key}"><span class="st-ti">${IC(t.icon)}</span><b>${esc(t.name)}</b>${bar(t.name + ' mastered', t.mature, t.total)}<small>${t.seen}/${t.total} seen · ${t.mature} mastered${t.acc === null ? '' : ' · ' + t.acc + '% correct'}</small></a>`).join('')}</div>
       <h3 class="st-sub">Badges</h3>
@@ -139,6 +153,7 @@
     if (run.cfg.daily) { const first = !(profile.daily && profile.daily.day === today()); profile.daily = { day: today(), score: run.score }; if (first) addXp(50); }
     const got = Q.newBadges(profile, today()); save();
     const r = run, total = r.cfg.questions.length;
+    if (perfect || r.levelUp || got.length) burst();
     frame(r.cfg.title + ' — results', `<section class="st-card st-end"><p class="st-big">${r.score}<small>/${r.cfg.lives ? n : total}</small></p><p>${perfect ? 'Perfect round!' : r.score / n >= 0.7 ? 'Solid work.' : 'Every miss is now scheduled for review tomorrow.'}</p>
       <div class="st-stats">${stat('star', '+' + r.xp, 'XP earned')}${stat('flame', r.best, 'best streak')}${stat('flame', profile.streak, 'day streak')}</div>
       ${r.levelUp ? `<p class="st-levelup">${IC('trophy')}Level up — you are now <b>${esc(r.levelUp)}</b></p>` : ''}
@@ -237,7 +252,7 @@
     const d = run.det;
     if (i === d.ans) {
       const first = run.wrong.size === 0, pts = detPoints(); run.solved = true; run.gained = pts; run.dsum.cases += 1; run.dsum.points += pts;
-      Q.record(profile, { topic: 'syn', card: 'syn:' + d.id }, first, today()); addXp(8 * pts); if (first && run.shown === 1) Q.bump(profile, 'oneClue');
+      Q.record(profile, { topic: 'syn', card: 'syn:' + d.id }, first, today()); addXp(8 * pts); if (first && run.shown === 1) { Q.bump(profile, 'oneClue'); burst(); }
       Q.newBadges(profile, today()); save();
     } else { run.wrong.add(i); }
     drawDetective();
@@ -263,7 +278,7 @@
     t.up = true; m.up.push(t); drawMatch();
     if (m.up.length === 2) {
       m.moves += 1; const [a, b] = m.up;
-      if (a.pid === b.pid && a.side !== b.side) { a.done = b.done = true; a.up = b.up = false; m.up = []; m.found += 1; if (m.found === m.match.pairs.length) { addXp(Math.max(10, 60 - 3 * m.moves)); Q.bump(profile, 'matchWins'); Q.touchDay(profile, today()); Q.newBadges(profile, today()); save(); } setTimeout(drawMatch, 350); }
+      if (a.pid === b.pid && a.side !== b.side) { a.done = b.done = true; a.up = b.up = false; m.up = []; m.found += 1; if (m.found === m.match.pairs.length) { addXp(Math.max(10, 60 - 3 * m.moves)); Q.bump(profile, 'matchWins'); burst(); Q.touchDay(profile, today()); Q.newBadges(profile, today()); save(); } setTimeout(drawMatch, 350); }
       else { m.lock = true; setTimeout(() => { a.up = b.up = false; m.up = []; m.lock = false; if (run === m) drawMatch(); }, 900); }
     }
   }
@@ -301,18 +316,19 @@
 
   /* ---------- cheat sheets ---------- */
   function reference() {
-    const se = (id) => B.FACTS.find((f) => f.id === id).a, tab = arg || 'asm';
-    const tabs = [['asm', 'Drugs'], ['gene', 'Genes'], ['trial', 'Trials'], ['se', 'Status epilepticus']];
+    const se = (id) => B.FACTS.find((f) => f.id === id).a, tab = arg || 'mech';
+    const tabs = [['mech', 'Drug diagrams'], ['asm', 'Drugs'], ['gene', 'Genes'], ['trial', 'Trials'], ['se', 'Status epilepticus']];
     const table = (head, rows) => `<div class="tbl-wrap"><table class="tbl"><thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
     let body = '';
-    if (tab === 'asm') body = table(['Drug', 'Mechanism', 'Adverse effects', 'Pearl'], B.ASM.map((a) => `<tr data-q="${esc((a.name + ' ' + a.mech + ' ' + a.tox + ' ' + a.pearl).toLowerCase())}"><th>${esc(a.name)}</th><td>${esc(a.mech)}</td><td>${esc(a.tox)}</td><td>${esc(a.pearl)}</td></tr>`));
+    if (tab === 'mech') body = `<div class="mech-grid">${Object.keys(B.BINS_ASM).concat(['other']).map((k) => `<figure class="mech-card">${Q.mechSvg(k)}<figcaption><b>${esc(Q.MECH[k][0])}</b><span>${esc(Q.MECH[k][1])}</span><ul>${B.ASM.filter((a) => a.bin === k).map((a) => `<li><b>${esc(a.name)}</b> ${esc(a.hook)}</li>`).join('')}</ul></figcaption></figure>`).join('')}</div>`;
+    else if (tab === 'asm') body = table(['Drug', 'Mechanism', 'Adverse effects', 'Pearl and hook'], B.ASM.map((a) => `<tr data-q="${esc((a.name + ' ' + a.mech + ' ' + a.tox + ' ' + a.pearl).toLowerCase())}"><th>${esc(a.name)}</th><td>${esc(a.mech)}</td><td>${esc(a.tox)}</td><td>${esc(a.pearl)}<br><i>${esc(a.hook)}</i></td></tr>`));
     else if (tab === 'gene') body = table(['Gene', 'Encodes / pathway', 'Syndromes', 'Key points'], B.GENES.map((g) => `<tr data-q="${esc((g.g + ' ' + g.fn + ' ' + g.pearl).toLowerCase())}"><th>${esc(g.g)}</th><td>${esc(g.fn)}</td><td>${esc(g.syn.map((id) => (Q.SYN.find((s) => s.id === id) || {}).abbr).filter(Boolean).join(', ') || '—')}</td><td>${esc(g.pearl)}</td></tr>`));
     else if (tab === 'trial') body = table(['Trial', 'Year', 'Question', 'Result', 'Source'], B.TRIALS.map((t) => `<tr data-q="${esc((t[0] + ' ' + t[2] + ' ' + t[3]).toLowerCase())}"><th>${esc(t[0])}</th><td>${t[1]}</td><td>${esc(t[2])}</td><td>${esc(t[3])}</td><td class="src">${esc(B.SRC[t[4]] || '')}</td></tr>`));
     else body = `<div class="se-card"><ol class="ord static">${B.SEQ[0].steps.map((s, i) => `<li><span class="n">${i + 1}</span><span class="t">${esc(s)}</span></li>`).join('')}</ol>
       <h3 class="st-sub">Doses (AES 2016 guideline)</h3><dl class="fc-dl"><dt>IM midazolam (&gt;40 kg)</dt><dd>${esc(se('se3'))}</dd><dt>IV lorazepam</dt><dd>${esc(se('se4'))}</dd><dt>Second line — fosphenytoin / valproate / levetiracetam</dt><dd>${esc(se('se5'))}</dd></dl>
       <h3 class="st-sub">Definitions</h3><dl class="fc-dl"><dt>Convulsive SE (ILAE 2015)</dt><dd>${esc(se('se1'))}</dd><dt>Focal SE with impaired consciousness</dt><dd>${esc(se('se2'))}</dd><dt>Refractory</dt><dd>${esc(B.FACTS.find((f) => f.id === 'se8').a)}</dd><dt>NORSE</dt><dd>${esc(B.FACTS.find((f) => f.id === 'se9').a)}</dd></dl>
       <p class="st-src">${esc(B.SRC.glauser2016)}<br>${esc(B.SRC.trinka2015)}<br>${esc(B.SRC.kapur2019)}</p></div>`;
-    frame('Cheat sheets', `<div class="gpills" role="group" aria-label="Sheet">${tabs.map((t) => `<a class="gpill${t[0] === tab ? ' on' : ''}" href="#/study/ref/${t[0]}">${t[1]}</a>`).join('')}</div>${tab === 'se' ? '' : '<div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="st-filter" type="search" placeholder="Filter this table…" aria-label="Filter table"></div>'}<section class="st-card">${body}<p class="st-fine">Sources are labelled per statement in the games; verify doses and indications against current guidelines and product labels.</p></section>`);
+    frame('Cheat sheets', `<div class="gpills" role="group" aria-label="Sheet">${tabs.map((t) => `<a class="gpill${t[0] === tab ? ' on' : ''}" href="#/study/ref/${t[0]}">${t[1]}</a>`).join('')}</div>${tab === 'se' || tab === 'mech' ? '' : '<div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="st-filter" type="search" placeholder="Filter this table…" aria-label="Filter table"></div>'}<section class="st-card">${body}<p class="st-fine">Sources are labelled per statement in the games; verify doses and indications against current guidelines and product labels.</p></section>`);
   }
 
   /* ---------- settings ---------- */
@@ -382,5 +398,7 @@
     el = $('#st-root'); profile = load();
     el.addEventListener('click', onClick); el.addEventListener('input', onInput); document.addEventListener('keydown', onKey);
   }
-  return { mount, show: route, _profile: () => profile };
+  const note = (id) => ((profile && profile.notes) || {})[id] || '';
+  function setNote(id, text) { profile.notes = profile.notes || {}; if (text.trim()) profile.notes[id] = text.slice(0, 2000); else delete profile.notes[id]; save(); }
+  return { mount, show: route, note, setNote, _profile: () => profile };
 });

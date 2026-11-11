@@ -1,206 +1,65 @@
-# Epilepsy Classifier
+# Epilepsy Study
 
-Clinician-facing decision support that takes seizure types, semiology, EEG, MRI, genetics, development and course, and maps them to the **current ILAE frameworks**:
+A visual study app for epilepsy, built for a neurologist who wants to know it in depth. Pictures first, annotations on everything, and games that make you retrieve the answer.
 
-| Step | Framework | What the app does |
-|---|---|---|
-| 1. Seizure type | **ILAE 2025** seizure classification (Beniczky et al.) | Names the class/type of each seizure entered (focal / generalized / epileptic spasms), applies the *consciousness = awareness + responsiveness* rule, flags unknown-onset tonic–clonic |
-| 2. Epilepsy type | **ILAE 2017** (Scheffer et al.) | Generalized · focal · combined generalized-and-focal · unknown, with the reasoning |
-| 3. Syndrome | **ILAE 2022** syndrome papers (Wirrell, Zuberi, Specchio, Riney, Hirsch) | Scores **38 syndromes** against their published *Mandatory / Alert / Exclusionary* tables |
-| 4. Etiology | ILAE 2017 categories; 2022 etiology-specific syndromes; 2026 Terminology Commission | Structural / genetic / infectious / metabolic / immune clues from the data |
+> **A study aid, not for patient care.** Confirm doses and indications against current guidelines and product labels. Everything runs in the browser; nothing is transmitted. Only your study progress and notes are kept in this browser's local storage.
 
-It also raises time-critical flags (epileptic spasms, super-refractory status) and suggests next investigations.
+## What is in it
 
-> **Not a medical device and not clinically validated.** It is a transparent aid for clinicians and trainees. It does not diagnose, and specialist judgement always prevails. Everything runs in the browser; nothing is transmitted. Patient findings are never stored; only your Study progress (flashcard schedule, XP, streak) is kept in this browser's local storage.
+* **Picture atlas** — 23 annotated EEG schematics, 25 seizure-movement drawings and 11 physical-sign drawings, each with features, pitfalls, which ILAE criteria use it, and a source line. **Cover the labels** hides every annotation so you can name the parts from memory; tap the picture to peek. A **My notes** box on every entry keeps your own hooks and cases.
+* **Drug diagrams** — one annotated synapse per mechanism group (sodium channel, SV2A, GABA-A, calcium channel, AMPA/NMDA, multi-target, other) with the target highlighted and every drug in the group.
+* **Memory hooks** — a vivid one-line mnemonic for each of 30 drugs and 30 genes, shown on flashcards, in quiz explanations and on the cheat sheets.
+* **Games** — daily rounds, flashcards with spaced repetition, quiz blitz (and survival), the syndrome detective, name-that-picture, memory match, sorting and ordering puzzles, and an EEG lab (10–20 electrodes, phase reversal).
+* **Cheat sheets** — drug diagrams, drugs, genes, trials, and a status epilepticus card.
+* **Progress** — XP, levels, streaks, 15 badges, a topic mastery map and a confetti burst for perfect rounds. Back up or move your progress as text from the settings page.
 
-## Run
+## How it is built to be memorable
 
-```bash
-# no build step — open the file directly
-open index.html            # or: npm run serve  →  http://localhost:8080
-
-npm test                   # 110 tests (Node ≥ 20, no dependencies)
-```
-
-## Using it
-
-The app opens on the **Guided assessment**, built for people who do not want to fill in a clinical form:
-
-1. **About the person** — age at the first seizure (type a number, tap a unit), sex, development.
-2. **What the seizures look like** — tap the pictures that match (drawings of the movements; the figures follow the age you gave: infant, child or adult). Focal seizures ask one follow-up: does the person stay aware?
-3. **When it happens** — sleep or awake, triggers, clusters, how it is going.
-4. **EEG** — match the report to schematic traces: background rhythm, then spikes and spike-wave.
-5. **Scan, genes and other tests** — MRI, genetic testing, a few key results, family history.
-6. **Physical examination** — pictures of skin, face, tone and neurological signs.
-
-Every step can be skipped ("Skip this step"), and a live *So far: CAE · possible* line shows how the answers are being read. The **Result** is written in plain language: the best match with a one-line description, what fits, what is still missing, the seizure and epilepsy type, and what to do next — with *See every criterion* opening the full ILAE checklist. The browser Back button (and the Android back button) steps back through the questions.
-
-How answers become findings: a tapped picture is **present**. In the seizure and examination steps, pictures you did *not* tap become **absent** once you have tapped at least one ("anything you don't tap counts as not seen"); a step where you tap nothing stays *not assessed*. Everywhere else — timing, EEG, tests — un-tapped items are never treated as absent. The guided assessment and the **Full checklist** share one state, so you can switch at any time.
-
-The **Library** holds the reference material: movements & poses, physical signs, the EEG atlas, and the diagrams.
-
-## Study mode
-
-The **Study** tab turns the same ILAE content into games, for learning epilepsy in depth rather than looking cases up.
-
-| Game | What it trains |
+| Technique | Where it appears |
 |---|---|
-| **Daily rounds** | Ten mixed questions, identical for everyone on a given day; keeps a streak |
-| **Flashcards** | Spaced repetition (an SM-2 variant): again/hard/good/easy, with next-interval previews; new-card limit per day |
-| **Quiz blitz** | Pick topics and length, or *survival* with three lives; misses are scheduled for tomorrow's review |
-| **Syndrome detective** | Clues appear one at a time, broad to narrow, worth fewer points as you reveal more. Clues are the syndrome's own mandatory (and “not present”) criteria and **every wrong option is a syndrome the rule engine rejects for the full clue set**, so each case has one defensible answer |
-| **Name that picture** | EEG patterns, seizure movements and physical signs drawn without captions or hints |
-| **Memory match** | Flip tiles: genes ↔ syndromes, abbreviations ↔ names, onset ages, EEG/movement pictures ↔ names |
-| **Sort & order** | Build the ILAE 2025 tree, sort drugs by mechanism, syndromes by group or epilepsy type, line syndromes up by onset age, order the status-epilepticus algorithm and other sequences |
-| **EEG lab** | 10–20 electrode names (tap the head map), and phase-reversal localisation in a bipolar chain |
-| **Cheat sheets** | Filterable tables of drugs, genes and trials, and a status-epilepticus card |
+| Retrieval practice | Every game asks before it tells; cover-the-labels in the atlas |
+| Spaced practice | SM-2-style flashcards; misses return tomorrow |
+| Interleaving | Daily rounds and quizzes mix topics |
+| Dual coding | A drawing, trace, head map or synapse diagram beside the words |
+| Elaboration, concrete examples | Every answer explains why; hooks tie facts to an image |
+| Game mechanics | Streaks, XP, levels, badges (evidence is for engagement, not magic) |
 
-Levels (from *Medical student* to *Back of my hand*), XP, streaks, 15 badges and a topic mastery map track progress. Progress is stored only in this browser (and, in the APK, the app's private storage); the settings page can copy it as text to back it up or move it to another device.
+The first five follow Weinstein, Madan & Sumeracki, *Teaching the science of learning*, Cognitive Research: Principles and Implications 2018 (https://link.springer.com/article/10.1186/s41235-017-0087-y). Independent evidence for picture mnemonics specifically is limited, so the hooks are an aid and not the method.
 
-**Where the content comes from.** Syndrome, EEG, movement and sign questions are generated from the same tables the scorer uses (`kb.js`, `morph.js`, `semio.js`, `physical.js`), so they cannot disagree with it. Hand-written content (`src/bank.js`: 114 facts, 30 drugs, 30 genes, 16 trials, 6 sequences) carries a source on every statement and a flag:
+## Where the content comes from
 
-* **checked source** — the figure or statement was checked against the abstract of the cited paper on PubMed when the bank was built (ILAE 2014 epilepsy definition, 2010 drug-resistance definition, 2025 seizure classification, ILAE 2015 status epilepticus, RAMPART, ESETT, Kwan & Brodie 2000, Glauser 2010 CAE trial, SANAD II, ICISS 18-month, Wiebe 2001, ERSET, SANTE, RNS, EXIST-3, cannabidiol in Dravet and LGS, fenfluramine in Dravet, AAN/AES 2017 SUDEP, AAN/AES/SMFM 2024 pregnancy guideline, ILAE 2023 neonatal guideline, ILAE hippocampal-sclerosis classification);
-* **standard teaching** — textbook-level knowledge (most pharmacology, genetics and semiology pearls), not re-verified; confirm against the current guideline or product label.
+Syndrome, EEG, movement and sign questions are generated from the ILAE 2022 criteria tables (`kb.js`) and the atlases, so they cannot disagree with each other. The syndrome detective uses the rule engine: every wrong option is a syndrome the criteria reject for the full clue set. Hand-written content (`src/bank.js`: 114 facts, 30 drugs, 30 genes, 16 trials, 6 sequences) carries a source on every statement and a flag:
 
-Where a correct answer would be conspicuously longer than the distractors, the game asks for **recall** (think, reveal, self-grade) instead of a multiple-choice, so there is no “pick the longest” shortcut. The study content is a learning aid, not clinical guidance: doses and indications differ between jurisdictions.
+* **checked source** — checked against the abstract of the cited paper on PubMed when the bank was built (ILAE 2014 epilepsy definition, 2010 drug-resistance definition, 2025 seizure classification, ILAE 2015 status epilepticus, RAMPART, ESETT, Kwan & Brodie 2000, the CAE trial, SANAD II, ICISS, Wiebe 2001, ERSET, SANTE, RNS, EXIST-3, cannabidiol, fenfluramine, SUDEP and pregnancy guidelines, ILAE 2023 neonatal guideline, ILAE hippocampal-sclerosis classification);
+* **standard teaching** — textbook-level knowledge, not re-verified.
 
-## Deploy (Vercel)
+Where a correct answer would be conspicuously the longest option, the game asks for recall (think, reveal, self-grade) rather than a multiple choice.
 
-Static site, no build step. **The Vercel project's Root Directory must be `epilepsy-classifier`** (the repository root contains unrelated files that Vercel cannot build).
+## Run, test, deploy
 
 ```bash
-cd epilepsy-classifier
-npx vercel deploy --prod       # first run links/creates the project
+open index.html            # no build step; or: npm run serve → http://localhost:8080
+npm test                   # 90 tests (Node ≥ 20, no dependencies)
 ```
 
-Or import the GitHub repo in the Vercel dashboard → *Root Directory* = `epilepsy-classifier`, Framework = *Other*, leave build/install commands empty.
+**Vercel:** static site, Root Directory `epilepsy-classifier`, Framework *Other*, no build or install command. `vercel.json` sets a strict Content-Security-Policy (no network access from the page, no inline scripts or styles).
 
-`vercel.json` sets a strict Content-Security-Policy (`default-src 'none'`, `connect-src 'none'`, no inline script/style) plus `nosniff`, `no-referrer`, `X-Frame-Options: DENY`. This makes the privacy claim enforceable by the browser: the page **cannot** make any network request, so no patient data can leave the device. Keep it that way if you add features (no analytics, no remote fonts/CDNs).
-
-## Android app (APK)
-
-`android/` wraps the same offline web app in a minimal native shell — **no Gradle/Android Studio needed**:
-
-```bash
-sudo apt-get install -y default-jdk-headless aapt apksigner zipalign dalvik-exchange libandroid-23-java android-sdk-platform-23
-./android/build.sh          # → android/build/epilepsy-classifier.apk  (~70 KB)
-```
-
-* **Install:** copy the APK to the phone, open it, and allow *Install unknown apps* for your file manager/browser. Play Protect may warn because the app is not from the Play Store.
-* **Privacy by construction:** the manifest declares **no permissions** (no `INTERNET`), so Android itself blocks all network access; the WebView additionally disables network loads and only serves bundled assets. Patient findings are never stored (no cache or form data). DOM storage is enabled solely so the Study mode can keep its progress in the app's private storage.
-* **Signing:** the script generates a throw-away key in `android/.signing/` (git-ignored). An update only installs over an existing copy if signed with the **same key**, so for a long-lived app create your own key once (`keytool -genkeypair …`) and run `KEYSTORE=… KS_ALIAS=… KS_PASS=… ./android/build.sh`.
-* **Bundled files** are exactly `index.html`, `styles.css` and `src/*.js` — the code covered by `npm test`.
-* Targets API 34, min API 21 (Android 5.0+). Not distributable on Google Play as-is (needs an upload key, listing, and — because it presents clinical decision support — a regulatory/medical-device review).
-
-## Physical signs and body size
-
-* **Physical signs** (`#/physical`): 11 examination findings with labelled drawings — facial capillary malformation (port-wine stain) in V1 with the trigeminal territories, microcephaly (head-size schematic), dysmorphology survey, facial asymmetry; hypomelanotic (ash-leaf) macules, facial angiofibromas and café-au-lait macules; hypotonia (typical vs hypotonic posture, head lag), hemiparesis / hemiatrophy / Todd paresis, visual-field deficit (homonymous hemianopia); ataxia and paroxysmal dyskinesia. Each shows which ILAE criteria use the sign (derived from the knowledge base), a pitfall, and a basis line.
-* **Sources differ by entry, and each says so.** ILAE-sourced: the V1 capillary malformation (Sturge–Weber alert; HHE and Rasmussen criteria), microcephaly → SLC2A1/GLUT1 testing, dysmorphism → chromosomal disorder (MEI exclusion; microarray in drug-resistant IGE), central hypotonia / cortical visual impairment in early DEE, hemiparesis and hemianopia (HHE, Rasmussen), contralateral facial weakness (MTLE-HS), movement disorders (GLUT1DS, PRRT2). **The skin signs of tuberous sclerosis and neurofibromatosis are not described in the ILAE syndrome papers**; they follow the international consensus criteria (Northrup 2021, *Pediatr Neurol* 123:50–66; Legius 2021, *Genet Med* 23:1506–1513, both confirmed in PubMed) and are not scored.
-* **In the assessment:** new optional findings (microcephaly, facial asymmetry, hypomelanotic macules, angiofibromas, café-au-lait) feed *Etiology clues* (neurocutaneous disorder; Sturge–Weber) and *Next steps* (GLUT1 testing with microcephaly; genetics review with dysmorphism). Every examination finding has a figure button.
-* **Body size:** the Movements tab can draw every figure as an **infant, child or adult** (head ≈ ¼, ⅙, ⅛ of body length; limbs and trunk scale about the ground line). Entries that are infant-specific (spasms) keep infant proportions. Standard anatomy, not ILAE content.
-* Skin signs vary with skin tone and age, and drawings are schematic; they are no substitute for dermatological examination.
-
-## Movements & poses
-
-* **Movements & poses** (`#/movements`): 25 seizure movements and postures — tonic, fencing posture, figure-of-4, dystonic posturing, version, focal/hemiclonic, tonic–clonic phases, myoclonic jerks, myoclonic absence ("ratcheting up"), epileptic spasms (flexor/extensor/cluster), atonic head-drop/collapse, myoclonic–atonic drop, negative myoclonus, hyperkinetic movements, the CDKL5 hyperkinetic→tonic→spasms sequence, automatisms, eyelid myoclonia, reading-induced orofacial myoclonia, SeLECTS facial seizures, gelastic, ictal vomiting, fearful screaming, absence/behavioural arrest and ictal paresis. Each has 1–3 labelled **frames** (a stylised mannequin or close-up face; the patient's right is on the viewer's left; orange marks the moving parts), features, lateralizing value where it has been studied, a pitfall and a *basis* line.
-* **Verified lateralization figures:** figure-of-4 — extended elbow contralateral to ictal onset in 35 of 39 patients (Kotagal 2000); unilateral dystonic posturing in temporal lobe epilepsy — contralateral with PPV 92%, versus 40% for tonic posturing (Bleasel 1997). Both were checked against their PubMed abstracts.
-* **Source caveat:** the ILAE 2022 semiology glossary (Beniczky et al., *Epileptic Disord* 24:447–495, doi:10.1684/epd.2022.1430) could not be read in this build environment (its repository sits behind a bot-challenge page). Movement wording is therefore taken from the ILAE 2025 paper and the 2022 syndrome papers where they describe it, and otherwise from standard semiology teaching — each entry says which. **Please verify the standard-teaching entries against the glossary.**
-* New optional findings in the form: fencing posture, figure-of-4, dystonic posturing, automatisms, ictal paresis and negative myoclonus. Focal-only postures imply the focal seizure class (ILAE 2025 descriptors); each movement finding has a figure button that opens its card.
-* Figures are generated by `src/figures.js` (two-bone inverse kinematics, so poses are specified by where the hand or foot goes); data are in `src/semio.js`.
-
-## EEG atlas and diagrams
-
-* **EEG atlas** (`#/atlas`): 23 EEG morphologies — background, burst/chaotic, generalized, focal and provoked/ictal patterns. Each has a labelled multichannel **schematic waveform**, features (frequency, field, state, significance), the syndrome criteria that use it, a common pitfall, and a *basis* line saying whether the wording comes from the ILAE papers or from standard EEG teaching. Every EEG finding in the form has an activity-icon button that opens the same card in a dialog, and checklist rows link to the patterns they reference.
-* **Diagrams** (`#/diagrams`): (1) age-at-onset window for all 38 syndromes, **derived from the knowledge base's own age criteria** (so it cannot disagree with the scorer), with alert ranges and the patient's onset marked; (2) the ILAE 2025 seizure classification tree (4 classes, 21 types); (3) a flow diagram of how mandatory / alert / exclusionary criteria combine. A one-row onset window also appears in the leading-syndrome card.
-* **Honesty about the figures:** waveforms are *stylised schematics* generated deterministically from a seeded model (negative up), not recordings. The "used by" lists are computed from `src/kb.js` and are polarity-aware (e.g. "alert when absent"). Two patterns (`eeg.ppr`, `eeg.temporal_spikes`) are reference-only: no ILAE syndrome table scores them.
-* **Not covered yet:** MRI/imaging morphology diagrams and seizure-semiology diagrams.
-
-## Design notes
-
-* **Guided first, checklist second:** the default screen asks one question at a time, in plain language, with pictures instead of jargon; touch targets are at least 44 px, the Back/Continue bar is always on screen, nothing is required, and the answer is written for a person ("Best match… what fits… what to do next") rather than as a score sheet. The ILAE checklist remains one tap away for clinicians who want every criterion.
-* **Layout (full checklist):** input on the left, a sticky *Assessment* panel on the right that mirrors the ILAE ladder — **1 Seizure type → 2 Epilepsy type → 3 Syndrome → 4 Etiology** — with the best-fitting syndrome as a hero card (mandatory-criteria meter, alerts, unchecked exclusions) and a criterion-by-criterion checklist. On phones the panel sits below the form with a bottom bar showing the leading syndrome.
-* **Speed:** the *Filter findings* box searches all ~150 findings; answered rows are highlighted; every entered finding can be removed with one tap from the *Findings entered* chips.
-* **Accessibility:** WCAG AA contrast in light and dark themes (checked numerically), keyboard-operable controls with visible focus, status conveyed by icon *and* text (never colour alone), `prefers-reduced-motion` respected.
-* **No external assets:** icons are an inline SVG sprite; the Inter typeface (SIL OFL, `fonts-OFL.txt`) is embedded as a data URI in `fonts.css` (regenerate with `tools/make-fonts-css.sh`). No inline styles/scripts, so the strict CSP in `vercel.json` holds.
-* **Print / PDF:** a purpose-built report layout (about 3 pages): leading syndrome's full checklist, ruled-out syndromes as one-liners.
-
-## How a syndrome is scored
-
-Every finding is **tri-state**: present / absent / not assessed. Missing information is *never* treated as absence — unless you tick a section's **"reviewed — treat unticked as absent"** box (this is how you tell the app "I looked, and these were not present").
-
-For each syndrome the ILAE table is evaluated criterion by criterion:
-
-* **Mandatory** — all must be met → *"Mandatory criteria met"*. Any unmet → *not consistent*. Unknown → *"Possible — data missing"*.
-* **Exclusionary** — any present → *not consistent* (the reason is shown).
-* **Alerts** — criteria that are rare in the syndrome; they do not exclude but lower confidence ("rethink the diagnosis").
-* **Course-dependent** items (e.g. "drug-resistant epilepsy", "remission by adolescence") are marked ⏳ and never block an early diagnosis.
-* A syndrome is only considered when its **defining criterion** is met (e.g. typical absences for CAE; a KCNQ2 variant for KCNQ2-DEE), so the output is not a wall of irrelevant candidates.
-
-Ranking: criteria-met syndromes first (fewer alerts / unassessed exclusions first), then possible ones (more mandatory criteria satisfied first).
-
-## Knowledge base
-
-`src/kb.js` is a plain-text, human-auditable encoding of the ILAE tables:
-
-```
-## CAE | Childhood absence epilepsy | CAE | IGE | hirsch2022 | Table 3 | Generalized
-M sz    | Typical absence seizures                          :: sz.abs_typical @core
-M eeg   | 3 Hz (2.5–4 Hz) generalized spike-wave …          :: eeg.gsw_3hz
-A sz    | Staring spells >30 s, or postictal confusion …    :: ctx.staring_gt30s
-E onset | Onset <2 or >13 years                             :: age<2y | age>13y
-```
-
-Expressions use finding IDs from `src/vocab.js`, `& | ! ( )`, and age predicates (`age<2y`, `age[2y,3y]`, `now>4m`). A criterion with `::  -` is shown for manual checking but not scored. To change a rule, edit one line; `npm test` verifies that the file parses, that every referenced finding exists, and that eight worked vignettes (`src/examples.js`) still reach the expected syndrome.
-
-## Provenance and verification status
-
-The 38 criteria tables were extracted from the ILAE-hosted position-paper PDFs (Epilepsia 2022;63:1333–1499) and the ILAE 2025 seizure paper was read in full from PMC. The 2017 paper's text was checked for the epilepsy-type rules used here. The 2026 Terminology Commission etiology report was read at **abstract level only**.
-
-**What has and has not been checked:**
-
-* ✅ Column assignment (Mandatory/Alert/Exclusionary) was parsed by character position under each table header, then each table was read.
-* ✅ Automated tests: KB integrity, expression logic, age boundaries, tri-state behaviour, mutation-checked.
-* ⚠️ The encoding is by an AI assistant and has **not yet been reviewed line-by-line by an epileptologist**. That review is the most valuable next step.
-* ⚠️ **Not validated against real patient cohorts.** No claims of sensitivity/specificity.
-
-**Interpretation choices to be aware of**
-
-* `age>13y` means strictly older than 13.0 years; a range such as "2–3 years" is read as 2.0 to <4.0 years.
-* Where the ILAE table gives an "A **OR** B" alert about *lack of* a variant or family history (SeLNE, SeLIE), it is read as "neither present".
-* Narrative items that cannot be entered as a finding are shown for manual verification.
-* Syndromes without a formal mandatory/exclusionary table are **not** scored: GEFS+, "genetic generalized epilepsy, syndrome not specified", "focal epilepsy, syndrome not specified". The app falls back to the epilepsy type (ILAE 2017 explicitly allows this as the final diagnostic level).
-* Neonatal *seizure* classification (Pressler 2021) is outside the 2025 seizure paper's scope and is not implemented; neonatal *syndromes* are.
-
-## Sources
-
-1. Beniczky S, Trinka E, Wirrell E, et al. Updated classification of epileptic seizures: Position paper of the ILAE. *Epilepsia* 2025;66:1804–1823. doi:10.1111/epi.18338
-2. Scheffer IE, Berkovic S, Capovilla G, et al. ILAE classification of the epilepsies. *Epilepsia* 2017;58:512–521. doi:10.1111/epi.13709
-3. Wirrell EC, Nabbout R, Scheffer IE, et al. Methodology for classification and definition of epilepsy syndromes with list of syndromes. *Epilepsia* 2022;63:1333–1348. doi:10.1111/epi.17237
-4. Zuberi SM, Wirrell E, Yozawitz E, et al. … syndromes with onset in neonates and infants. *Epilepsia* 2022;63:1349–1397. doi:10.1111/epi.17239
-5. Specchio N, Wirrell EC, Scheffer IE, et al. … syndromes with onset in childhood. *Epilepsia* 2022;63:1398–1442. doi:10.1111/epi.17241
-6. Riney K, Bogacz A, Somerville E, et al. … syndromes with onset at a variable age. *Epilepsia* 2022;63:1443–1474. doi:10.1111/epi.17240
-7. Hirsch E, French J, Scheffer IE, et al. ILAE definition of the idiopathic generalized epilepsy syndromes. *Epilepsia* 2022;63:1475–1499. doi:10.1111/epi.17236
-8. Specchio N, Auvin S, Bisulli F, et al. How should etiology change the classification of the epilepsies? Report from the ILAE 2021–2025 Terminology Commission. *Epilepsia* 2026. doi:10.1002/epi.70467 (abstract only)
+**Android:** `android/build.sh` packs the same files into a WebView app (no Gradle; needs `aapt`, `apksigner`, `zipalign`, a JDK). The manifest declares no permissions, so the OS blocks all network access. DOM storage is enabled solely so study progress and notes persist.
 
 ## Layout
 
 ```
 index.html  styles.css
-src/vocab.js     finding vocabulary (inputs) + ILAE 2025 seizure mapping
-src/kb.js        the 38 syndrome criteria tables
-src/engine.js    expression parser, tri-state evaluator, scoring, epilepsy type, flags, next steps
-src/examples.js  eight teaching vignettes (also regression fixtures)
-src/morph.js     EEG morphology atlas content (23 patterns)
-src/diagrams.js  waveform / onset-chart / seizure-tree / flow diagram generators
-src/figures.js   mannequin / face figure renderer (inverse kinematics)
-src/semio.js     movements & poses content (25 entries)
-src/physical.js  physical-signs content (11 entries)
-src/plain.js     one-line plain-language description of each syndrome
-src/wizard.js    guided assessment: step definitions, picture cards → findings, plain-language result
-src/bank.js      hand-written, source-labelled study content (facts, drugs, genes, trials, sequences)
-src/quiz.js      study engine: deck, questions, detective (engine-checked), puzzles, spaced repetition, XP
-src/study.js     study UI: hub, flashcards, quizzes, puzzles, EEG lab, cheat sheets
-src/views.js     library lists, diagrams page, dialog, router
-src/app.js       UI
+src/bank.js      hand-written, source-labelled study content and memory hooks
+src/quiz.js      study engine: deck, questions, detective, puzzles, spaced repetition, XP, mechanism diagrams
+src/study.js     study UI: hub, games, cheat sheets
+src/views.js     picture atlas (EEG, movements, signs, diagrams), annotation cover, notes, router
+src/kb.js        ILAE 2022 syndrome criteria (data for the games)
+src/engine.js    criteria parser and evaluator (used by the detective)
+src/morph.js semio.js physical.js   atlas content; src/diagrams.js figures.js   drawings
 tests/           node:test suite
 ```
+
+## Sources
+
+ILAE: Beniczky 2025 (seizure classification); Scheffer 2017 (epilepsies); Wirrell, Zuberi, Specchio, Riney and Hirsch 2022 (syndromes); Fisher 2014; Kwan 2010; Trinka 2015; Blümcke 2013; Pressler 2023. Guidelines and trials as listed on the cards, with PMIDs where checked.

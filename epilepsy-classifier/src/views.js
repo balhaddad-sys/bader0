@@ -35,12 +35,13 @@
   const isSem = (m) => !!m.frames;
   function morphBody(m, withFig) {
     const fig = !withFig ? '' : isSem(m) ? `<div class="fig pose-fig" data-sem="${m.id}" data-label="${esc(m.name)}"></div>` : `<div class="fig" data-fig="${m.fig}" data-label="${esc(m.name)}"></div>`;
-    return `${fig}
+    return `${fig}${withFig ? '<p class="fig-tools"><button type="button" class="btn sm" data-cover>Cover the labels</button><span>Name each part from memory, then tap the picture to peek.</span></p>' : ''}
       <dl class="feat">${m.features.map((f) => `<div><dt>${esc(f[0])}</dt><dd>${esc(f[1])}</dd></div>`).join('')}</dl>
       <div class="used"><h5>Used by syndrome criteria</h5>${usageHtml(m.id)}</div>
       <div class="pit">${IC('alert')}<p><b>Pitfall.</b> ${esc(m.pitfall)}</p></div>
       ${m.refs ? `<p class="src">References: ${m.refs.map(esc).join(' · ')}</p>` : ''}
-      <p class="src">Basis: ${esc(m.basis)}</p>`;
+      <p class="src">Basis: ${esc(m.basis)}</p>
+      ${withFig ? `<label class="note"><span>My notes</span><textarea data-note="${esc(m.id)}" rows="2" placeholder="Your own hook, a case you saw, a question to look up…">${esc(window.EpiStudy ? window.EpiStudy.note(m.id) : '')}</textarea></label>` : ''}`;
   }
   const fillFigs = (root) => $$('.fig:not([data-done])', root).forEach((el) => {
     if (el.dataset.fig) el.innerHTML = D.waveformSvg(el.dataset.fig, el.dataset.label);
@@ -97,7 +98,13 @@
       if (e.target === dlg || e.target.closest('[data-close]')) dlg.close();
       const a = e.target.closest('[data-atlas]'); if (a) { dlg.close(); location.hash = S.byId[a.dataset.atlas] ? '#/movements' : P.byId[a.dataset.atlas] ? '#/physical' : '#/atlas'; setTimeout(() => showInList(a.dataset.atlas), 60); }
     });
-    document.addEventListener('click', (e) => { const b = e.target.closest('[data-morph]'); if (b) openMorph(b.dataset.morph); });
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-morph]'); if (b) openMorph(b.dataset.morph);
+      const cv = e.target.closest('[data-cover]');
+      if (cv) { const f = cv.closest('.m-body, .dlg-b').querySelector('.fig'); if (f) { const on = f.classList.toggle('cover'); f.classList.remove('peek'); cv.textContent = on ? 'Show the labels' : 'Cover the labels'; } return; }
+      const pk = e.target.closest('.fig.cover'); if (pk) pk.classList.toggle('peek');
+    });
+    document.addEventListener('input', (e) => { const t = e.target.closest('[data-note]'); if (t && window.EpiStudy) window.EpiStudy.setNote(t.dataset.note, t.value); });
   }
 
   /* ---------- diagrams page ---------- */
@@ -108,7 +115,7 @@
     $('#dg-onset').innerHTML = D.timelineSvg(rows, { width: 820, labelW: 92, rowH: 18, marker: onset, label: 'Age at seizure onset for each of the 38 syndromes, as encoded from the ILAE criteria' });
     $('#dg-tree').innerHTML = D.seizureTreeHtml();
     $('#dg-flow').innerHTML = D.scoringFlowSvg();
-    $('#dg-onset-note').textContent = onset === null ? 'Enter an onset age in the guided assessment or the full checklist to see where it falls.' : (shown.size ? 'Highlighted: syndromes currently meeting or approaching their criteria.' : 'Your onset age is marked; no syndrome is highlighted yet.');
+    $('#dg-onset-note').textContent = 'Each bar is the onset window the ILAE 2022 criteria accept for that syndrome.';
   }
 
   /* ---------- body size toggle + proportions ---------- */
@@ -139,10 +146,10 @@
   }
 
   /* ---------- router ---------- */
-  const VIEWS = ['guided', 'assess', 'library', 'study', 'atlas', 'movements', 'physical', 'diagrams'];
+  const VIEWS = ['study', 'library', 'atlas', 'movements', 'physical', 'diagrams'];
   const TAB_OF = { atlas: 'library', movements: 'library', physical: 'library', diagrams: 'library' };
   function route() {
-    const m = /^#\/(\w+)/.exec(location.hash), v = m && VIEWS.includes(m[1]) ? m[1] : (m ? 'guided' : (document.body.dataset.view || 'guided'));
+    const m = /^#\/(\w+)/.exec(location.hash), v = m && VIEWS.includes(m[1]) ? m[1] : (m ? 'study' : (document.body.dataset.view || 'study'));
     document.body.dataset.view = v;
     VIEWS.forEach((k) => { $('#view-' + k).hidden = k !== v; });
     $$('.tab').forEach((t) => { if (t.dataset.view === (TAB_OF[v] || v)) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current'); });

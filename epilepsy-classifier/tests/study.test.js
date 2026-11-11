@@ -231,3 +231,25 @@ test('Quick regression: the study modules load without a DOM', () => {
   assert.ok(M.ITEMS.length && S.ITEMS.length && P.ITEMS.length);
   assert.ok(Q.topicSummary(Q.blankProfile()).every((t) => t.total > 0), 'every topic has cards');
 });
+
+/* ------------------------------------------------------------------ v0.8: hooks and diagrams */
+test('Memory hooks: every drug and gene has one, and it is shown on its card and in its explanations', () => {
+  B.ASM.forEach((a) => assert.ok(a.hook && a.hook.length > 20 && a.hook.length < 200, a.id + ' hook'));
+  B.GENES.forEach((g) => assert.ok(g.hook && g.hook.length > 20 && g.hook.length < 200, g.g + ' hook'));
+  assert.equal(new Set(B.ASM.map((a) => a.hook)).size, B.ASM.length, 'hooks must be distinct');
+  const deck = Q.buildDeck();
+  B.ASM.forEach((a) => { const f = Q.face(deck.byId['asm:' + a.id]); assert.ok(f.back.includes(a.hook.slice(0, 30).replace(/&/g, '&amp;').replace(/’/g, '’')) || f.back.includes('class="hook"'), a.id); assert.ok(f.back.includes('class="mech"'), a.id + ' diagram'); });
+  B.GENES.forEach((g) => assert.ok(Q.face(deck.byId['gene:' + g.g]).back.includes('class="hook"'), g.g));
+  Q.variants(deck.byId['asm:vigabatrin'], Q.rng(1)).forEach((q) => assert.match(q.explain, /Hook:/));
+});
+
+test('Mechanism diagrams: one per drug group, valid, annotated and with no stray numbers', () => {
+  Object.keys(B.BINS_ASM).concat(['other']).forEach((k) => {
+    const svg = Q.mechSvg(k);
+    assert.ok(svg.startsWith('<svg') && svg.endsWith('</svg>') && !/NaN|undefined/.test(svg), k);
+    assert.ok(svg.includes(Q.MECH[k][0].replace(/&/g, '&amp;')) || svg.includes(Q.MECH[k][0]), k + ' carries its annotation');
+    if (k !== 'other') assert.ok(/class="ms-hi"/.test(svg), k + ' highlights its target');
+  });
+  assert.equal((Q.mechSvg('sv2a').match(/ms-hi/g) || []).length, 1, 'only the vesicle is highlighted for SV2A ligands');
+  B.ASM.forEach((a) => assert.ok(Q.MECH[a.bin], a.id));
+});

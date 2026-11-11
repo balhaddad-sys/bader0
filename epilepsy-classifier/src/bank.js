@@ -180,6 +180,75 @@
     { g: 'GNAQ (somatic R183Q)', fn: 'G-protein α-q subunit (somatic mosaic activating variant)', syn: ['SWS'], tells: ['Somatic mosaic activating variant in Sturge–Weber syndrome and port-wine birthmarks'], pearl: 'Sturge–Weber syndrome.' },
   ];
 
+
+  /* ---- memory hooks: one vivid line per drug and gene (mnemonic aids; the facts they point to are on the cards) ---- */
+  const HOOKS = {
+    'carbamazepine': 'The car that tunes its own engine (autoinduction) and swerves into the HLA-B*15:02 crash barrier.',
+    'oxcarbazepine': 'Carbamazepine’s cousin with a leaky salt shaker: the sodium drops.',
+    'eslicarbazepine': 'Eslicarbazepine is the once-a-day way to deliver licarbazepine.',
+    'phenytoin': 'A bath that overflows: past a point one extra drop floods it (zero-order). Swollen gums, hairy, coarse face.',
+    'lamotrigine': 'Rash if you rush: go slow, and halve the start dose beside valproate.',
+    'lacosamide': 'Slow gate (slow inactivation) and slow heart (PR prolongation).',
+    'rufinamide': 'Rufinamide ruffles the QT short: never in familial short-QT.',
+    'levetiracetam': 'The lever on the vesicle (SV2A), and the mood goes “Keppra rage”.',
+    'brivaracetam': 'Brisk levetiracetam: a tighter grip on the same vesicle protein.',
+    'phenobarbital': 'A barbed latch that holds the GABA door open longer.',
+    'primidone': 'Primi-DONE: it turns into phenobarbital and PEMA.',
+    'clobazam': 'The 1,5-benzodiazepine: its active metabolite piles up when CYP2C19 is blocked.',
+    'vigabatrin': 'The vision bat: it blocks GABA-T and flies off with your peripheral fields.',
+    'tiagabine': 'Traps GABA in the cleft by shutting the GAT-1 gate; can tip a generalized epilepsy into non-convulsive status.',
+    'stiripentol': 'A stirring pot of enzymes: it raises clobazam and valproate.',
+    'ganaxolone': 'A gentle neuro-steroid for CDKL5.',
+    'ethosuximide': 'ETHOS for absences: one thalamic T-type target, one seizure type.',
+    'gabapentin': 'The α2δ gatekeeper: kidneys only, weight and wobble.',
+    'pregabalin': 'Gabapentin’s faster cousin on the same α2δ gate.',
+    'perampanel': 'Per-AMPA-nel: long half-life, short temper.',
+    'felbamate': 'Felbamate fells the marrow and the liver.',
+    'valproate': 'The broad generalist: weight, hair, tremor, teratogen. POLG disease: never.',
+    'topiramate': 'Stones, pins and needles, and “Dopamax” word-finding trouble: a carbonic-anhydrase brake.',
+    'zonisamide': 'Sulfa-built: stones, less sweating, no use in sulfa allergy.',
+    'cenobamate': 'Climb the ladder slowly or DRESS knocks you off; it also shortens the QT.',
+    'cannabidiol': 'Green leaf, raised liver enzymes (worse with valproate), more clobazam metabolite.',
+    'fenfluramine': 'Fen-valve: echo the heart valves.',
+    'everolimus': 'mTOR brakes on tuberous-sclerosis overgrowth.',
+    'acth': 'The steroid hammer for spasms; vigabatrin first when it is a tuber.',
+    'retigabine': 'Opens the K-gate, paints the retina and skin blue-grey.',
+  };
+  const GENE_HOOKS = {
+    'SCN1A': 'Remove the interneuron brake and fever drives off the road: never add sodium-channel blockers.',
+    'SCN2A': 'Early Gain, Late Loss: early gain-of-function wants a blocker, late loss-of-function does not.',
+    'SCN8A': 'A gate stuck open: high-dose sodium-channel blockers close it.',
+    'KCNQ2': 'M-current is the brake pedal: half a pedal gives self-limited seizures, a jammed pedal (dominant-negative) gives a DEE.',
+    'KCNQ3': 'KCNQ2’s quieter partner: 3 follows 2.',
+    'KCNT1': 'Slack channel gone hyperactive: migrating focal seizures.',
+    'STXBP1': 'Munc18 is the vesicle dock-worker: too few workers, early DEE with tremor.',
+    'CDKL5': 'X-linked kinase: hyperkinetic, then tonic, then spasms; ganaxolone.',
+    'PCDH19': 'Mosaic mix-up of cells (cellular interference) hits girls: fever clusters and fearful screams.',
+    'ARX': 'X-linked homeobox: lissencephaly, ambiguous genitalia (XLAG) and spasms.',
+    'SLC2A1': 'GLUT1 is the brain’s glucose door: stuck door, low CSF sugar, keto fuel.',
+    'ALDH7A1': 'B6 is the key, lysine is the trap.',
+    'PNPO': 'Makes active B6 (PLP): give PLP, not plain pyridoxine.',
+    'TSC1 / TSC2': 'mTOR runaway: tubers, shagreen, ash-leaf, angiofibroma → vigabatrin and everolimus.',
+    'DEPDC5 / NPRL2 / NPRL3': 'GATOR1 is the mTOR gatekeeper: lose it and focal cortex overgrows.',
+    'CHRNA4 / CHRNB2 / CHRNA2': 'Nicotinic receptor: a night-time smoker, with sleep-related hypermotor seizures.',
+    'LGI1': 'One name, two diseases: the gene gives auditory-aura epilepsy, the antibody gives limbic encephalitis.',
+    'PRRT2': 'Paroxysmal at every age: infant seizures, kinesigenic dyskinesia, hemiplegic migraine; carbamazepine works.',
+    'GRIN2A': 'NMDA subunit and lost language: the epilepsy–aphasia spectrum.',
+    'CHD2': 'Flash and jerk: photosensitive myoclonic epilepsy.',
+    'SLC6A1': 'GAT-1 transporter: myoclonic-atonic drops (Doose).',
+    'GABRG2': 'γ2 anchors benzodiazepines: GEFS+ and febrile seizures.',
+    'CSTB': 'Repeat expansion, stimulus-sensitive jerks, and phenytoin makes it worse.',
+    'EPM2A / NHLRC1': 'Laforin and malin: sugar-body disease with visual seizures and rapid decline.',
+    'CLN2 (TPP1)': 'Slow flicker (1–2 Hz) fires spikes; enzyme goes into the ventricle.',
+    'KCNC1': 'Kv3.1 fast-spiking: MEAK is myoclonus, epilepsy and ataxia.',
+    'NEU1': 'Sialidosis: cherry-red spot plus myoclonus.',
+    'POLG': 'Mitochondrial polymerase: valproate means liver failure.',
+    'UBE3A': 'Maternal copy only: happy, ataxic, no speech.',
+    'GNAQ (somatic R183Q)': 'Port-wine stain plus leptomeningeal angioma: Sturge–Weber.',
+  };
+  ASM.forEach((a) => { a.hook = HOOKS[a.id]; });
+  GENES.forEach((g) => { g.hook = GENE_HOOKS[g.g]; });
+
   /* ------------------------------------------------------------------ Free facts
      Multiple-choice: `a` is the right answer, `w` three plausible wrong answers, `x` the teaching point. */
   const F = (id, t, q, a, w, x, s, v) => ({ id, t, q, a, w, x, s, v: v === undefined ? 1 : v });

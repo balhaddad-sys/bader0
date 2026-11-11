@@ -47,6 +47,30 @@
   }
   const geoMid = (lo, hi) => Math.sqrt(Math.max(lo, 0.05) * hi);
 
+
+  /* ============================================================ annotated mechanism diagrams (one synapse, the target highlighted) */
+  const MECH = {
+    na: ['Voltage-gated Na⁺ channel', 'Blocks the axonal sodium channel, so fast firing is cut'],
+    sv2a: ['SV2A on the synaptic vesicle', 'Binds the vesicle protein, so less transmitter is released'],
+    gaba: ['GABA-A receptor (Cl⁻ in)', 'Strengthens inhibition at the postsynaptic receptor or in the cleft'],
+    ca: ['Presynaptic Ca²⁺ channel', 'Thalamic T-type, or the α2δ subunit, limits calcium entry'],
+    glut: ['AMPA / NMDA receptor', 'Blocks the postsynaptic excitatory receptor'],
+    multi: ['Several targets', 'More than one channel or receptor is involved'],
+    other: ['Not a single receptor target', 'Hormone, mTOR, serotonin or a still-uncertain mechanism'],
+  };
+  function mechSvg(bin) {
+    const hi = (k) => bin === k || bin === 'multi', m = MECH[bin] || MECH.other;
+    const c = (cls, x, y, r) => `<circle class="${cls}" cx="${x}" cy="${y}" r="${r}"/>`;
+    let g = `<rect class="ms-cell" x="8" y="26" width="104" height="22" rx="8"/><rect class="ms-cell" x="104" y="8" width="208" height="60" rx="14"/><rect class="ms-cell" x="104" y="96" width="208" height="56" rx="14"/>`;
+    [160, 208, 256].forEach((x, i) => { g += c(i === 1 && hi('sv2a') ? 'ms-hi' : 'ms-ves', x, 34, 10); });
+    [152, 208, 262].forEach((x) => { g += `<rect class="${hi('glut') && x === 262 ? 'ms-hi' : hi('gaba') && x === 208 ? 'ms-hi' : 'ms-rec'}" x="${x - 10}" y="90" width="20" height="10" rx="3"/>`; });
+    g += `<rect class="${hi('na') ? 'ms-hi' : 'ms-rec'}" x="46" y="21" width="14" height="8" rx="3"/><rect class="${hi('na') ? 'ms-hi' : 'ms-rec'}" x="46" y="45" width="14" height="8" rx="3"/>`;
+    g += `<rect class="${hi('ca') ? 'ms-hi' : 'ms-rec'}" x="118" y="62" width="20" height="10" rx="3"/>`;
+    g += `<text class="ms-s" x="56" y="70" text-anchor="middle">axon</text><text class="ms-s" x="208" y="84" text-anchor="middle">cleft</text><text class="ms-s" x="208" y="126" text-anchor="middle">postsynaptic cell</text>`;
+    g += `<text class="ms-t" x="8" y="166">${esc(m[0])}</text>`;
+    return `<svg class="mech" viewBox="0 0 320 174" role="img" aria-label="Mechanism diagram: ${esc(m[0])}" xmlns="http://www.w3.org/2000/svg"><title>${esc(m[0])}</title>${g}</svg>`;
+  }
+
   /* ============================================================ deck */
   let DECK = null;
   function buildDeck() {
@@ -81,12 +105,12 @@
     if (card.kind === 'asm') {
       const a = card.a;
       return { front: `<p class="fc-k">Antiseizure medication</p><p class="fc-q">${esc(a.name)}</p><p class="fc-hint">Mechanism? Signature toxicity? Where does it shine — and where does it hurt?</p>`,
-        back: `<dl class="fc-dl"><dt>Mechanism</dt><dd>${esc(a.mech)}</dd><dt>Hallmarks</dt><dd>${li(a.tells)}</dd><dt>Adverse effects</dt><dd>${esc(a.tox)}</dd><dt>Pearl</dt><dd>${esc(a.pearl)}</dd></dl>`, src: B.SRC.std, v: 0 };
+        back: `${mechSvg(a.bin)}<p class="hook">${esc(a.hook || '')}</p><dl class="fc-dl"><dt>Mechanism</dt><dd>${esc(a.mech)}</dd><dt>Hallmarks</dt><dd>${li(a.tells)}</dd><dt>Adverse effects</dt><dd>${esc(a.tox)}</dd><dt>Pearl</dt><dd>${esc(a.pearl)}</dd></dl>`, src: B.SRC.std, v: 0 };
     }
     if (card.kind === 'gene') {
       const g = card.g, names = g.syn.map((id) => (SYN.find((s) => s.id === id) || {}).abbr).filter(Boolean);
       return { front: `<p class="fc-k">Gene</p><p class="fc-q">${esc(g.g)}</p><p class="fc-hint">Protein or pathway? Phenotype? Treatment implications?</p>`,
-        back: `<dl class="fc-dl"><dt>Encodes / pathway</dt><dd>${esc(g.fn)}</dd>${names.length ? `<dt>Syndromes (ILAE 2022)</dt><dd>${esc(names.join(', '))}</dd>` : ''}<dt>Key points</dt><dd>${esc(g.pearl)}</dd><dt>Hallmark</dt><dd>${li(g.tells)}</dd></dl>`, src: B.SRC.std, v: 0 };
+        back: `<p class="hook">${esc(g.hook || '')}</p><dl class="fc-dl"><dt>Encodes / pathway</dt><dd>${esc(g.fn)}</dd>${names.length ? `<dt>Syndromes (ILAE 2022)</dt><dd>${esc(names.join(', '))}</dd>` : ''}<dt>Key points</dt><dd>${esc(g.pearl)}</dd><dt>Hallmark</dt><dd>${li(g.tells)}</dd></dl>`, src: B.SRC.std, v: 0 };
     }
     if (card.kind === 'syn') {
       const s = card.s, span = onsetSpan(s), mand = s.criteria.filter((c) => c.level === 'M' && !c.follow), al = s.criteria.filter((c) => c.level === 'A'), ex = s.criteria.filter((c) => c.level === 'E');
@@ -117,11 +141,11 @@
       else out.push(mcq(r, Object.assign({}, base, { id: id('f'), stem: f.q, correct: f.a, wrong: f.w, explain: f.x, src: sources(f.s), v: f.v })));
     } else if (card.kind === 'asm') {
       const a = card.a, others = B.ASM.filter((x) => x.id !== a.id), same = others.filter((x) => x.bin === a.bin);
-      out.push(mcq(r, Object.assign({}, base, { id: id('mech'), stem: `Which description fits the mechanism of ${a.name}?`, correct: a.mech, wrong: sample(same, 1, r).concat(sample(others, 6, r)).map((x) => x.mech), explain: a.pearl })));
-      a.tells.forEach((t, i) => out.push(mcq(r, Object.assign({}, base, { id: id('tell' + i), stem: `Which antiseizure medication? — ${t}`, correct: a.name, wrong: sample(same, 2, r).concat(sample(others, 6, r)).map((x) => x.name), explain: `${a.name}: ${a.mech}. ${a.pearl}` }))));
+      out.push(mcq(r, Object.assign({}, base, { id: id('mech'), stem: `Which description fits the mechanism of ${a.name}?`, correct: a.mech, wrong: sample(same, 1, r).concat(sample(others, 6, r)).map((x) => x.mech), explain: a.pearl + ' Hook: ' + a.hook })));
+      a.tells.forEach((t, i) => out.push(mcq(r, Object.assign({}, base, { id: id('tell' + i), stem: `Which antiseizure medication? — ${t}`, correct: a.name, wrong: sample(same, 2, r).concat(sample(others, 6, r)).map((x) => x.name), explain: `${a.name}: ${a.mech}. ${a.pearl} Hook: ${a.hook}` }))));
     } else if (card.kind === 'gene') {
       const g = card.g, others = B.GENES.filter((x) => x.g !== g.g);
-      g.tells.forEach((t, i) => out.push(mcq(r, Object.assign({}, base, { id: id('tell' + i), stem: `Which gene (or gene set)? — ${t}`, correct: g.g, wrong: others.map((x) => x.g), explain: g.pearl }))));
+      g.tells.forEach((t, i) => out.push(mcq(r, Object.assign({}, base, { id: id('tell' + i), stem: `Which gene (or gene set)? — ${t}`, correct: g.g, wrong: others.map((x) => x.g), explain: g.pearl + ' Hook: ' + g.hook }))));
       out.push(mcq(r, Object.assign({}, base, { id: id('fn'), stem: `What does ${g.g} encode or regulate?`, correct: g.fn, wrong: sample(others, 7, r).map((x) => x.fn), explain: g.pearl })));
       g.syn.forEach((sid, i) => {
         const s = SYN.find((x) => x.id === sid); if (!s || BROAD.has(sid)) return; // EIDEE and IESS have many causes: a distractor could also be defensible
@@ -359,6 +383,6 @@
       return { key: t.key, name: t.name, icon: t.icon, total: cs.length, seen, mature: mat, acc: st.n ? Math.round(100 * st.c / st.n) : null, answered: st.n }; });
   }
 
-  return { SYN, rng, hash, shuffle, sample, fmtAge, fmtRange, onsetSpan, buildDeck, face, picHtml, variants, questionFor, questionsFor, dailyQuestions, detectiveFor, detectivePool, ladder, binPuzzle, BINSETS, sequence, matchSet, picMatch,
+  return { MECH, mechSvg, SYN, rng, hash, shuffle, sample, fmtAge, fmtRange, onsetSpan, buildDeck, face, picHtml, variants, questionFor, questionsFor, dailyQuestions, detectiveFor, detectivePool, ladder, binPuzzle, BINSETS, sequence, matchSet, picMatch,
     ELECTRODES, CHAINS, electrodeQ, phaseQ, dayNumber, newState, review, nextLabels, isMature, queue, LEVELS, levelFor, blankProfile, touchDay, record, bump, newBadges, BADGES, topicSummary, mature, sat, toPatient, esc };
 });
