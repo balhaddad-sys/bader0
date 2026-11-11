@@ -41,17 +41,28 @@
 
   /* ============================================================ hub */
   const GAMES = [
-    ['daily', 'trophy', 'Daily rounds', 'Ten mixed questions, the same for everyone today. Keeps your streak alive.'],
-    ['flash', 'layers', 'Flashcards', 'Spaced repetition: the app schedules each card just before you would forget it.'],
-    ['quiz', 'target', 'Quiz blitz', 'Pick topics, race through questions, or play survival with three lives.'],
-    ['detective', 'search', 'Syndrome detective', 'Clues appear one at a time, narrowest last. Solve it with as few as you can.'],
-    ['pictures', 'activity', 'Name that picture', 'EEG patterns, seizure movements and physical signs — drawings with no captions.'],
-    ['match', 'grid', 'Memory match', 'Flip tiles to pair genes with syndromes, patterns with names, abbreviations with onset ages.'],
-    ['puzzle', 'sort', 'Sort & order', 'Build the ILAE tree, sort drugs by mechanism, line syndromes up by onset age, order the SE algorithm.'],
-    ['eeglab', 'zap', 'EEG lab', 'Name the 10–20 electrode, then find the focus from a phase reversal.'],
-    ['#/library', 'book', 'Picture atlas', 'Annotated EEG traces, seizure movements and physical signs. Cover the labels to test yourself, and add your own notes.'],
-    ['ref', 'table', 'Cheat sheets', 'Drug mechanism diagrams with memory hooks, genes, trials and the status epilepticus card.'],
+    ['flash', 'layers', 'Flashcards', 'Spaced repetition with a picture and a memory hook on the back.', 'stack', 2],
+    ['quiz', 'target', 'Quiz blitz', 'Pick your topics. Race, or survive with three lives.', 'target', 1],
+    ['detective', 'search', 'Syndrome detective', 'Clues arrive one by one. Crack the case in as few as you can.', 'sign:neuro.facial_angioma_v1', 4],
+    ['pictures', 'activity', 'Name that picture', 'EEG, movements and signs, drawn with no captions.', 'sem:sem.fencing', 3],
+    ['match', 'grid', 'Memory match', 'Flip tiles to pair genes, patterns and names.', 'match', 5],
+    ['puzzle', 'sort', 'Sort & order', 'Build the ILAE tree. Order the status epilepticus steps.', 'order', 6],
+    ['eeglab', 'zap', 'EEG lab', 'Name the electrode, then find the focus from a phase reversal.', 'head', 1],
+    ['#/library', 'book', 'Picture atlas', 'Annotated traces and drawings. Cover the labels and test yourself.', 'eeg:eeg.hypsarrhythmia', 2],
+    ['ref', 'table', 'Cheat sheets', 'Drug diagrams with memory hooks, genes, trials, status epilepticus.', 'mech', 3],
   ];
+  const ART = {
+    stack: '<svg class="art-svg" viewBox="0 0 120 80" aria-hidden="true"><rect class="a-c a1" x="22" y="14" width="64" height="44" rx="7" transform="rotate(-9 54 36)"/><rect class="a-c a2" x="30" y="14" width="64" height="44" rx="7" transform="rotate(5 62 36)"/><rect class="a-c a3" x="26" y="18" width="64" height="44" rx="7"/><path class="a-l" d="M38 34h40M38 44h26"/></svg>',
+    target: '<svg class="art-svg" viewBox="0 0 120 80" aria-hidden="true"><circle class="a-c a3" cx="60" cy="40" r="32"/><circle class="a-c a2" cx="60" cy="40" r="21"/><circle class="a-c a1" cx="60" cy="40" r="10"/><path class="a-l" d="M60 40 100 12M92 10l10 2-2 10"/></svg>',
+    match: '<svg class="art-svg" viewBox="0 0 120 80" aria-hidden="true"><rect class="a-c a3" x="18" y="10" width="40" height="28" rx="6"/><rect class="a-c a1" x="62" y="10" width="40" height="28" rx="6"/><rect class="a-c a2" x="18" y="42" width="40" height="28" rx="6"/><rect class="a-c a3" x="62" y="42" width="40" height="28" rx="6"/><path class="a-l" d="M34 24h8M78 24l4 4 8-8M32 56h12M76 56h12"/></svg>',
+    order: '<svg class="art-svg" viewBox="0 0 120 80" aria-hidden="true"><rect class="a-c a1" x="18" y="12" width="30" height="12" rx="6"/><rect class="a-c a2" x="18" y="34" width="56" height="12" rx="6"/><rect class="a-c a3" x="18" y="56" width="84" height="12" rx="6"/><path class="a-l" d="M92 14v18M88 18l4-5 4 5"/></svg>',
+  };
+  function art(key, cards) {
+    if (ART[key]) return ART[key];
+    if (key === 'head') return headSvg({ target: 'T3', tap: false }, false).replace('<svg class="head"', '<svg class="head art-head"');
+    if (key === 'mech') return Q.mechSvg('na');
+    return Q.picHtml(cards.byId[key]);
+  }
   function hub() {
     const lv = Q.levelFor(profile.xp), day = today(), cards = Q.buildDeck(), q = Q.queue(profile, cards, day, { newPerDay: prefs().newPerDay });
     const dailyDone = profile.daily && profile.daily.day === day;
@@ -63,7 +74,7 @@
         <div class="st-stats">${stat('flame', profile.streak, profile.streak === 1 ? 'day streak' : 'day streak')}${stat('layers', q.due.length, 'cards due')}${stat('star', Object.keys(profile.badges).length + '/' + Q.BADGES.length, 'badges')}</div>
       </section>
       ${canStore ? '' : '<p class="st-warn">This browser is blocking local storage, so progress will not be saved after you close the page.</p>'}
-      <a class="st-daily${dailyDone ? ' done' : ''}" href="#/study/daily"><span class="st-di">${IC(dailyDone ? 'check' : 'trophy')}</span><span><b>${dailyDone ? 'Daily rounds complete — ' + profile.daily.score + '/10' : 'Today’s daily rounds'}</b><small>${dailyDone ? 'Come back tomorrow, or replay for practice.' : '10 mixed questions · +50 XP bonus · keeps your streak'}</small></span>${IC('arrow')}</a>
+      <a class="st-daily gold${dailyDone ? ' done' : ''}" href="#/study/daily"><span class="st-di">${IC(dailyDone ? 'check' : 'trophy')}</span><span><b>${dailyDone ? 'Daily rounds complete — ' + profile.daily.score + '/10' : 'Today’s daily rounds'}</b><small>${dailyDone ? 'Come back tomorrow, or replay for practice.' : '10 mixed questions · +50 XP bonus · keeps your streak'}</small></span>${IC('arrow')}</a>
       ${q.due.length ? `<a class="st-daily alt" href="#/study/flash"><span class="st-di">${IC('layers')}</span><span><b>${q.due.length} card${q.due.length === 1 ? '' : 's'} due for review</b><small>${q.fresh.length ? q.fresh.length + ' new cards waiting too' : 'Reviewing now is what makes it stick.'}</small></span>${IC('arrow')}</a>` : ''}
       <details class="st-why"><summary>${IC('book')}Why this works: how the app is built to make it stick</summary><ul>
         <li><b>Retrieval practice.</b> Every game asks you to produce the answer before it shows it; “cover the labels” in the atlas does the same for pictures.</li>
@@ -74,7 +85,7 @@
         <li><b>Game mechanics.</b> Streaks, XP, levels and badges are there to keep you coming back; the evidence for gamification is for engagement, not magic.</li></ul>
         <p class="st-fine">The first five follow Weinstein, Madan &amp; Sumeracki, <a href="https://link.springer.com/article/10.1186/s41235-017-0087-y" target="_blank" rel="noopener">Teaching the science of learning</a> (Cognitive Research: Principles and Implications, 2018). Picture mnemonics have limited independent evidence, so the hooks are an aid and not the whole method.</p></details>
       <h3 class="st-sub">Games</h3>
-      <div class="st-games">${GAMES.map((g) => `<a class="st-game" href="${g[0][0] === '#' ? g[0] : '#/study/' + g[0]}"><span class="st-gi">${IC(g[1])}</span><b>${g[2]}</b><small>${g[3]}</small></a>`).join('')}</div>
+      <div class="st-games tiles">${GAMES.map((g) => `<a class="st-game tile c${g[5]}" href="${g[0][0] === '#' ? g[0] : '#/study/' + g[0]}"><span class="st-art">${art(g[4], cards)}</span><span class="st-tx"><b>${g[2]}</b><small>${g[3]}</small></span></a>`).join('')}</div>
       <h3 class="st-sub">Mastery map${weak ? ` <small class="st-weak">weakest so far: <a href="#/study/quiz/${weak.key}">${esc(weak.name)} (${weak.acc}%)</a></small>` : ''}</h3>
       <div class="st-topics">${topics.map((t) => `<a class="st-topic" href="#/study/quiz/${t.key}"><span class="st-ti">${IC(t.icon)}</span><b>${esc(t.name)}</b>${bar(t.name + ' mastered', t.mature, t.total)}<small>${t.seen}/${t.total} seen · ${t.mature} mastered${t.acc === null ? '' : ' · ' + t.acc + '% correct'}</small></a>`).join('')}</div>
       <h3 class="st-sub">Badges</h3>
