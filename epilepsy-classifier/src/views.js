@@ -101,7 +101,7 @@
     document.addEventListener('click', (e) => {
       const b = e.target.closest('[data-morph]'); if (b) openMorph(b.dataset.morph);
       const cv = e.target.closest('[data-cover]');
-      if (cv) { const f = cv.closest('.m-body, .dlg-b').querySelector('.fig'); if (f) { const on = f.classList.toggle('cover'); f.classList.remove('peek'); cv.textContent = on ? 'Show the labels' : 'Cover the labels'; } return; }
+      if (cv) { const f = (cv.closest('.m-body, .dlg-b, .dg-card') || document).querySelector('.fig'); if (f) { const on = f.classList.toggle('cover'); f.classList.remove('peek'); cv.textContent = on ? 'Show the labels' : 'Cover the labels'; } return; }
       const pk = e.target.closest('.fig.cover'); if (pk) pk.classList.toggle('peek');
     });
     document.addEventListener('input', (e) => { const t = e.target.closest('[data-note]'); if (t && window.EpiStudy) window.EpiStudy.setNote(t.dataset.note, t.value); });
@@ -114,6 +114,7 @@
     const rows = SYN.slice().sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group)).map((s) => { const w = E.onsetWindows(s); return { abbr: s.abbr, group: s.group, windows: w.windows, alerts: w.alerts, none: w.none, hi: shown.has(s.id), dim: shown.size > 0 && !shown.has(s.id) }; });
     $('#dg-onset').innerHTML = D.timelineSvg(rows, { width: 820, labelW: 92, rowH: 18, marker: onset, label: 'Age at seizure onset for each of the 38 syndromes, as encoded from the ILAE criteria' });
     $('#dg-tree').innerHTML = D.seizureTreeHtml();
+    if (window.EpiBrain && $('#dg-lobes')) $('#dg-lobes').innerHTML = window.EpiBrain.html();
     $('#dg-flow').innerHTML = D.scoringFlowSvg();
     $('#dg-onset-note').textContent = 'Each bar is the onset window the ILAE 2022 criteria accept for that syndrome.';
   }

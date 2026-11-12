@@ -932,3 +932,13 @@ svg.mech { display: block; width: 100%; max-width: 420px; height: auto; margin: 
 .st-art .pic-row { height: 112px; width: 100%; align-items: center; }
 .st-art .pic-row svg.pose.thumb { height: 112px; max-width: 70%; }
 @media (max-width: 640px) { .st-art .pic-row, .st-art .pic-row svg.pose.thumb { height: 92px; } }
+
+/* brain localisation diagram */
+.lobes { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: center; }
+@media (max-width: 760px) { .lobes { grid-template-columns: 1fr; } }
+svg.brain { display: block; width: 100%; height: auto; }
+.pin circle { fill: var(--surface); stroke: var(--ink); stroke-width: 2.4; } .pin text { font: 800 17px var(--font); fill: var(--ink); }
+.lobe-list { display: grid; gap: 10px; } .lobe-list li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; font-size: 14px; }
+.lobe-n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--ink); background: var(--surface); font-weight: 800; font-size: 14px; }
+.lobe-list b { color: var(--primary); }
+.fig.lobes.cover:not(.peek) .lobe-t { visibility: hidden; }

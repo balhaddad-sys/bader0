@@ -253,3 +253,14 @@ test('Mechanism diagrams: one per drug group, valid, annotated and with no stray
   assert.equal((Q.mechSvg('sv2a').match(/ms-hi/g) || []).length, 1, 'only the vesicle is highlighted for SV2A ligands');
   B.ASM.forEach((a) => assert.ok(Q.MECH[a.bin], a.id));
 });
+
+test('Brain diagram: four numbered lobes, CSP-safe markup, annotations match the bank’s localising facts', () => {
+  const Br = require('../src/brain.js');
+  const svg = Br.svg();
+  assert.ok(svg.startsWith('<svg') && svg.endsWith('</svg>') && !/NaN|undefined/.test(svg));
+  assert.ok(!/style=|<style|<script|<image/.test(svg), 'must stay inline-style free for the strict CSP');
+  ['#', 'fill="#'].forEach((x) => assert.ok(svg.includes(x)));
+  assert.equal(Br.PINS.length, 4); assert.deepEqual(Br.PINS.map((p) => p.lobe), ['Frontal', 'Parietal', 'Temporal', 'Occipital']);
+  assert.match(Br.PINS[0].t, /hypermotor/i); assert.match(Br.PINS[2].t, /déjà vu/); assert.match(Br.PINS[3].t, /visual/i);
+  assert.match(Br.html(), /data-cover/);
+});
