@@ -115,7 +115,7 @@
     $('#dg-onset').innerHTML = D.timelineSvg(rows, { width: 820, labelW: 92, rowH: 18, marker: onset, label: 'Age at seizure onset for each of the 38 syndromes, as encoded from the ILAE criteria' });
     $('#dg-tree').innerHTML = D.seizureTreeHtml();
     if (window.EpiBrain && $('#dg-lobes')) $('#dg-lobes').innerHTML = window.EpiBrain.html();
-    $('#dg-flow').innerHTML = D.scoringFlowSvg();
+    if ($('#dg-flow')) $('#dg-flow').innerHTML = D.scoringFlowSvg();
     $('#dg-onset-note').textContent = 'Each bar is the onset window the ILAE 2022 criteria accept for that syndrome.';
   }
 

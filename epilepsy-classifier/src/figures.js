@@ -53,20 +53,30 @@
     const sho = { R: [SH.R[0] + sh, SH.R[1] + dy], L: [SH.L[0] + sh, SH.L[1] + dy] };
     const arm = Object.assign({}, REST.arm, s.arm || {}), leg = Object.assign({}, REST.leg, s.leg || {});
     const k = P.limb;
-    let g = '';
+    let g = `<ellipse class="pf-ground" cx="${100 + sh}" cy="244" rx="52" ry="6"/>`;
+    // a limb is drawn as two tapered, outlined segments (outlines first, so the joint stays clean)
+    const seg = (p, q, w, on) => `<path class="pf-lo${on}" d="M${f1(p[0])} ${f1(p[1])}L${f1(q[0])} ${f1(q[1])}" stroke-width="${f1(w + 3.6)}"/>`;
+    const fill = (p, q, w, on) => `<path class="pf-limb${on}" d="M${f1(p[0])} ${f1(p[1])}L${f1(q[0])} ${f1(q[1])}" stroke-width="${f1(w)}"/>`;
+    const limb = (S, E, T, w1, w2, on) => seg(S, E, w1, on) + seg(E, T, w2, on) + fill(S, E, w1, on) + fill(E, T, w2, on);
     ['R', 'L'].forEach((sd) => {   // legs first (behind torso)
-      const r = ik(HP[sd], leg[sd].foot, L1.th * k * (ls['leg' + sd] || 1), L1.sh * k * (ls['leg' + sd] || 1), leg[sd].bend);
-      g += `<path class="pf-limb ${hl.has('leg' + sd) ? 'hl' : ''}" d="M${f1(HP[sd][0])} ${f1(HP[sd][1])}L${f1(r.E[0])} ${f1(r.E[1])}L${f1(r.T[0])} ${f1(r.T[1])}"/><ellipse class="pf-end ${hl.has('leg' + sd) ? 'hl' : ''}" cx="${f1(r.T[0] + (sd === 'R' ? -3 : 3))}" cy="${f1(r.T[1] + 2)}" rx="8" ry="4.5"/>`;
+      const r = ik(HP[sd], leg[sd].foot, L1.th * k * (ls['leg' + sd] || 1), L1.sh * k * (ls['leg' + sd] || 1), leg[sd].bend), on = hl.has('leg' + sd) ? ' hl' : '';
+      g += limb(HP[sd], r.E, r.T, 17, 13, on) + `<ellipse class="pf-lo${on}" cx="${f1(r.T[0] + (sd === 'R' ? -3 : 3))}" cy="${f1(r.T[1] + 3)}" rx="11" ry="6.6"/><ellipse class="pf-shoe" cx="${f1(r.T[0] + (sd === 'R' ? -3 : 3))}" cy="${f1(r.T[1] + 3)}" rx="9.4" ry="5"/>`;
     });
-    g += `<path class="pf-torso ${hl.has('torso') ? 'hl' : ''}" d="M${f1(sho.R[0] - 7)} ${f1(sho.R[1] - 1)}Q100 ${f1(sho.R[1] - 14)} ${f1(sho.L[0] + 7)} ${f1(sho.L[1] - 1)}C${f1(sho.L[0] + 2)} ${f1(sho.L[1] + 30)} 119 ${f1(HP.L[1] - 20)} ${f1(HP.L[0] + 9)} 154Q100 161 ${f1(HP.R[0] - 9)} 154C81 ${f1(HP.R[1] - 20)} ${f1(sho.R[0] - 2)} ${f1(sho.R[1] + 30)} ${f1(sho.R[0] - 7)} ${f1(sho.R[1] - 1)}Z"/>`;
+    const cx0 = 100 + sh, y0 = sho.R[1], H = 154 - y0, xl = sho.R[0] - 9, xr = sho.L[0] + 9, p2 = (x, y) => `${f1(x)} ${f1(y)}`;
+    g += `<path class="pf-shorts" d="M${p2(cx0 - 25, 150)}L${p2(cx0 + 25, 150)}L${p2(cx0 + 30, 182)}L${p2(cx0 + 4, 176)}L${p2(cx0, 172)}L${p2(cx0 - 4, 176)}L${p2(cx0 - 30, 182)}Z"/>`;
+    g += `<path class="pf-torso ${hl.has('torso') ? 'hl' : ''}" d="M${p2(xl, y0 + 3)}Q${p2(cx0, y0 - 11)} ${p2(xr, y0 + 3)}C${p2(xr + 1, y0 + 0.3 * H)} ${p2(cx0 + 20, y0 + 0.42 * H)} ${p2(cx0 + 18, y0 + 0.6 * H)}C${p2(cx0 + 17, y0 + 0.78 * H)} ${p2(cx0 + 27, y0 + 0.88 * H)} ${p2(cx0 + 24, 156)}Q${p2(cx0, 162)} ${p2(cx0 - 24, 156)}C${p2(cx0 - 27, y0 + 0.88 * H)} ${p2(cx0 - 17, y0 + 0.78 * H)} ${p2(cx0 - 18, y0 + 0.6 * H)}C${p2(cx0 - 20, y0 + 0.42 * H)} ${p2(xl - 1, y0 + 0.3 * H)} ${p2(xl, y0 + 3)}Z"/>`;
     ['R', 'L'].forEach((sd) => {
-      const r = ik(sho[sd], arm[sd].hand, L1.ua * k * (ls['arm' + sd] || 1), L1.fa * k * (ls['arm' + sd] || 1), arm[sd].bend), on = hl.has('arm' + sd) ? 'hl' : '';
-      g += `<path class="pf-limb ${on}" d="M${f1(sho[sd][0])} ${f1(sho[sd][1])}L${f1(r.E[0])} ${f1(r.E[1])}L${f1(r.T[0])} ${f1(r.T[1])}"/><circle class="pf-end ${on}" cx="${f1(r.T[0])}" cy="${f1(r.T[1])}" r="6.5"/>`;
+      const r = ik(sho[sd], arm[sd].hand, L1.ua * k * (ls['arm' + sd] || 1), L1.fa * k * (ls['arm' + sd] || 1), arm[sd].bend), on = hl.has('arm' + sd) ? ' hl' : '';
+      const ang = Math.atan2(r.T[1] - r.E[1], r.T[0] - r.E[0]), hx = r.T[0] + Math.cos(ang) * 4.5, hy = r.T[1] + Math.sin(ang) * 4.5, deg = (ang * 180) / Math.PI - 90;
+      g += limb(sho[sd], r.E, r.T, 13, 10.5, on) + `<ellipse class="pf-hand${on}" cx="${f1(hx)}" cy="${f1(hy)}" rx="6" ry="7.6" transform="rotate(${f1(deg)} ${f1(hx)} ${f1(hy)})"/>`;
     });
-    const h = s.head || {}, hr = P.head, hx = 100 + sh + (h.dx || 0) + (h.turn || 0) * 3, hy = 42 + dy + (h.dy || 0);
-    g += `<path class="pf-neck" d="M${100 + sh} ${f1(sho.R[1] - 6)}L${f1(hx)} ${f1(hy + hr - 2)}"/><circle class="pf-head ${hl.has('head') ? 'hl' : ''}" cx="${f1(hx)}" cy="${f1(hy)}" r="${hr}"/>`;
-    g += faceDetail(hx, hy, hr, h);
-    g += `<text class="pf-side" x="58" y="250" text-anchor="middle">R</text><text class="pf-side" x="142" y="250" text-anchor="middle">L</text>`;
+    const h = s.head || {}, hr = P.head, hx2 = 100 + sh + (h.dx || 0) + (h.turn || 0) * 3, hy2 = 42 + dy + (h.dy || 0);
+    g += `<path class="pf-lo" d="M${f1(100 + sh)} ${f1(sho.R[1] - 4)}L${f1(hx2)} ${f1(hy2 + hr - 2)}" stroke-width="13"/><path class="pf-neck" d="M${f1(100 + sh)} ${f1(sho.R[1] - 4)}L${f1(hx2)} ${f1(hy2 + hr - 2)}" stroke-width="9.4"/>`;
+    g += `<ellipse class="pf-ear" cx="${f1(hx2 - hr)}" cy="${f1(hy2 + 1)}" rx="${f1(hr * 0.2)}" ry="${f1(hr * 0.3)}"/><ellipse class="pf-ear" cx="${f1(hx2 + hr)}" cy="${f1(hy2 + 1)}" rx="${f1(hr * 0.2)}" ry="${f1(hr * 0.3)}"/>`;
+    g += `<circle class="pf-head ${hl.has('head') ? 'hl' : ''}" cx="${f1(hx2)}" cy="${f1(hy2)}" r="${hr}"/>`;
+    g += `<path class="pf-hair" d="M${f1(hx2 - hr + 0.8)} ${f1(hy2 - 1)}A${hr - 0.8} ${hr - 0.8} 0 0 1 ${f1(hx2 + hr - 0.8)} ${f1(hy2 - 1)}Q${f1(hx2)} ${f1(hy2 - hr * 1.62)} ${f1(hx2 - hr + 0.8)} ${f1(hy2 - 1)}Z"/>`;
+    g += faceDetail(hx2, hy2, hr, h);
+    g += `<text class="pf-side" x="10" y="14" text-anchor="middle">R</text><text class="pf-side" x="196" y="14" text-anchor="middle">L</text>`;
     return `<g class="pf-age-${age}" transform="translate(100 238) scale(${P.k}) translate(-100 -238)">${g}${marks(s.marks)}</g>`;
   }
   function faceDetail(cx, cy, r, h) {
@@ -85,7 +95,9 @@
   function face(s) {
     s = s || {}; const cx = 105, cy = 118, R = 80; let g = '';
     const gaze = s.gaze || [0, 0], pr = 5.6, lid = s.lid === undefined ? 0 : s.lid; // lid 0 open .. 1 closed
+    g += `<ellipse class="pf-ear" cx="${cx - R}" cy="${cy + 4}" rx="9" ry="20"/><ellipse class="pf-ear" cx="${cx + R}" cy="${cy + 4}" rx="9" ry="20"/>`;
     g += `<circle class="pf-head" cx="${cx}" cy="${cy}" r="${R}"/>`;
+    g += `<path class="pf-hair" d="M${cx - R + 2} ${cy - 4}A${R - 2} ${R - 2} 0 0 1 ${cx + R - 2} ${cy - 4}Q${cx} ${cy - R * 1.72} ${cx - R + 2} ${cy - 4}Z"/>`;
     g += `<path class="pf-feat" d="M${cx - 50} ${cy - 46}Q${cx - 34} ${cy - 58} ${cx - 16} ${cy - 46}M${cx + 16} ${cy - 46}Q${cx + 34} ${cy - 58} ${cx + 50} ${cy - 46}"/>`;
     [-33, 33].forEach((ox) => {
       const ex = cx + ox, ey = cy - 20;
