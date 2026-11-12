@@ -961,3 +961,12 @@ svg.brain { display: block; width: 100%; height: auto; }
 .pro-art { margin: 6px 0 14px; padding: 0; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--line); background: #fff; }
 .pro-art svg.pro-svg { display: block; width: 100%; max-width: 460px; height: auto; margin: 0 auto; }
 .pro-art figcaption { padding: 8px 12px; border-top: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 12px; line-height: 1.4; }
+
+/* v0.8.4 — colour pass: readable text on the gold banner (>= 4.5:1), calmer dark-mode tiles, visible progress track */
+:root { --daily-a: #c2570c; --daily-b: #9a3412; --c4: #fbeae4; --c2: #fcf1d9; }
+@media (prefers-color-scheme: dark) {
+  :root { --c1: #17304d; --c2: #322a1a; --c3: #143028; --c4: #36232a; --c5: #28254a; --c6: #12313a; --daily-a: #b45309; --daily-b: #8a2f10; }
+}
+:root[data-theme="dark"] { --c1: #17304d; --c2: #322a1a; --c3: #143028; --c4: #36232a; --c5: #28254a; --c6: #12313a; --daily-a: #b45309; --daily-b: #8a2f10; }
+.st-hero progress.st-bar, .st-hero progress.st-bar::-webkit-progress-bar { background: rgba(255, 255, 255, .3); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
+.st-daily.gold small { opacity: .95; }
