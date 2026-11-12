@@ -35,7 +35,8 @@
   const isSem = (m) => !!m.frames;
   function morphBody(m, withFig) {
     const fig = !withFig ? '' : isSem(m) ? `<div class="fig pose-fig" data-sem="${m.id}" data-label="${esc(m.name)}"></div>` : `<div class="fig" data-fig="${m.fig}" data-label="${esc(m.name)}"></div>`;
-    return `${fig}${withFig ? '<p class="fig-tools"><button type="button" class="btn sm" data-cover>Cover the labels</button><span>Name each part from memory, then tap the picture to peek.</span></p>' : ''}
+    const pro = withFig && window.EpiArt ? window.EpiArt.html(m.id) : '';
+    return `${pro}${fig}${withFig ? '<p class="fig-tools"><button type="button" class="btn sm" data-cover>Cover the labels</button><span>Name each part from memory, then tap the picture to peek.</span></p>' : ''}
       <dl class="feat">${m.features.map((f) => `<div><dt>${esc(f[0])}</dt><dd>${esc(f[1])}</dd></div>`).join('')}</dl>
       <div class="used"><h5>Used by syndrome criteria</h5>${usageHtml(m.id)}</div>
       <div class="pit">${IC('alert')}<p><b>Pitfall.</b> ${esc(m.pitfall)}</p></div>

@@ -264,3 +264,18 @@ test('Brain diagram: four numbered lobes, CSP-safe markup, annotations match the
   assert.match(Br.PINS[0].t, /hypermotor/i); assert.match(Br.PINS[2].t, /déjà vu/); assert.match(Br.PINS[3].t, /visual/i);
   assert.match(Br.html(), /data-cover/);
 });
+
+test('Professional illustrations: CSP-safe, uniquely identified, attached to real atlas entries', () => {
+  const A = require('../src/art.js'), ids = Object.keys(A.ART);
+  assert.ok(ids.length >= 3);
+  const allIds = [];
+  ids.forEach((id) => {
+    assert.ok(S.byId[id], id + ' must be a movement entry');
+    const svg = A.ART[id].svg;
+    assert.ok(svg.startsWith('<svg') && svg.endsWith('</svg>') && !/style=|<style|<script|<image|NaN|undefined/.test(svg), id);
+    (svg.match(/\bid="([^"]+)"/g) || []).forEach((x) => allIds.push(x));
+    (svg.match(/url\(#([^)]+)\)/g) || []).forEach((u) => assert.ok(svg.includes('id="' + u.slice(5, -1) + '"'), id + ' dangling ' + u));
+    assert.match(A.html(id), /<figure class="pro-art">/); assert.ok(A.ART[id].alt.length > 30);
+  });
+  assert.equal(new Set(allIds).size, allIds.length, 'ids must be unique across drawings');
+});

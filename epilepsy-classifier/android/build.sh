@@ -29,7 +29,7 @@ rm -rf "$B"; mkdir -p "$B/assets/www/src" "$B/classes"
 
 # 1. Bundle exactly the files the web app needs (no tests, README, deploy config).
 cp "$WEB/index.html" "$WEB/styles.css" "$WEB/fonts.css" "$B/assets/www/"
-cp "$WEB"/src/{vocab,kb,engine,morph,diagrams,figures,semio,physical,plain,bank,quiz,study,brain,views,app}.js "$B/assets/www/src/"
+cp "$WEB"/src/{vocab,kb,engine,morph,diagrams,figures,semio,physical,plain,bank,quiz,study,brain,art,views,app}.js "$B/assets/www/src/"
 
 # 2. Compile the Java shell against the API 23 framework, then convert to dex.
 javac -source 8 -target 8 -Xlint:-options -bootclasspath "$ANDROID_JAR" -d "$B/classes" \

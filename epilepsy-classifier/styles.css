@@ -956,3 +956,8 @@ svg.brain { display: block; width: 100%; height: auto; }
 .pf-neck { fill: none; stroke: var(--skin); stroke-linecap: round; } .pf-ground { fill: var(--surface-3); opacity: .9; }
 .pf-lb, .pf-lbw { paint-order: stroke; stroke: var(--surface-2); stroke-width: 3.2px; stroke-linejoin: round; } .pf-lbw { stroke: rgba(120, 20, 50, .8); }
 .pf-eye { fill: #1c1713; } .pf-eyeball { fill: #fff; stroke: var(--skin-line); }
+
+/* professional-style illustrations at the head of an atlas entry */
+.pro-art { margin: 6px 0 14px; padding: 0; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--line); background: #fff; }
+.pro-art svg.pro-svg { display: block; width: 100%; max-width: 460px; height: auto; margin: 0 auto; }
+.pro-art figcaption { padding: 8px 12px; border-top: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 12px; line-height: 1.4; }
