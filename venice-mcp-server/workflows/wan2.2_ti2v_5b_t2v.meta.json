@@ -1,0 +1,18 @@
+{
+  "description": "Wan 2.2 TI2V 5B, text-to-video",
+  "family": "2.2",
+  "fps": 24,
+  "default_frames": 121,
+  "min_frames": 49,
+  "max_frames": 145,
+  "allowed_sizes": [
+    {
+      "width": 1280,
+      "height": 704
+    },
+    {
+      "width": 704,
+      "height": 1280
+    }
+  ]
+}

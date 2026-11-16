@@ -1,11 +1,19 @@
 /**
- * A local stand-in for ComfyUI, used by the smoke test to exercise wan_video / wan_status /
- * wan_cancel without a GPU. It runs one job at a time from a FIFO queue like ComfyUI does,
- * reports progress on /ws, and records every request.
+ * A local stand-in for ComfyUI, used by the smoke test to exercise wan_video / wan_status / wan_cancel without a GPU.
+ * It runs one job at a time from a FIFO queue like ComfyUI does, reports progress on /ws, validates the model files a
+ * workflow names the way ComfyUI does (so a GGUF sent through UNETLoader is rejected), and records every request.
  *
- * The positive prompt steers each job: "FAIL_RENDER" fails with a CUDA OOM, "HANG" renders
- * until interrupted, "LOST_FILE" succeeds but its output cannot be fetched, anything else
- * succeeds after renderMs. Interrupts settle 300 ms later, as a real sampler finishes its step.
+ * The positive prompt steers each job:
+ *   FAIL_RENDER  always out of memory (what this keyword has always meant), so it also exercises the retry
+ *   BOOM         fails with a generic error that is not about memory
+ *   OOM_BIG      out of memory when the latent is over 500k pixels
+ *   OOM_LONG     out of memory when the latent has more than 100 frames
+ *   OOM_ALWAYS   always out of memory
+ *   HANG         renders until interrupted
+ *   LOST_FILE    succeeds but its output cannot be fetched
+ *   UNSAFE_NAME  succeeds but names its output "../evil.mp4"
+ *   anything else succeeds after renderMs.
+ * Interrupts settle 300 ms later, as a real sampler finishes its step.
  */
 import { createHash, randomUUID } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
@@ -15,7 +23,13 @@ export const FAKE_MP4 = Buffer.from("\x00\x00\x00\x18ftypmp42-fake-wan-clip", "l
 
 export interface MockComfyOptions {
   vramGB?: number;
+  gpuName?: string;
   checkpoints?: string[];
+  /** .gguf files; only listed (and loadable) when ggufInstalled is true. */
+  ggufFiles?: string[];
+  ggufInstalled?: boolean;
+  clipFiles?: string[];
+  vaeFiles?: string[];
   renderMs?: number;
 }
 
@@ -27,12 +41,14 @@ export interface ComfyRequest {
   contentType?: string;
 }
 
+type Workflow = Record<string, { class_type: string; inputs: Record<string, any> }>;
+
 interface Job {
   id: string;
   number: number;
-  workflow: Record<string, { class_type: string; inputs: Record<string, any> }>;
+  workflow: Workflow;
   clientId: string;
-  behavior: "ok" | "fail" | "hang" | "lost";
+  behavior: "ok" | "fail" | "hang" | "lost" | "unsafe" | "oom_big" | "oom_long" | "oom_always";
   timer?: NodeJS.Timeout;
   history?: Record<string, unknown>;
 }
@@ -65,9 +81,27 @@ async function readRaw(req: IncomingMessage): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
+/** The node that carries the latent size and length, whatever the workflow calls it. */
+function latentOf(workflow: Workflow): { width: number; height: number; length: number } {
+  for (const node of Object.values(workflow)) {
+    if (/LatentVideo$|ImageToVideo/.test(node.class_type) && "length" in node.inputs) {
+      return { width: node.inputs.width, height: node.inputs.height, length: node.inputs.length };
+    }
+  }
+  return { width: 0, height: 0, length: 0 };
+}
+
 export async function startMockComfy(options: MockComfyOptions = {}) {
-  const checkpoints = options.checkpoints ?? DEFAULT_CHECKPOINTS;
-  const renderMs = options.renderMs ?? 600;
+  const settings = {
+    vramGB: options.vramGB ?? 24,
+    gpuName: options.gpuName ?? "NVIDIA GeForce RTX 4090",
+    checkpoints: options.checkpoints ?? DEFAULT_CHECKPOINTS,
+    ggufFiles: options.ggufFiles ?? [],
+    ggufInstalled: options.ggufInstalled ?? false,
+    clipFiles: options.clipFiles ?? ["umt5_xxl_fp16.safetensors"],
+    vaeFiles: options.vaeFiles ?? ["wan2.2_vae.safetensors", "wan_2.1_vae.safetensors"],
+    renderMs: options.renderMs ?? 600
+  };
   const steps = 4;
   const requests: ComfyRequest[] = [];
   const jobs = new Map<string, Job>();
@@ -94,6 +128,21 @@ export async function startMockComfy(options: MockComfyOptions = {}) {
     startNext();
   };
 
+  const oom = (id: string, start: unknown[]) => [
+    start,
+    [
+      "execution_error",
+      {
+        prompt_id: id,
+        node_id: "8",
+        node_type: "KSampler",
+        exception_message: "CUDA out of memory. Tried to allocate 2.00 GiB",
+        exception_type: "torch.OutOfMemoryError",
+        traceback: []
+      }
+    ]
+  ];
+
   const startNext = () => {
     if (running) return;
     const id = pending.shift();
@@ -104,49 +153,82 @@ export async function startMockComfy(options: MockComfyOptions = {}) {
     send(job.clientId, { type: "execution_start", data: { prompt_id: id } });
     if (job.behavior === "hang") return;
 
+    const latent = latentOf(job.workflow);
+    const outOfMemory =
+      job.behavior === "oom_always" ||
+      (job.behavior === "oom_big" && latent.width * latent.height > 500_000) ||
+      (job.behavior === "oom_long" && latent.length > 100);
+
     let step = 0;
     const tick = () => {
       step++;
       send(job.clientId, { type: "progress", data: { value: step, max: steps, prompt_id: id, node: "8" } });
       if (step < steps) {
-        job.timer = setTimeout(tick, renderMs / steps);
+        job.timer = setTimeout(tick, settings.renderMs / steps);
+        return;
+      }
+      if (outOfMemory) {
+        settle(job, "error", oom(id, start));
         return;
       }
       if (job.behavior === "fail") {
         settle(job, "error", [
           start,
-          [
-            "execution_error",
-            {
-              prompt_id: id,
-              node_id: "8",
-              node_type: "KSampler",
-              exception_message: "CUDA out of memory. Tried to allocate 2.00 GiB",
-              exception_type: "torch.OutOfMemoryError",
-              traceback: []
-            }
-          ]
+          ["execution_error", { prompt_id: id, node_id: "8", node_type: "KSampler", exception_message: "Sampler exploded", exception_type: "RuntimeError", traceback: [] }]
         ]);
         return;
       }
-      const filename = `wan_${String(job.number).padStart(5, "0")}_.mp4`;
-      if (job.behavior !== "lost") outputs.set(filename, FAKE_MP4);
+      const filename = job.behavior === "unsafe" ? "../evil.mp4" : `wan_${String(job.number).padStart(5, "0")}_.mp4`;
+      if (job.behavior !== "lost" && job.behavior !== "unsafe") outputs.set(filename, FAKE_MP4);
       settle(job, "success", [start, ["execution_success", { prompt_id: id }]], {
         "save-node": { images: [{ filename, subfolder: "venice-mcp", type: "output" }], animated: [true] }
       });
     };
-    job.timer = setTimeout(tick, renderMs / steps);
+    job.timer = setTimeout(tick, settings.renderMs / steps);
   };
 
-  const objectInfo: Record<string, unknown> = {
-    UNETLoader: { UNETLoader: { input: { required: { unet_name: [checkpoints], weight_dtype: [["default", "fp8_e4m3fn"]] } } } },
-    UnetLoaderGGUF: {},
-    CLIPLoader: { CLIPLoader: { input: { required: { clip_name: [["umt5_xxl_fp16.safetensors"]], type: [["wan", "sd3"]] } } } },
-    VAELoader: { VAELoader: { input: { required: { vae_name: [["wan2.2_vae.safetensors", "wan_2.1_vae.safetensors"]] } } } },
-    CLIPVisionLoader: { CLIPVisionLoader: { input: { required: { clip_name: [["clip_vision_h.safetensors"]] } } } },
+  const comboNode = (cls: string, input: string, files: string[], extra: Record<string, unknown> = {}) => ({
+    [cls]: { input: { required: { [input]: [files], ...extra } } }
+  });
+
+  const objectInfo = (): Record<string, unknown> => ({
+    UNETLoader: comboNode("UNETLoader", "unet_name", settings.checkpoints, { weight_dtype: [["default", "fp8_e4m3fn"]] }),
+    UnetLoaderGGUF: settings.ggufInstalled ? comboNode("UnetLoaderGGUF", "unet_name", settings.ggufFiles) : {},
+    CLIPLoader: comboNode("CLIPLoader", "clip_name", settings.clipFiles, { type: [["wan", "sd3"]] }),
+    VAELoader: comboNode("VAELoader", "vae_name", settings.vaeFiles),
+    CLIPVisionLoader: comboNode("CLIPVisionLoader", "clip_name", ["clip_vision_h.safetensors"]),
     // The newer COMBO format, so both parsers are exercised
     KSampler: { KSampler: { input: { required: { sampler_name: ["COMBO", { options: ["euler", "uni_pc", "dpmpp_2m"] }] } } } },
-    LoadImage: { LoadImage: { input: { required: { image: [["existing.png"]] } } } }
+    LoadImage: comboNode("LoadImage", "image", ["existing.png"])
+  });
+
+  /** ComfyUI's own /prompt validation: the node classes must exist and the model files must be installed. */
+  const validate = (workflow: Workflow): { status: number; body: unknown } | undefined => {
+    for (const [nodeId, node] of Object.entries(workflow ?? {})) {
+      if (node.class_type === "UnetLoaderGGUF" && !settings.ggufInstalled) {
+        return {
+          status: 400,
+          body: { error: { type: "invalid_prompt", message: "Cannot execute because node UnetLoaderGGUF does not exist.", details: `Node ID '#${nodeId}'` }, node_errors: {} }
+        };
+      }
+      const list =
+        node.class_type === "UNETLoader" ? settings.checkpoints : node.class_type === "UnetLoaderGGUF" ? settings.ggufFiles : undefined;
+      if (list && !list.includes(node.inputs.unet_name)) {
+        return {
+          status: 400,
+          body: {
+            error: { type: "prompt_outputs_failed_validation", message: "Prompt outputs failed validation", details: "" },
+            node_errors: {
+              [nodeId]: {
+                class_type: node.class_type,
+                errors: [{ type: "value_not_in_list", message: "Value not in list", details: "", extra_info: { input_name: "unet_name", received_value: node.inputs.unet_name } }]
+              }
+            }
+          }
+        };
+      }
+    }
+    return undefined;
   };
 
   const server = createServer(async (req, res) => {
@@ -164,45 +246,42 @@ export async function startMockComfy(options: MockComfyOptions = {}) {
         system: { os: "posix", comfyui_version: "0.3.60" },
         devices: [
           {
-            name: "cuda:0 NVIDIA GeForce RTX 4090 : cudaMallocAsync",
+            name: `cuda:0 ${settings.gpuName} : cudaMallocAsync`,
             type: "cuda",
             index: 0,
-            vram_total: (options.vramGB ?? 24) * 1024 ** 3,
-            vram_free: (options.vramGB ?? 24) * 1024 ** 3
+            vram_total: settings.vramGB * 1024 ** 3,
+            vram_free: settings.vramGB * 1024 ** 3
           }
         ]
       });
     }
-    if (req.method === "GET" && path.startsWith("/object_info/")) return json(res, 200, objectInfo[path.slice(13)] ?? {});
+    if (req.method === "GET" && path.startsWith("/object_info/")) return json(res, 200, objectInfo()[path.slice(13)] ?? {});
     if (req.method === "POST" && path === "/upload/image") {
       if (!contentType?.startsWith("multipart/form-data")) return json(res, 400, { error: "expected multipart" });
       return json(res, 200, { name: "start.png", subfolder: "", type: "input" });
     }
     if (req.method === "POST" && path === "/prompt") {
-      const workflow = body?.prompt as Job["workflow"];
-      // ComfyUI's own validation: model files must be installed
-      for (const [nodeId, node] of Object.entries(workflow ?? {})) {
-        if (node.class_type === "UNETLoader" && !checkpoints.includes(node.inputs.unet_name)) {
-          return json(res, 400, {
-            error: { type: "prompt_outputs_failed_validation", message: "Prompt outputs failed validation", details: "" },
-            node_errors: {
-              [nodeId]: {
-                class_type: "UNETLoader",
-                errors: [{ type: "value_not_in_list", message: "Value not in list", details: "", extra_info: { input_name: "unet_name", received_value: node.inputs.unet_name } }]
-              }
-            }
-          });
-        }
-      }
+      const workflow = body?.prompt as Workflow;
+      const invalid = validate(workflow);
+      if (invalid) return json(res, invalid.status, invalid.body);
       const text = JSON.stringify(workflow);
       const id = randomUUID();
-      const job: Job = {
-        id,
-        number: ++counter,
-        workflow,
-        clientId: body.client_id,
-        behavior: text.includes("FAIL_RENDER") ? "fail" : text.includes("HANG") ? "hang" : text.includes("LOST_FILE") ? "lost" : "ok"
-      };
+      const behavior: Job["behavior"] = text.includes("BOOM")
+        ? "fail"
+        : text.includes("FAIL_RENDER") || text.includes("OOM_ALWAYS")
+          ? "oom_always"
+          : text.includes("OOM_BIG")
+            ? "oom_big"
+            : text.includes("OOM_LONG")
+              ? "oom_long"
+              : text.includes("HANG")
+                ? "hang"
+                : text.includes("LOST_FILE")
+                  ? "lost"
+                  : text.includes("UNSAFE_NAME")
+                    ? "unsafe"
+                    : "ok";
+      const job: Job = { id, number: ++counter, workflow, clientId: body.client_id, behavior };
       jobs.set(id, job);
       pending.push(id);
       startNext();
@@ -265,8 +344,19 @@ export async function startMockComfy(options: MockComfyOptions = {}) {
     url: `http://127.0.0.1:${port}`,
     requests,
     state: () => ({ running, pending: [...pending] }),
+    /** Change the reported VRAM, as if ComfyUI had been restarted on a different card. */
+    setVram: (gb: number, gpuName?: string) => {
+      settings.vramGB = gb;
+      if (gpuName) settings.gpuName = gpuName;
+    },
+    /** Every workflow ComfyUI accepted, oldest first, with the prompt ID it was given. */
+    submissions: () =>
+      requests
+        .filter(r => r.method === "POST" && r.path === "/prompt")
+        .map(r => r.body?.prompt as Workflow)
+        .filter(workflow => workflow && !validate(workflow)),
     /** The last workflow ComfyUI accepted. */
-    lastWorkflow: () => [...requests].reverse().find(r => r.method === "POST" && r.path === "/prompt")?.body?.prompt as Job["workflow"],
+    lastWorkflow: () => [...requests].reverse().find(r => r.method === "POST" && r.path === "/prompt")?.body?.prompt as Workflow,
     close: async () => {
       for (const job of jobs.values()) clearTimeout(job.timer);
       for (const socket of sockets.values()) socket.destroy();

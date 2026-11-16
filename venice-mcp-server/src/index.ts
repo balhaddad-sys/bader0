@@ -16,7 +16,10 @@ import { registerAgentTools } from "./tools/agent.js";
 import { registerCatalogTools } from "./tools/catalog.js";
 import { registerChatTools } from "./tools/chat.js";
 import { registerMediaTools } from "./tools/media.js";
+import { registerVideoTools } from "./tools/video.js";
 import { registerWanTools } from "./tools/wan.js";
+import { pruneOutputDir } from "./output.js";
+import { shutdownWan } from "./wan.js";
 import { registerWebTools } from "./tools/web.js";
 
 /** Builds a fresh server. serveStdio calls it once; createMcpHandler calls it for every HTTP request. */
@@ -28,8 +31,8 @@ function createServer(): McpServer {
         "Venice.ai tools. For research or multi-step tasks that need current information, call venice_agent: it searches, reads pages and returns a cited answer. " +
         "Use venice_chat for a single prompt to a Venice model, venice_web_search / venice_web_scrape for raw web data, " +
         "venice_generate_image and venice_text_to_speech for media, and venice_list_models / venice_list_characters to find IDs. " +
-        "Every venice_* generation call is billed to the user's Venice account. " +
-        "wan_video renders video locally (free, private, never sent to Venice); it returns a job ID at once, so poll wan_status instead of waiting."
+        "Every venice_* generation call, including venice_video (hosted video), is billed to the user's Venice account. " +
+        "wan_video renders video locally (free, private, never sent to Venice). Both video tools return a job ID at once, so poll wan_status / venice_video_status instead of waiting."
     }
   );
   registerAgentTools(server);
@@ -38,6 +41,7 @@ function createServer(): McpServer {
   registerMediaTools(server);
   registerCatalogTools(server);
   registerWanTools(server);
+  registerVideoTools(server);
   return server;
 }
 
@@ -91,9 +95,33 @@ if (!isLoopbackUrl(wanConfig.baseUrl)) {
   );
 }
 
+// Old clips go before anything is served; this never throws
+await pruneOutputDir();
+
+/**
+ * Cancels the local renders this process queued, so a closed session leaves nothing orphaned in ComfyUI's queue, then
+ * exits. The stdio transport only closes itself when stdin ends; the progress websocket would keep the process alive.
+ */
+let shuttingDown = false;
+function shutdown(reason: string): void {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.error(`${SERVER_NAME}: shutting down (${reason})`);
+  const deadline = setTimeout(() => process.exit(0), 4_000);
+  void shutdownWan()
+    .catch(() => undefined)
+    .finally(() => {
+      clearTimeout(deadline);
+      process.exit(0);
+    });
+}
+for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) process.on(signal, () => shutdown(signal));
+
 if (process.env.TRANSPORT === "http") {
   serveHttp();
 } else {
   serveStdio(createServer);
+  process.stdin.on("end", () => shutdown("stdin closed"));
+  process.stdin.on("close", () => shutdown("stdin closed"));
   console.error(`${SERVER_NAME} ${SERVER_VERSION} running on stdio`);
 }

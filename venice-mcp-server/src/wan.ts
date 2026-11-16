@@ -1,31 +1,65 @@
 /**
- * Local Wan video generation through ComfyUI: runner detection, VRAM-based defaults,
- * workflow injection by class_type, and the job lifecycle (queue -> poll -> download).
+ * Local Wan video generation through ComfyUI: planning from workflow metadata and the GPU, workflow injection by
+ * class_type, and the job lifecycle (queue -> poll -> download), including the one out-of-memory retry and shutdown.
  *
- * Nothing here calls Venice. Jobs are tracked in this process; job IDs are ComfyUI prompt
- * IDs, so wan_status can still resolve a job from ComfyUI's history after a server restart.
+ * Nothing here calls Venice. A job's ID is the ComfyUI prompt ID of its first attempt, so wan_status can still resolve
+ * it from ComfyUI's history after a server restart; a retried job keeps that ID while its current prompt ID changes.
  */
 import { randomInt, randomUUID } from "node:crypto";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { basename, extname, isAbsolute, join, resolve } from "node:path";
+import { basename, dirname, extname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { ComfyApiError, comfyBytes, comfyJson } from "./comfy.js";
+import { comfyBytes, comfyJson } from "./comfy.js";
 import { wanConfig } from "./config.js";
-import { bundledImageToVideo, bundledTextToVideo, type Workflow, type WorkflowNode } from "./wan-workflows.js";
+import { hasPathTraversal, localOutputPath } from "./output.js";
+import { diffusionLoaders, ggufMissingError, injectRequest, loaderFile, nodes, normalizeLoaders, setLoaderFile, substituteSupportFile } from "./wan-graph.js";
+import {
+  describeFootprint,
+  estimateFootprint,
+  is5B,
+  lowerTier,
+  pickCandidate,
+  preferredSize,
+  ratedTier,
+  tierAtLeast,
+  tierOf,
+  TIER_LABEL,
+  usableGB,
+  type Candidate,
+  type Footprint,
+  type Tier
+} from "./wan-plan.js";
+import { comboOptions, getRunnerProfile, isGguf, objectInfo, readQueue, type Checkpoint, type RunnerProfile } from "./wan-runner.js";
+import {
+  BUNDLED_LABELS,
+  loadBundledWorkflow,
+  loadWorkflowFile,
+  minSide,
+  resolveFrames,
+  resolveSize,
+  sizeLabel,
+  snapFrames,
+  type BundledKey,
+  type LoadedWorkflow,
+  type SizeOption,
+  type WanMeta
+} from "./wan-workflows.js";
 
-export const DEFAULT_FPS = 16;
-export const DEFAULT_FRAMES = 81;
-export const MAX_FRAMES = 241;
+export { getRunnerProfile } from "./wan-runner.js";
+
 const DEFAULT_NEGATIVE =
   "blurry, low quality, worst quality, jpeg artifacts, static frame, overexposed, subtitles, text, watermark, " +
   "deformed, disfigured, extra fingers, poorly drawn hands, poorly drawn face, mutated limbs, cluttered background";
 
 /** Identifies this server to ComfyUI, so its websocket sends progress for the jobs queued here. */
 const CLIENT_ID = randomUUID();
-const PROFILE_TTL_MS = 30_000;
 const DOWNLOAD_TIMEOUT_MS = 300_000;
+const SHUTDOWN_TIMEOUT_MS = 2_000;
 const MAX_START_IMAGE_BYTES = 20 * 1024 * 1024;
+/** Jobs ahead of a new one (running + waiting) at which this server stops adding to ComfyUI's queue. */
+const MAX_QUEUE_DEPTH = 2;
+const OOM_FRAME_FACTOR = 0.6;
 const IMAGE_TYPES: Record<string, string> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".bmp": "image/bmp" };
 const VIDEO_TYPES: Record<string, string> = {
   ".mp4": "video/mp4",
@@ -36,141 +70,11 @@ const VIDEO_TYPES: Record<string, string> = {
   ".gif": "image/gif"
 };
 
-// ---------------------------------------------------------------------------
-// Runner detection
-// ---------------------------------------------------------------------------
-
 type Mode = "t2v" | "i2v";
 
-export interface Checkpoint {
-  file: string;
-  loader: "UNETLoader" | "UnetLoaderGGUF";
-  mode: "t2v" | "i2v" | "ti2v" | "other";
-  family: "2.1" | "2.2" | "unknown";
-  params?: number;
-  dual?: "high" | "low";
-  quantized: boolean;
-  footprintGB?: number;
-  nativeHeight?: 480 | 720;
-}
-
-export interface RunnerProfile {
-  gpu?: string;
-  vramGB?: number;
-  checkpoints: Checkpoint[];
-  options: { unet: string[]; gguf: string[]; clip: string[]; vae: string[]; clipVision: string[]; samplers: string[] };
-}
-
-let profileCache: { expiresAt: number; profile: RunnerProfile } | undefined;
-
-/** Reads the choices for one input of a node class from /object_info, in both the old and the COMBO format. */
-function comboOptions(info: unknown, cls: string, input: string): string[] {
-  const node = (info as Record<string, any> | undefined)?.[cls];
-  const spec = node?.input?.required?.[input] ?? node?.input?.optional?.[input];
-  if (!Array.isArray(spec)) return [];
-  const list = Array.isArray(spec[0]) ? spec[0] : spec[0] === "COMBO" ? spec[1]?.options : undefined;
-  return Array.isArray(list) ? list.filter((item): item is string => typeof item === "string") : [];
-}
-
-async function objectInfo(cls: string, signal?: AbortSignal): Promise<unknown> {
-  try {
-    return await comfyJson(`object_info/${cls}`, {}, signal);
-  } catch (error) {
-    // Classes from custom nodes that are not installed come back empty or 404
-    if (error instanceof ComfyApiError && error.status === 404) return {};
-    throw error;
-  }
-}
-
-function bytesPerParam(name: string): number {
-  if (name.endsWith(".gguf")) {
-    const level = /q(\d)/.exec(name)?.[1];
-    return { "8": 1.06, "6": 0.82, "5": 0.69, "4": 0.56, "3": 0.43, "2": 0.33 }[level ?? ""] ?? 0.6;
-  }
-  if (/fp8|e4m3|e5m2/.test(name)) return 1;
-  if (/fp32/.test(name)) return 4;
-  return 2;
-}
-
-/** Reads size class, task and family from a checkpoint file name, e.g. wan2.1_t2v_1.3B_fp16.safetensors. */
-export function parseCheckpoint(file: string, loader: Checkpoint["loader"]): Checkpoint | undefined {
-  const name = file.toLowerCase();
-  if (!name.includes("wan")) return undefined;
-  const params = /1[._]3b/.test(name) ? 1.3 : /(^|[^0-9.])5b/.test(name) ? 5 : /14b/.test(name) ? 14 : undefined;
-  const mode = /(flf2v|vace|fun|s2v|animate|camera|control)/.test(name)
-    ? "other"
-    : /ti2v/.test(name)
-      ? "ti2v"
-      : /i2v/.test(name)
-        ? "i2v"
-        : /t2v/.test(name)
-          ? "t2v"
-          : "other";
-  const family = /wan_?2[._-]?2|wan22/.test(name) ? "2.2" : /wan_?2[._-]?1|wan21/.test(name) ? "2.1" : "unknown";
-  const dual = /high[_-]?noise/.test(name) ? "high" : /low[_-]?noise/.test(name) ? "low" : undefined;
-  const nativeHeight = /720p/.test(name) ? 720 : /480p/.test(name) || params === 1.3 ? 480 : undefined;
-  return {
-    file,
-    loader,
-    mode,
-    family,
-    ...(params ? { params, footprintGB: Math.round(params * bytesPerParam(name) * 10) / 10 } : {}),
-    ...(dual ? { dual } : {}),
-    quantized: name.endsWith(".gguf") || /fp8|e4m3|e5m2/.test(name),
-    ...(nativeHeight ? { nativeHeight } : {})
-  };
-}
-
-/** Asks ComfyUI what GPU it has and which models are installed. Cached briefly; throws if the runner is down. */
-export async function getRunnerProfile(signal?: AbortSignal): Promise<RunnerProfile> {
-  if (profileCache && profileCache.expiresAt > Date.now()) return profileCache.profile;
-  const [stats, unet, gguf, clip, vae, clipVision, sampler] = await Promise.all([
-    comfyJson("system_stats", {}, signal),
-    objectInfo("UNETLoader", signal),
-    objectInfo("UnetLoaderGGUF", signal),
-    objectInfo("CLIPLoader", signal),
-    objectInfo("VAELoader", signal),
-    objectInfo("CLIPVisionLoader", signal),
-    objectInfo("KSampler", signal)
-  ]);
-  const devices = ((stats as { devices?: unknown[] }).devices ?? []) as { name?: string; type?: string; vram_total?: number }[];
-  const gpu = devices.find(device => device.type !== "cpu" && typeof device.vram_total === "number" && device.vram_total > 0);
-
-  const options = {
-    unet: comboOptions(unet, "UNETLoader", "unet_name"),
-    gguf: comboOptions(gguf, "UnetLoaderGGUF", "unet_name"),
-    clip: comboOptions(clip, "CLIPLoader", "clip_name"),
-    vae: comboOptions(vae, "VAELoader", "vae_name"),
-    clipVision: comboOptions(clipVision, "CLIPVisionLoader", "clip_name"),
-    samplers: comboOptions(sampler, "KSampler", "sampler_name")
-  };
-  const checkpoints = [
-    ...options.unet.map(file => parseCheckpoint(file, "UNETLoader")),
-    ...options.gguf.map(file => parseCheckpoint(file, "UnetLoaderGGUF"))
-  ].filter((checkpoint): checkpoint is Checkpoint => checkpoint !== undefined);
-
-  // "cuda:0 NVIDIA GeForce RTX 4090 : cudaMallocAsync" -> "NVIDIA GeForce RTX 4090"
-  const gpuName = gpu?.name?.replace(/^cuda:\d+\s*/, "").replace(/\s*:\s*\w+$/, "");
-  const profile: RunnerProfile = {
-    ...(gpuName ? { gpu: gpuName } : {}),
-    ...(gpu?.vram_total ? { vramGB: Math.round((gpu.vram_total / 1024 ** 3) * 10) / 10 } : {}),
-    checkpoints,
-    options
-  };
-  profileCache = { expiresAt: Date.now() + PROFILE_TTL_MS, profile };
-  return profile;
-}
-
 // ---------------------------------------------------------------------------
-// Defaults from VRAM
+// Choosing a workflow and checkpoint
 // ---------------------------------------------------------------------------
-
-export interface WanDefaults {
-  width: number;
-  height: number;
-  checkpoint?: Checkpoint;
-  reason: string;
-}
 
 function describeCheckpoint(checkpoint: Checkpoint): string {
   const size = checkpoint.params ? `${checkpoint.params}B` : "unknown size";
@@ -178,199 +82,349 @@ function describeCheckpoint(checkpoint: Checkpoint): string {
   return `${checkpoint.file} (${size}${checkpoint.quantized ? " quantized" : ""}${footprint})`;
 }
 
-function installedList(profile: RunnerProfile): string {
-  return profile.checkpoints.length ? profile.checkpoints.map(checkpoint => checkpoint.file).join(", ") : "none";
-}
+const installedList = (profile: RunnerProfile): string => (profile.checkpoints.length ? profile.checkpoints.map(checkpoint => checkpoint.file).join(", ") : "none");
 
-/** Whether the bundled Wan 2.1 single-model workflow can load this checkpoint. */
-function fitsBundled(checkpoint: Checkpoint, mode: Mode): boolean {
-  return checkpoint.mode === mode && checkpoint.family !== "2.2" && !checkpoint.dual && checkpoint.params !== undefined && checkpoint.params !== 5;
-}
+const envNameFor = (mode: Mode): "WAN_WORKFLOW_T2V" | "WAN_WORKFLOW_I2V" => (mode === "t2v" ? "WAN_WORKFLOW_T2V" : "WAN_WORKFLOW_I2V");
+const customPathFor = (mode: Mode): string | undefined => (mode === "t2v" ? wanConfig.workflowT2V : wanConfig.workflowI2V);
 
-/**
- * Picks resolution and (for the bundled workflow) checkpoint from VRAM:
- * under 12 GB -> 480p and the smallest checkpoint; 12-23 GB -> 480p and the largest checkpoint that fits
- * in 75% of VRAM (the mid size on typical installs); 24 GB and up -> 720p and the largest that fits.
- */
-export function chooseDefaults(profile: RunnerProfile, mode: Mode, pickCheckpoint: boolean): WanDefaults {
-  const vram = profile.vramGB;
-  const gpuText = vram !== undefined ? `${profile.gpu ?? "GPU"} with ${vram} GB VRAM` : "no GPU reported by ComfyUI";
-  let width = 832;
-  let height = 480;
-  let tier = "under 12 GB → 480p";
-  if (vram !== undefined && vram >= 24) {
-    width = 1280;
-    height = 720;
-    tier = "24 GB+ → 720p";
-  } else if (vram !== undefined && vram >= 12) {
-    tier = "12–23 GB → 480p (720p possible)";
-  }
-
-  let checkpoint: Checkpoint | undefined;
-  let modelText = "";
-  if (pickCheckpoint) {
-    if (wanConfig.model) {
-      const file = wanConfig.model;
-      checkpoint =
-        profile.checkpoints.find(candidate => candidate.file === file) ??
-        (profile.options.unet.includes(file)
-          ? { file, loader: "UNETLoader", mode: "other", family: "unknown", quantized: false }
-          : profile.options.gguf.includes(file)
-            ? { file, loader: "UnetLoaderGGUF", mode: "other", family: "unknown", quantized: true }
-            : undefined);
-      if (!checkpoint) {
-        throw new Error(`WAN_MODEL is set to ${wanConfig.model}, but ComfyUI does not have it. Installed Wan checkpoints: ${installedList(profile)}.`);
-      }
-      modelText = `checkpoint ${describeCheckpoint(checkpoint)} from WAN_MODEL`;
-    } else {
-      const candidates = profile.checkpoints.filter(candidate => fitsBundled(candidate, mode)).sort((a, b) => (a.footprintGB ?? 0) - (b.footprintGB ?? 0));
-      if (candidates.length === 0) throw missingCheckpointError(profile, mode);
-      if (vram === undefined || vram < 12) {
-        checkpoint = candidates[0]!;
-        modelText = `checkpoint ${describeCheckpoint(checkpoint)}, the smallest installed`;
-      } else {
-        const fitting = candidates.filter(candidate => (candidate.footprintGB ?? Infinity) <= vram * 0.75);
-        checkpoint = fitting.at(-1) ?? candidates[0]!;
-        modelText = fitting.length
-          ? `checkpoint ${describeCheckpoint(checkpoint)}, the largest installed that fits in 75% of VRAM`
-          : `checkpoint ${describeCheckpoint(checkpoint)}, the smallest installed (none fit in 75% of VRAM)`;
-      }
-    }
-    if (checkpoint.nativeHeight === 480 && height > 480) {
-      width = 832;
-      height = 480;
-      tier += ", capped at 480p because the checkpoint is a 480p model";
-    }
-  }
-
-  const reason = `${gpuText} (${tier}): default ${width}x${height}${modelText ? `; ${modelText}` : ""}.`;
-  return { width, height, ...(checkpoint ? { checkpoint } : {}), reason };
+/** Which bundled workflow can load a checkpoint, if any. The 5B TI2V serves both modes; 2.2 high/low-noise models are not bundled. */
+function bundledKeyFor(checkpoint: Checkpoint, mode: Mode): BundledKey | undefined {
+  if (checkpoint.dual || checkpoint.params === undefined) return undefined;
+  if (is5B(checkpoint)) return checkpoint.mode === "ti2v" || checkpoint.mode === mode ? (`wan2.2_ti2v_5b_${mode}` as BundledKey) : undefined;
+  if (checkpoint.family === "2.2" || checkpoint.params === 5) return undefined;
+  return checkpoint.mode === mode ? (`wan2.1_${mode}` as BundledKey) : undefined;
 }
 
 function missingCheckpointError(profile: RunnerProfile, mode: Mode): Error {
   const kind = mode === "t2v" ? "text-to-video" : "image-to-video";
-  const envName = mode === "t2v" ? "WAN_WORKFLOW_T2V" : "WAN_WORKFLOW_I2V";
+  const ggufNote = profile.ggufLoader ? "" : " GGUF files are only listed once the ComfyUI-GGUF custom nodes are installed.";
   if (profile.checkpoints.length === 0) {
     return new Error(
       "No Wan checkpoints are installed in ComfyUI (models/diffusion_models). Add one, e.g. " +
-        (mode === "t2v" ? "wan2.1_t2v_1.3B_fp16.safetensors (runs under 12 GB)." : "wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors.")
+        (mode === "t2v" ? "wan2.1_t2v_1.3B_fp16.safetensors (runs under 12 GB)." : "wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors.") +
+        ggufNote
     );
   }
   return new Error(
-    `No Wan 2.1 ${kind} checkpoint is installed for the bundled workflow. Installed Wan files: ${installedList(profile)}. ` +
-      `Wan 2.2 and specialty checkpoints (5B TI2V, high/low-noise 14B, VACE, Fun) need their own workflow: build it in ComfyUI, ` +
-      `use Export (API), and set ${envName} to that file.`
+    `No installed checkpoint fits a bundled ${kind} workflow (Wan 2.1 1.3B/14B and Wan 2.2 5B TI2V). Installed Wan files: ${installedList(profile)}. ` +
+      `Wan 2.2 high/low-noise 14B and specialty checkpoints (VACE, Fun) need their own workflow: build it in ComfyUI, use Export (API), ` +
+      `save a sibling .meta.json, and set ${envNameFor(mode)} to that file.${ggufNote}`
   );
 }
 
+/** WAN_MODEL: a listed checkpoint, or any installed diffusion model file. */
+function resolveModelOverride(profile: RunnerProfile): Checkpoint {
+  const file = wanConfig.model!;
+  if (isGguf(file) && !profile.ggufLoader) throw ggufMissingError(file, wanConfig.baseUrl);
+  const listed = profile.checkpoints.find(candidate => candidate.file === file);
+  if (listed) return listed;
+  if (!profile.options.unet.includes(file) && !profile.options.gguf.includes(file)) {
+    throw new Error(`WAN_MODEL is set to ${file}, but ComfyUI does not have it. Installed Wan checkpoints: ${installedList(profile)}.`);
+  }
+  return { file, loader: isGguf(file) ? "UnetLoaderGGUF" : "UNETLoader", mode: "other", family: "unknown", quantized: isGguf(file) };
+}
+
+function keyForOverride(checkpoint: Checkpoint, mode: Mode): BundledKey {
+  if (checkpoint.dual || (checkpoint.family === "2.2" && !is5B(checkpoint))) {
+    throw new Error(
+      `WAN_MODEL ${checkpoint.file} is a Wan 2.2 high/low-noise or specialty checkpoint, which the bundled workflows cannot load. ` +
+        `Build its workflow in ComfyUI, use Export (API), save a sibling .meta.json, and set ${envNameFor(mode)}.`
+    );
+  }
+  if (is5B(checkpoint)) return `wan2.2_ti2v_5b_${mode}`;
+  if ((checkpoint.mode === "t2v" || checkpoint.mode === "i2v") && checkpoint.mode !== mode) {
+    throw new Error(`WAN_MODEL ${checkpoint.file} is a ${checkpoint.mode} checkpoint, but this request is ${mode}. Unset WAN_MODEL or pass ${checkpoint.mode === "i2v" ? "a start_image" : "no start_image"}.`);
+  }
+  return `wan2.1_${mode}`;
+}
+
+const T5_DEFAULT = "umt5_xxl_fp8_e4m3fn_scaled.safetensors";
+/** The text encoder the bundled workflows will end up with: their own if installed, else the first umt5 file. */
+const encoderFileFor = (profile: RunnerProfile): string | undefined =>
+  profile.options.clip.includes(T5_DEFAULT) ? T5_DEFAULT : profile.options.clip.find(file => /umt5/i.test(file));
+
+interface Selection {
+  loaded: LoadedWorkflow;
+  checkpoint?: Checkpoint;
+  size: SizeOption;
+  why: string;
+  estimate?: Footprint;
+  warnings: string[];
+}
+
+/** Picks the workflow (and, for bundled ones, the checkpoint) for a tier. Shared by planning and the wan_status overview. */
+async function selectWorkflow(profile: RunnerProfile, mode: Mode, tier: Tier): Promise<Selection> {
+  const customPath = customPathFor(mode);
+  const encoderFile = encoderFileFor(profile);
+
+  if (customPath) {
+    const loaded = await loadWorkflowFile(customPath, envNameFor(mode));
+    const checkpoint = wanConfig.model ? resolveModelOverride(profile) : undefined;
+    return {
+      loaded,
+      ...(checkpoint ? { checkpoint } : {}),
+      size: preferredSize(loaded.meta, tier, checkpoint),
+      why: checkpoint ? "from WAN_MODEL" : "the model the workflow itself loads",
+      warnings: []
+    };
+  }
+
+  if (wanConfig.model) {
+    const checkpoint = resolveModelOverride(profile);
+    const loaded = await loadBundledWorkflow(keyForOverride(checkpoint, mode));
+    const size = preferredSize(loaded.meta, tier, checkpoint);
+    const estimate = estimateFootprint({ checkpoint, ...(encoderFile ? { encoderFile } : {}), size, frames: loaded.meta.default_frames });
+    return { loaded, checkpoint, size, why: "from WAN_MODEL", ...(estimate ? { estimate } : {}), warnings: [] };
+  }
+
+  const candidates: Candidate[] = [];
+  for (const checkpoint of profile.checkpoints) {
+    const key = bundledKeyFor(checkpoint, mode);
+    if (!key) continue;
+    candidates.push({ checkpoint, key, meta: (await loadBundledWorkflow(key)).meta });
+  }
+  if (candidates.length === 0) throw missingCheckpointError(profile, mode);
+  const pick = pickCandidate(candidates, { tier, ...(profile.vramGB !== undefined ? { vramGB: profile.vramGB } : {}), ...(encoderFile ? { encoderFile } : {}) });
+  return {
+    loaded: await loadBundledWorkflow(pick.candidate.key),
+    checkpoint: pick.candidate.checkpoint,
+    size: pick.size,
+    why: pick.why,
+    ...(pick.estimate ? { estimate: pick.estimate } : {}),
+    warnings: pick.warnings
+  };
+}
+
+function reasonText(profile: RunnerProfile, tier: Tier, selection: Selection): string {
+  const vram = profile.vramGB;
+  const gpuText = vram !== undefined ? `${profile.gpu ?? "GPU"} with ${vram} GB VRAM` : "no GPU reported by ComfyUI";
+  const capped = selection.checkpoint?.nativeHeight === 480 && minSide(selection.size) <= 480 && tier === "high" ? ", capped at 480p because the checkpoint is a 480p model" : "";
+  const model = selection.checkpoint ? `checkpoint ${describeCheckpoint(selection.checkpoint)}, ${selection.why}` : selection.why;
+  const usable = usableGB(tier, vram);
+  const estimate = selection.estimate && usable !== undefined ? `. Estimate: ${describeFootprint(selection.estimate)} of ${usable} GB usable` : "";
+  return `${gpuText} (${TIER_LABEL[tier]}${capped}): default ${sizeLabel(selection.size)}; ${model}${estimate}.`;
+}
+
+export interface WanModeDefaults {
+  family: string;
+  width: number;
+  height: number;
+  fps: number;
+  default_frames: number;
+  allowed_sizes: SizeOption[];
+  model: string;
+  workflow: string;
+  tier: Tier;
+  reason: string;
+}
+
+/** What wan_video would use for a mode on this runner, straight from the metadata and the GPU. */
+export async function describeDefaults(profile: RunnerProfile, mode: Mode): Promise<WanModeDefaults> {
+  const tier = tierOf(profile.vramGB);
+  const selection = await selectWorkflow(profile, mode, tier);
+  const meta = selection.loaded.meta;
+  return {
+    family: meta.family,
+    width: selection.size.width,
+    height: selection.size.height,
+    fps: meta.fps,
+    default_frames: meta.default_frames,
+    allowed_sizes: meta.allowed_sizes,
+    model: selection.checkpoint?.file ?? "(the model the workflow loads)",
+    workflow: selection.loaded.bundledKey ? BUNDLED_LABELS[selection.loaded.bundledKey] : selection.loaded.label,
+    tier,
+    reason: reasonText(profile, tier, selection)
+  };
+}
+
 // ---------------------------------------------------------------------------
-// Workflow injection (by class_type, never by node ID)
+// Planning one request
 // ---------------------------------------------------------------------------
 
-type Link = [string, number];
-const isLink = (value: unknown): value is Link =>
-  Array.isArray(value) && value.length === 2 && typeof value[0] === "string" && typeof value[1] === "number";
-
-function nodes(workflow: Workflow, test: (node: WorkflowNode) => boolean): [string, WorkflowNode][] {
-  return Object.entries(workflow).filter(([, node]) => test(node));
+export interface WanVideoParams {
+  prompt: string;
+  negative_prompt?: string;
+  width?: number;
+  height?: number;
+  frames?: number;
+  duration?: number;
+  seed?: number;
+  start_image?: string;
+  steps?: number;
+  cfg?: number;
+  sampler?: string;
 }
 
-const isEncoder = (node: WorkflowNode) => /TextEncode/.test(node.class_type) && typeof node.inputs.text === "string";
+interface Plan {
+  mode: Mode;
+  tier: Tier;
+  loaded: LoadedWorkflow;
+  checkpoint?: Checkpoint;
+  model: string;
+  width: number;
+  height: number;
+  frames: number;
+  fps: number;
+  seed: number;
+  family: string;
+  workflowLabel: string;
+  steps?: number;
+  cfg?: number;
+  sampler?: string;
+  warnings: string[];
+  reason: string;
+  estimate?: Footprint;
+}
 
-/** Follows a sampler's positive or negative input upstream to the text encoder that feeds it. */
-function traceEncoder(workflow: Workflow, start: string, role: "positive" | "negative"): string | undefined {
-  const opposite = role === "positive" ? "negative" : "positive";
-  const queue = [start];
-  const seen = new Set<string>();
-  while (queue.length) {
-    const id = queue.shift()!;
-    if (seen.has(id)) continue;
-    seen.add(id);
-    const node = workflow[id];
-    if (!node) continue;
-    if (isEncoder(node)) return id;
-    const inputs = Object.entries(node.inputs).filter(([key, value]) => isLink(value) && key !== opposite);
-    const preferred = inputs.filter(([key]) => key === role || key === "conditioning");
-    const rest = inputs.filter(([key]) => key !== role && key !== "conditioning");
-    for (const [, value] of [...preferred, ...rest]) queue.push((value as Link)[0]);
+interface PlanOptions {
+  tier?: Tier;
+  frames?: number;
+  seed?: number;
+  /** Drop the caller's width/height and use the tier's default size (an out-of-memory retry). */
+  ignoreSize?: boolean;
+}
+
+const VAE_PATTERN_21 = /wan.?2[._]?1.*vae|wan_2\.1_vae|^(?!.*2[._]?2).*wan.*vae/i;
+const VAE_PATTERN_22 = /wan.?2[._]?2.*vae/i;
+
+/**
+ * Builds the workflow for one request without touching ComfyUI's queue: every check that can fail does so here, before
+ * a model is loaded. Frame rate, default frames and allowed sizes come from the workflow's metadata.
+ */
+async function planJob(params: WanVideoParams, profile: RunnerProfile, options: PlanOptions = {}): Promise<Plan> {
+  const mode: Mode = params.start_image ? "i2v" : "t2v";
+  const customPath = customPathFor(mode);
+  const tier = options.tier ?? tierOf(profile.vramGB);
+  const selection = await selectWorkflow(profile, mode, tier);
+  const { loaded, checkpoint } = selection;
+  const meta: WanMeta = loaded.meta;
+  const workflow = loaded.workflow;
+  const warnings = [...selection.warnings];
+
+  // Size and length, judged against the metadata before anything is submitted
+  const size = options.ignoreSize ? selection.size : resolveSize(meta, { width: params.width, height: params.height }, selection.size, loaded.label);
+  const length =
+    options.frames !== undefined
+      ? { frames: snapFrames(options.frames, meta), warnings: [] as string[] }
+      : resolveFrames(meta, { frames: params.frames, duration: params.duration });
+  warnings.push(...length.warnings);
+  const frames = length.frames;
+
+  // The diffusion model: .gguf files get UnetLoaderGGUF by extension; a custom workflow keeps its own unless WAN_MODEL is set
+  const loaders = diffusionLoaders(workflow);
+  if (loaders.length === 0) throw new Error("The workflow has no UNETLoader (or UnetLoaderGGUF) node to load the Wan model.");
+  if (checkpoint && (!customPath || Boolean(wanConfig.model))) {
+    if (loaders.length > 1) {
+      throw new Error(`The workflow loads ${loaders.length} diffusion models (e.g. Wan 2.2 high/low noise), so WAN_MODEL cannot pick one. Unset WAN_MODEL or edit the workflow.`);
+    }
+    setLoaderFile(loaders[0]![1], checkpoint.file);
   }
-  return undefined;
-}
+  normalizeLoaders(workflow, profile, wanConfig.baseUrl);
 
-function findEncoders(workflow: Workflow): { positive: string; negative?: string } {
-  const conditioned = nodes(workflow, node => isLink(node.inputs.positive) && isLink(node.inputs.negative));
-  for (const [, node] of conditioned) {
-    const positive = traceEncoder(workflow, (node.inputs.positive as Link)[0], "positive");
-    const negative = traceEncoder(workflow, (node.inputs.negative as Link)[0], "negative");
-    if (positive && negative && positive !== negative) return { positive, negative };
+  if (!customPath) {
+    const vaePattern = loaded.bundledKey?.startsWith("wan2.2") ? VAE_PATTERN_22 : VAE_PATTERN_21;
+    for (const [, node] of nodes(workflow, node => node.class_type === "CLIPLoader")) substituteSupportFile(node, "clip_name", profile.options.clip, /umt5/i, "text encoder (umt5)");
+    for (const [, node] of nodes(workflow, node => node.class_type === "VAELoader")) substituteSupportFile(node, "vae_name", profile.options.vae, vaePattern, "VAE");
+    for (const [, node] of nodes(workflow, node => node.class_type === "CLIPVisionLoader")) substituteSupportFile(node, "clip_name", profile.options.clipVision, /clip.?vision/i, "CLIP vision model");
   }
-  // No sampler wiring to follow: fall back to titles, then to node order
-  const encoders = nodes(workflow, isEncoder).sort(([a], [b]) => Number(a) - Number(b) || a.localeCompare(b));
-  if (encoders.length === 0) throw new Error("The workflow has no CLIPTextEncode node to put the prompt in.");
-  const titled = (pattern: RegExp) => encoders.find(([, node]) => pattern.test(node._meta?.title ?? ""))?.[0];
-  const negative = titled(/neg/i) ?? encoders[1]?.[0];
-  const positive = titled(/pos/i) ?? encoders.find(([id]) => id !== negative)![0];
-  return { positive, ...(negative && negative !== positive ? { negative } : {}) };
-}
-
-const DIFFUSION_LOADERS: Record<string, string> = { UNETLoader: "unet_name", UnetLoaderGGUF: "unet_name", CheckpointLoaderSimple: "ckpt_name" };
-
-/** Swaps a missing text encoder / VAE / CLIP vision file for an installed equivalent (bundled workflow only). */
-function substituteSupportFile(node: WorkflowNode, input: string, installed: string[], pattern: RegExp, label: string): void {
-  const current = node.inputs[input];
-  if (typeof current !== "string" || installed.length === 0 || installed.includes(current)) return;
-  const replacement = installed.find(file => pattern.test(file));
-  if (!replacement) {
-    throw new Error(`ComfyUI is missing the Wan ${label} (${current}). Install it in ComfyUI's models folder. Installed: ${installed.join(", ")}.`);
-  }
-  node.inputs[input] = replacement;
-}
-
-function setDiffusionModel(node: WorkflowNode, checkpoint: Checkpoint): void {
-  if (checkpoint.loader === "UnetLoaderGGUF") {
-    node.class_type = "UnetLoaderGGUF";
-    node.inputs = { unet_name: checkpoint.file };
-  } else {
-    node.class_type = "UNETLoader";
-    node.inputs = { unet_name: checkpoint.file, weight_dtype: typeof node.inputs.weight_dtype === "string" ? node.inputs.weight_dtype : "default" };
-  }
-}
-
-function readFps(workflow: Workflow): number {
+  // Every model file the workflow names must be installed
+  const optionLists: Record<string, string[]> = {
+    UNETLoader: profile.options.unet,
+    UnetLoaderGGUF: profile.options.gguf,
+    CLIPLoader: profile.options.clip,
+    VAELoader: profile.options.vae,
+    CLIPVisionLoader: profile.options.clipVision
+  };
   for (const [, node] of Object.entries(workflow)) {
-    const value = node.inputs.fps ?? node.inputs.frame_rate;
-    if (typeof value === "number" && value > 0 && /Video|Animated|Combine/.test(node.class_type)) return value;
+    const list = optionLists[node.class_type];
+    const input = node.class_type === "CLIPLoader" || node.class_type === "CLIPVisionLoader" ? "clip_name" : node.class_type === "VAELoader" ? "vae_name" : "unet_name";
+    const file = node.inputs[input];
+    if (list && typeof file === "string" && !list.includes(file)) {
+      throw new Error(`ComfyUI does not have ${file} (needed by ${node.class_type}). Installed: ${list.join(", ") || "none"}. Install it or set WAN_MODEL to an installed checkpoint.`);
+    }
   }
-  return DEFAULT_FPS;
-}
+  if (mode === "i2v" && nodes(workflow, node => node.class_type === "LoadImage").length === 0) {
+    throw new Error(`The image-to-video workflow (${loaded.label}) has no LoadImage node for start_image.`);
+  }
 
-/** Wan needs 4k+1 frames. */
-export function snapFrames(frames: number): number {
-  return Math.min(MAX_FRAMES, Math.max(5, Math.round((frames - 1) / 4) * 4 + 1));
-}
+  // Memory: estimate, and say so when it is not expected to fit
+  const clipNode = nodes(workflow, node => node.class_type === "CLIPLoader")[0]?.[1];
+  const encoderFile = typeof clipNode?.inputs.clip_name === "string" ? clipNode.inputs.clip_name : encoderFileFor(profile);
+  const estimate = checkpoint ? estimateFootprint({ checkpoint, ...(encoderFile ? { encoderFile } : {}), size, frames }) : undefined;
+  const vram = profile.vramGB;
+  if (checkpoint && vram !== undefined) {
+    const rated = ratedTier(checkpoint, size);
+    const usable = usableGB("high", vram);
+    if (rated && !tierAtLeast(tierOf(vram), rated)) {
+      warnings.push(`${checkpoint.file} at ${sizeLabel(size)} is rated for a 24 GB-class card and this one has ${vram} GB: expect offloading or out-of-memory. An out-of-memory is retried once at a lower setting.`);
+    } else if (!rated && estimate && usable !== undefined && estimate.total > usable) {
+      warnings.push(`Estimated ${describeFootprint(estimate)} is more than the ${usable} GB usable of ${vram} GB VRAM; ComfyUI will offload to system RAM (slow) and may run out of memory.`);
+    }
+  }
+  if (checkpoint?.nativeHeight === 480 && minSide(size) > 480) {
+    warnings.push(`${checkpoint.file} is a 480p model; ${sizeLabel(size)} is outside the resolution it was trained for.`);
+  }
 
-async function loadCustomWorkflow(path: string, envName: string): Promise<Workflow> {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(await readFile(path, "utf8"));
-  } catch (error) {
-    throw new Error(`Could not read ${envName} (${path}): ${error instanceof Error ? error.message : String(error)}`);
-  }
-  if (parsed && typeof parsed === "object" && Array.isArray((parsed as { nodes?: unknown }).nodes)) {
-    throw new Error(`${envName} is a UI-format workflow. In ComfyUI use Export (API) and point ${envName} at that file.`);
-  }
-  const entries = Object.entries((parsed ?? {}) as Record<string, unknown>);
-  const valid = entries.length > 0 && entries.every(([, node]) => node && typeof node === "object" && typeof (node as WorkflowNode).class_type === "string" && typeof (node as WorkflowNode).inputs === "object");
-  if (!valid) throw new Error(`${envName} (${path}) is not an API-format ComfyUI workflow.`);
-  return parsed as Workflow;
+  const seed = options.seed ?? params.seed ?? randomInt(0, 2 ** 48 - 1);
+  const injected = injectRequest(workflow, {
+    prompt: params.prompt,
+    negativePrompt: params.negative_prompt ?? DEFAULT_NEGATIVE,
+    explicitNegative: params.negative_prompt !== undefined,
+    width: size.width,
+    height: size.height,
+    frames,
+    fps: meta.fps,
+    seed,
+    ...(params.steps !== undefined ? { steps: params.steps } : {}),
+    ...(params.cfg !== undefined ? { cfg: params.cfg } : {}),
+    ...(params.sampler !== undefined ? { sampler: params.sampler } : {}),
+    knownSamplers: profile.options.samplers,
+    filenamePrefix: "venice-mcp/wan"
+  });
+  warnings.push(...injected.warnings);
+
+  const sampler = injected.sampler;
+  return {
+    mode,
+    tier,
+    loaded,
+    ...(checkpoint ? { checkpoint } : {}),
+    model: diffusionLoaders(workflow).map(([, node]) => loaderFile(node) ?? "unknown").join(" + "),
+    width: size.width,
+    height: size.height,
+    frames,
+    fps: meta.fps,
+    seed,
+    family: meta.family,
+    workflowLabel: loaded.bundledKey ? BUNDLED_LABELS[loaded.bundledKey] : (customPath ?? loaded.label),
+    ...(typeof sampler.inputs.steps === "number" ? { steps: sampler.inputs.steps } : {}),
+    ...(typeof sampler.inputs.cfg === "number" ? { cfg: sampler.inputs.cfg } : {}),
+    ...(typeof sampler.inputs.sampler_name === "string" ? { sampler: sampler.inputs.sampler_name } : {}),
+    warnings,
+    reason: reasonText(profile, tier, selection),
+    ...(estimate ? { estimate } : {})
+  };
 }
 
 // ---------------------------------------------------------------------------
 // Start image
 // ---------------------------------------------------------------------------
 
-/** Uploads a local file or data URI to ComfyUI's input folder, or checks that a media ID is already there. */
-async function resolveStartImage(value: string, signal?: AbortSignal): Promise<string> {
+/** Cheap, purely textual check that runs before anything else: no `..` in a path or media ID. */
+function assertSafeStartImage(value: string): void {
+  if (/^data:/i.test(value)) return;
+  if (hasPathTraversal(value)) {
+    throw new Error('start_image must not contain ".." or NUL. Pass the file\'s full path, or an image name from ComfyUI\'s input folder.');
+  }
+}
+
+type PreparedImage = { kind: "existing"; name: string } | { kind: "upload"; bytes: Buffer; filename: string; mimeType: string };
+
+/**
+ * Checks a start image without side effects: a local file or data URI is read and validated, a media ID is checked
+ * against ComfyUI's input folder. The upload itself waits until the queue-busy check has passed.
+ */
+async function prepareStartImage(value: string, signal?: AbortSignal): Promise<PreparedImage> {
   let bytes: Buffer;
   let filename: string;
   let mimeType: string;
@@ -393,19 +447,24 @@ async function resolveStartImage(value: string, signal?: AbortSignal): Promise<s
     mimeType = type;
   } else {
     // A media ID: the name of an image already in ComfyUI's input folder, as /upload/image returns it
-    if (value.split("/").includes("..") || !/^[\w .\-/]+$/.test(value)) {
+    if (!/^[\w .\-/]+$/.test(value)) {
       throw new Error("start_image media IDs are file names from ComfyUI's input folder, such as 'start.png' or 'clips/start.png'.");
     }
     const available = comboOptions(await objectInfo("LoadImage", signal), "LoadImage", "image");
     if (available.length && !available.includes(value)) {
       throw new Error(`start_image ${JSON.stringify(value)} is not in ComfyUI's input folder. Pass a local file path instead and it will be uploaded.`);
     }
-    return value;
+    return { kind: "existing", name: value };
   }
   if (bytes.length > MAX_START_IMAGE_BYTES) throw new Error("start_image is larger than 20 MB.");
+  return { kind: "upload", bytes, filename, mimeType };
+}
 
+/** Uploads a prepared image to ComfyUI's input folder and returns the name to put in LoadImage. */
+async function uploadStartImage(prepared: PreparedImage, signal?: AbortSignal): Promise<string> {
+  if (prepared.kind === "existing") return prepared.name;
   const form = new FormData();
-  form.set("image", new Blob([new Uint8Array(bytes)], { type: mimeType }), filename);
+  form.set("image", new Blob([new Uint8Array(prepared.bytes)], { type: prepared.mimeType }), prepared.filename);
   form.set("type", "input");
   form.set("overwrite", "true");
   const uploaded = (await comfyJson("upload/image", { form, timeoutMs: 60_000 }, signal)) as { name?: string; subfolder?: string };
@@ -420,8 +479,22 @@ async function resolveStartImage(value: string, signal?: AbortSignal): Promise<s
 export type JobStatus = "queued" | "running" | "completed" | "failed" | "cancelled" | "timed_out";
 const TERMINAL: ReadonlySet<JobStatus> = new Set(["completed", "failed", "cancelled"]);
 
+export interface AttemptSummary {
+  prompt_id: string;
+  tier: Tier;
+  width: number;
+  height: number;
+  frames: number;
+  model: string;
+  outcome: "out_of_memory";
+}
+
 export interface WanJob {
+  /** The ComfyUI prompt ID of the first attempt. Stays the same if the job is retried. */
   job_id: string;
+  /** The prompt ID of the current attempt. */
+  prompt_id: string;
+  attempt: number;
   status: JobStatus;
   created_at: string;
   started_at?: string;
@@ -433,6 +506,8 @@ export interface WanJob {
   frames: number;
   fps: number;
   duration_seconds: number;
+  family?: string;
+  tier?: Tier;
   model: string;
   workflow: string;
   steps?: number;
@@ -442,6 +517,7 @@ export interface WanJob {
   defaults_reason?: string;
   queue_position?: number;
   progress?: { value: number; max: number; percent: number };
+  previous_attempts?: AttemptSummary[];
   output_path?: string;
   output_uri?: string;
   output_mime_type?: string;
@@ -449,154 +525,113 @@ export interface WanJob {
   warnings: string[];
 }
 
-export interface WanVideoParams {
-  prompt: string;
-  negative_prompt?: string;
-  width?: number;
-  height?: number;
-  frames?: number;
-  duration?: number;
-  seed?: number;
-  start_image?: string;
-  steps?: number;
-  cfg?: number;
-  sampler?: string;
+interface JobContext {
+  params: WanVideoParams;
+  startImage?: string;
+  plan: Plan;
 }
 
 const MAX_TRACKED_JOBS = 100;
 const jobs = new Map<string, WanJob>();
+const contexts = new Map<string, JobContext>();
+/** Current prompt ID -> job, for websocket progress. */
+const promptIndex = new Map<string, WanJob>();
+/** Jobs this process queued. Only these are cancelled at shutdown. */
+const owned = new Set<string>();
 const inFlight = new Map<string, Promise<void>>();
 const loggedReasons = new Set<string>();
 
 function track(job: WanJob): void {
   if (jobs.size >= MAX_TRACKED_JOBS) {
     const oldest = [...jobs.values()].find(candidate => TERMINAL.has(candidate.status));
-    if (oldest) jobs.delete(oldest.job_id);
+    if (oldest) {
+      jobs.delete(oldest.job_id);
+      contexts.delete(oldest.job_id);
+      promptIndex.delete(oldest.prompt_id);
+      owned.delete(oldest.job_id);
+    }
   }
   jobs.set(job.job_id, job);
+  promptIndex.set(job.prompt_id, job);
 }
 
-/** Builds the workflow for one request and queues it. Returns as soon as ComfyUI accepts it. */
-export async function queueWanVideo(params: WanVideoParams, signal?: AbortSignal): Promise<WanJob> {
-  const mode: Mode = params.start_image ? "i2v" : "t2v";
-  const envName = mode === "t2v" ? "WAN_WORKFLOW_T2V" : "WAN_WORKFLOW_I2V";
-  const customPath = mode === "t2v" ? wanConfig.workflowT2V : wanConfig.workflowI2V;
-  const profile = await getRunnerProfile(signal);
-  const workflow = customPath ? await loadCustomWorkflow(customPath, envName) : mode === "t2v" ? bundledTextToVideo() : bundledImageToVideo();
-  const warnings: string[] = [];
+function applyPlan(job: WanJob, plan: Plan): void {
+  job.seed = plan.seed;
+  job.width = plan.width;
+  job.height = plan.height;
+  job.frames = plan.frames;
+  job.fps = plan.fps;
+  job.duration_seconds = Math.round((plan.frames / plan.fps) * 100) / 100;
+  job.family = plan.family;
+  job.tier = plan.tier;
+  job.model = plan.model;
+  job.workflow = plan.workflowLabel;
+  job.defaults_reason = plan.reason;
+  if (plan.steps !== undefined) job.steps = plan.steps;
+  if (plan.cfg !== undefined) job.cfg = plan.cfg;
+  if (plan.sampler !== undefined) job.sampler = plan.sampler;
+  for (const warning of plan.warnings) if (!job.warnings.includes(warning)) job.warnings.push(warning);
+}
 
-  // Model: chosen from VRAM for the bundled workflow; a custom workflow keeps its own unless WAN_MODEL is set
-  const loaders = nodes(workflow, node => node.class_type in DIFFUSION_LOADERS);
-  if (loaders.length === 0) throw new Error("The workflow has no UNETLoader (or UnetLoaderGGUF) node to load the Wan model.");
-  const defaults = chooseDefaults(profile, mode, !customPath || Boolean(wanConfig.model));
-  if (defaults.checkpoint) {
-    if (loaders.length > 1) {
-      throw new Error(`The workflow loads ${loaders.length} diffusion models (e.g. Wan 2.2 high/low noise), so WAN_MODEL cannot pick one. Unset WAN_MODEL or edit the workflow.`);
-    }
-    setDiffusionModel(loaders[0]![1], defaults.checkpoint);
+async function submitPlan(plan: Plan, startImage: string | undefined, signal?: AbortSignal): Promise<string> {
+  if (startImage) {
+    for (const [, node] of nodes(plan.loaded.workflow, node => node.class_type === "LoadImage")) node.inputs.image = startImage;
   }
-  if (!customPath) {
-    for (const [, node] of nodes(workflow, node => node.class_type === "CLIPLoader")) substituteSupportFile(node, "clip_name", profile.options.clip, /umt5/i, "text encoder (umt5)");
-    for (const [, node] of nodes(workflow, node => node.class_type === "VAELoader")) substituteSupportFile(node, "vae_name", profile.options.vae, /wan.?2[._]?1.*vae|wan_2\.1_vae|^(?!.*2[._]?2).*wan.*vae/i, "VAE");
-    for (const [, node] of nodes(workflow, node => node.class_type === "CLIPVisionLoader")) substituteSupportFile(node, "clip_name", profile.options.clipVision, /clip.?vision/i, "CLIP vision model");
-  }
-  // Every model file the workflow names must be installed
-  const optionLists: Record<string, string[]> = { UNETLoader: profile.options.unet, UnetLoaderGGUF: profile.options.gguf, CLIPLoader: profile.options.clip, VAELoader: profile.options.vae, CLIPVisionLoader: profile.options.clipVision };
-  for (const [, node] of Object.entries(workflow)) {
-    const list = optionLists[node.class_type];
-    const input = node.class_type === "CLIPLoader" || node.class_type === "CLIPVisionLoader" ? "clip_name" : node.class_type === "VAELoader" ? "vae_name" : "unet_name";
-    const file = node.inputs[input];
-    if (list && typeof file === "string" && !list.includes(file)) {
-      throw new Error(`ComfyUI does not have ${file} (needed by ${node.class_type}). Installed: ${list.join(", ") || "none"}. Install it or set WAN_MODEL to an installed checkpoint.`);
-    }
-  }
-  if (!loggedReasons.has(defaults.reason)) {
-    loggedReasons.add(defaults.reason);
-    console.error(`[wan] ${defaults.reason}`);
-  }
-
-  // Size and length
-  let width = params.width ?? defaults.width;
-  let height = params.height ?? defaults.height;
-  if (params.width && !params.height) height = Math.max(256, Math.round((params.width * defaults.height) / defaults.width / 16) * 16);
-  if (params.height && !params.width) width = Math.max(256, Math.round((params.height * defaults.width) / defaults.height / 16) * 16);
-  const fps = readFps(workflow);
-  const requestedFrames = params.frames ?? (params.duration !== undefined ? Math.round(params.duration * fps) : DEFAULT_FRAMES);
-  const frames = snapFrames(requestedFrames);
-  if (frames !== requestedFrames) warnings.push(`frames adjusted from ${requestedFrames} to ${frames} (Wan needs 4k+1 frames, 5–${MAX_FRAMES}).`);
-  const vram = profile.vramGB;
-  if (vram !== undefined && vram < 12 && width * height > 832 * 480) warnings.push(`${width}x${height} on ${vram} GB VRAM may run out of memory; 832x480 is the safe size.`);
-  if (frames > 121) warnings.push(`${frames} frames is beyond Wan's 81-frame training length; expect drift and long renders.`);
-  const seed = params.seed ?? randomInt(0, 2 ** 48 - 1);
-
-  // Prompt text
-  const encoders = findEncoders(workflow);
-  workflow[encoders.positive]!.inputs.text = params.prompt;
-  if (encoders.negative) workflow[encoders.negative]!.inputs.text = params.negative_prompt ?? DEFAULT_NEGATIVE;
-  else if (params.negative_prompt) warnings.push("The workflow has no negative prompt node; negative_prompt was ignored.");
-
-  // Latent size and length
-  const latents = nodes(workflow, node => /LatentVideo$|ImageToVideo/.test(node.class_type) && "width" in node.inputs && "height" in node.inputs && "length" in node.inputs);
-  if (latents.length === 0) {
-    throw new Error("The workflow has no latent video node (EmptyHunyuanLatentVideo, WanImageToVideo, Wan22ImageToVideoLatent…) with width/height/length inputs.");
-  }
-  for (const [, node] of latents) Object.assign(node.inputs, { width, height, length: frames });
-
-  // Sampling
-  const seeded = nodes(workflow, node => /KSampler|SamplerCustom|RandomNoise/.test(node.class_type) && (typeof node.inputs.seed === "number" || typeof node.inputs.noise_seed === "number"));
-  if (seeded.length === 0) throw new Error("The workflow has no KSampler (or RandomNoise) node to set the seed on.");
-  for (const [, node] of seeded) node.inputs[typeof node.inputs.seed === "number" ? "seed" : "noise_seed"] = seed;
-  const stepNodes = nodes(workflow, node => /^KSampler(Advanced)?$|BasicScheduler/.test(node.class_type) && typeof node.inputs.steps === "number");
-  if (params.steps !== undefined) {
-    if (stepNodes.length === 1) stepNodes[0]![1].inputs.steps = params.steps;
-    else warnings.push(`steps was ignored: the workflow has ${stepNodes.length} samplers with their own step splits.`);
-  }
-  if (params.cfg !== undefined) {
-    for (const [, node] of nodes(workflow, node => /KSampler|SamplerCustom|CFGGuider/.test(node.class_type) && typeof node.inputs.cfg === "number")) node.inputs.cfg = params.cfg;
-  }
-  if (params.sampler !== undefined) {
-    if (profile.options.samplers.length && !profile.options.samplers.includes(params.sampler)) {
-      throw new Error(`Unknown sampler ${JSON.stringify(params.sampler)}. ComfyUI offers: ${profile.options.samplers.join(", ")}.`);
-    }
-    for (const [, node] of nodes(workflow, node => /KSampler/.test(node.class_type) && typeof node.inputs.sampler_name === "string")) node.inputs.sampler_name = params.sampler;
-  }
-  for (const [, node] of nodes(workflow, node => typeof node.inputs.filename_prefix === "string")) node.inputs.filename_prefix = "venice-mcp/wan";
-
-  // Start image for image-to-video
-  let startImage: string | undefined;
-  if (params.start_image) {
-    const loadImage = nodes(workflow, node => node.class_type === "LoadImage");
-    if (loadImage.length === 0) throw new Error(`The image-to-video workflow (${customPath ?? "bundled"}) has no LoadImage node for start_image.`);
-    startImage = await resolveStartImage(params.start_image, signal);
-    for (const [, node] of loadImage) node.inputs.image = startImage;
-  }
-
-  const queued = (await comfyJson("prompt", { json: { prompt: workflow, client_id: CLIENT_ID } }, signal)) as { prompt_id?: string; number?: number };
+  const queued = (await comfyJson("prompt", { json: { prompt: plan.loaded.workflow, client_id: CLIENT_ID } }, signal)) as { prompt_id?: string };
   if (!queued.prompt_id) throw new Error("ComfyUI accepted the workflow but returned no prompt_id.");
+  return queued.prompt_id;
+}
 
-  const sampler = stepNodes[0]?.[1] ?? seeded[0]![1];
+/** Refuses to stack a job on a queue that already has MAX_QUEUE_DEPTH ahead of it. Applies to new jobs only, not the retry of a failed one. */
+async function assertQueueNotBusy(signal?: AbortSignal): Promise<void> {
+  const queue = await readQueue(signal);
+  const ahead = queue.running.length + queue.pending.length;
+  if (ahead >= MAX_QUEUE_DEPTH) {
+    throw new Error(
+      `ComfyUI's queue is busy, ${ahead} ahead (${queue.running.length} running, ${queue.pending.length} waiting), so this job was not queued. ` +
+        "Wait for one to finish (wan_status shows progress), stop one with wan_cancel, then try again."
+    );
+  }
+}
+
+/** Plans, checks and queues one clip. Returns as soon as ComfyUI accepts it. */
+export async function queueWanVideo(params: WanVideoParams, signal?: AbortSignal): Promise<WanJob> {
+  if (params.start_image) assertSafeStartImage(params.start_image);
+  const profile = await getRunnerProfile(signal);
+  const plan = await planJob(params, profile);
+  // Everything that can be wrong with the request is reported before the transient "queue is busy"
+  const prepared = params.start_image ? await prepareStartImage(params.start_image, signal) : undefined;
+  await assertQueueNotBusy(signal);
+  const startImage = prepared ? await uploadStartImage(prepared, signal) : undefined;
+  const promptId = await submitPlan(plan, startImage, signal);
+
+  if (!loggedReasons.has(plan.reason)) {
+    loggedReasons.add(plan.reason);
+    console.error(`[wan] ${plan.reason}`);
+  }
   const job: WanJob = {
-    job_id: queued.prompt_id,
+    job_id: promptId,
+    prompt_id: promptId,
+    attempt: 1,
     status: "queued",
     created_at: new Date().toISOString(),
     prompt: params.prompt,
-    seed,
-    width,
-    height,
-    frames,
-    fps,
-    duration_seconds: Math.round((frames / fps) * 100) / 100,
-    model: loaders.map(([, node]) => String(node.inputs.unet_name ?? node.inputs.ckpt_name)).join(" + "),
-    workflow: customPath ?? (mode === "t2v" ? "bundled Wan 2.1 text-to-video" : "bundled Wan 2.1 image-to-video"),
-    ...(typeof sampler.inputs.steps === "number" ? { steps: sampler.inputs.steps } : {}),
-    ...(typeof sampler.inputs.cfg === "number" ? { cfg: sampler.inputs.cfg } : {}),
-    ...(typeof sampler.inputs.sampler_name === "string" ? { sampler: sampler.inputs.sampler_name } : {}),
+    seed: plan.seed,
+    width: plan.width,
+    height: plan.height,
+    frames: plan.frames,
+    fps: plan.fps,
+    duration_seconds: 0,
+    model: plan.model,
+    workflow: plan.workflowLabel,
     ...(startImage ? { start_image: startImage } : {}),
-    defaults_reason: defaults.reason,
-    warnings
+    warnings: []
   };
+  applyPlan(job, plan);
   track(job);
-  console.error(`[wan] queued ${job.job_id}: seed=${seed} ${width}x${height} ${frames}f@${fps}fps model=${job.model}`);
+  contexts.set(job.job_id, { params, ...(startImage ? { startImage } : {}), plan });
+  owned.add(job.job_id);
+  console.error(`[wan] queued ${job.job_id}: seed=${job.seed} ${job.width}x${job.height} ${job.frames}f@${job.fps}fps family=${job.family} model=${job.model}`);
   ensureProgressSocket();
   watch(job);
   return job;
@@ -634,11 +669,13 @@ function findOutputFile(outputs: unknown): OutputFile | undefined {
   return best && rank(best) < 18 ? best : undefined;
 }
 
+const isOutOfMemory = (data: Record<string, unknown> | undefined): boolean =>
+  /out of memory|OutOfMemory|allocate/i.test(`${String(data?.exception_message ?? "")} ${String(data?.exception_type ?? "")}`);
+
 function describeExecutionError(data: Record<string, unknown> | undefined): string {
   const node = typeof data?.node_type === "string" ? data.node_type : "A node";
   const message = typeof data?.exception_message === "string" ? data.exception_message.trim().replace(/\.$/, "") : "unknown error";
-  let hint = "";
-  if (/out of memory|OOM|allocate/i.test(message)) hint = " Lower width/height or frames, or set WAN_MODEL to a smaller checkpoint.";
+  const hint = isOutOfMemory(data) ? " Lower width/height or frames, or set WAN_MODEL to a smaller checkpoint." : "";
   return `${node} failed: ${message}.${hint}`;
 }
 
@@ -649,15 +686,26 @@ function finish(job: WanJob, status: JobStatus, error?: string): void {
   if (error) job.error = error;
 }
 
+class UnsafeOutputError extends Error {}
+
+/** ComfyUI chooses these names. Anything that would climb out of its output folder is refused before it reaches /view. */
+function assertSafeOutputRef(file: OutputFile): void {
+  if (hasPathTraversal(file.filename, { rejectAbsolute: true }) || hasPathTraversal(file.subfolder, { rejectAbsolute: true }) || file.filename === "") {
+    throw new UnsafeOutputError(
+      `ComfyUI named an output ${JSON.stringify(join(file.subfolder, file.filename))} that tries to leave its output folder, so it was not fetched.`
+    );
+  }
+}
+
 async function download(job: WanJob, file: OutputFile): Promise<void> {
+  assertSafeOutputRef(file);
   const bytes = await comfyBytes("view", { filename: file.filename, subfolder: file.subfolder, type: file.type }, DOWNLOAD_TIMEOUT_MS);
-  await mkdir(wanConfig.outputDir, { recursive: true });
-  const safeName = basename(file.filename).replace(/[^\w.\-]+/g, "_");
-  const path = join(wanConfig.outputDir, `${job.job_id}-${safeName}`);
+  const path = localOutputPath(job.job_id, file.filename);
+  await mkdir(dirname(path), { recursive: true });
   await writeFile(path, bytes);
   job.output_path = path;
   job.output_uri = pathToFileURL(path).href;
-  job.output_mime_type = VIDEO_TYPES[extname(safeName).toLowerCase()] ?? "application/octet-stream";
+  job.output_mime_type = VIDEO_TYPES[extname(path).toLowerCase()] ?? "application/octet-stream";
 }
 
 function checkTimeout(job: WanJob): void {
@@ -671,14 +719,85 @@ function checkTimeout(job: WanJob): void {
   }
 }
 
+const sameSettings = (a: Plan, b: Plan): boolean =>
+  a.checkpoint?.file === b.checkpoint?.file && a.width === b.width && a.height === b.height && a.frames === b.frames && a.loaded.label === b.loaded.label;
+
+/**
+ * After an out-of-memory, queues the same request once more at the next tier down: the tier's default size and, for
+ * bundled workflows, its checkpoint. When that changes nothing (the 5B has a single size), it asks for fewer frames
+ * instead. Returns false when there is nothing smaller to try or the retry could not be queued.
+ */
+async function retryAfterOutOfMemory(job: WanJob, signal?: AbortSignal): Promise<boolean> {
+  const context = contexts.get(job.job_id);
+  if (!context || job.attempt >= 2 || !owned.has(job.job_id)) return false;
+  const old = context.plan;
+  let next: Plan | undefined;
+  let change = "";
+  try {
+    const profile = await getRunnerProfile(signal);
+    const lower = lowerTier(old.tier);
+    if (lower) {
+      const candidate = await planJob(context.params, profile, { tier: lower, seed: job.seed, ignoreSize: true });
+      if (!sameSettings(old, candidate)) {
+        next = candidate;
+        change = `tier ${old.tier} (${TIER_LABEL[old.tier]}) → ${lower} (${TIER_LABEL[lower]})`;
+      }
+    }
+    if (!next) {
+      const reduced = Math.max(old.loaded.meta.min_frames, snapFrames(old.frames * OOM_FRAME_FACTOR, old.loaded.meta));
+      if (reduced < old.frames) {
+        next = await planJob(context.params, profile, { tier: old.tier, seed: job.seed, frames: reduced });
+        change = `${old.frames} → ${reduced} frames (there is no smaller size or checkpoint)`;
+      }
+    }
+    if (!next) return false;
+    const promptId = await submitPlan(next, context.startImage, signal);
+
+    console.error(
+      `[wan] job ${job.job_id}: out of memory at ${old.width}x${old.height}, ${old.frames} frames, ${old.model}; ` +
+        `retrying once with ${next.width}x${next.height}, ${next.frames} frames, ${next.model} (${change})`
+    );
+    (job.previous_attempts ??= []).push({
+      prompt_id: job.prompt_id,
+      tier: old.tier,
+      width: old.width,
+      height: old.height,
+      frames: old.frames,
+      model: old.model,
+      outcome: "out_of_memory"
+    });
+    promptIndex.delete(job.prompt_id);
+    job.prompt_id = promptId;
+    job.attempt = 2;
+    job.status = "queued";
+    for (const key of ["started_at", "finished_at", "progress", "queue_position", "error"] as const) delete job[key];
+    applyPlan(job, next);
+    job.warnings.push(
+      `Ran out of memory at ${old.width}x${old.height}, ${old.frames} frames (${old.model}); retried once at ${next.width}x${next.height}, ${next.frames} frames (${next.model}): ${change}.`
+    );
+    promptIndex.set(promptId, job);
+    context.plan = next;
+    return true;
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    console.error(`[wan] job ${job.job_id}: could not retry after out-of-memory: ${error instanceof Error ? error.message : String(error)}`);
+    return false;
+  }
+}
+
 async function refresh(job: WanJob, signal?: AbortSignal): Promise<void> {
-  const history = (await comfyJson(`history/${encodeURIComponent(job.job_id)}`, {}, signal)) as Record<string, any>;
-  const entry = history[job.job_id];
+  const history = (await comfyJson(`history/${encodeURIComponent(job.prompt_id)}`, {}, signal)) as Record<string, any>;
+  const entry = history[job.prompt_id];
   if (entry) {
     const messages: unknown[] = Array.isArray(entry.status?.messages) ? entry.status.messages : [];
     const message = (name: string) => (messages.find(item => Array.isArray(item) && item[0] === name) as [string, Record<string, unknown>] | undefined)?.[1];
     if (message("execution_interrupted")) return finish(job, "cancelled");
-    if (entry.status?.status_str === "error" || message("execution_error")) return finish(job, "failed", describeExecutionError(message("execution_error")));
+    if (entry.status?.status_str === "error" || message("execution_error")) {
+      const data = message("execution_error");
+      if (isOutOfMemory(data) && !TERMINAL.has(job.status) && (await retryAfterOutOfMemory(job, signal))) return;
+      const retried = job.attempt > 1 ? " It had already been retried once at a lower setting." : "";
+      return finish(job, "failed", describeExecutionError(data) + retried);
+    }
     const file = findOutputFile(entry.outputs);
     if (file) {
       if (!job.output_path) {
@@ -686,6 +805,7 @@ async function refresh(job: WanJob, signal?: AbortSignal): Promise<void> {
           await download(job, file);
         } catch (error) {
           if (signal?.aborted) throw error;
+          if (error instanceof UnsafeOutputError) return finish(job, "failed", error.message);
           const reason = error instanceof Error ? error.message : String(error);
           return finish(job, "failed", `The render finished, but fetching ${file.filename} from ComfyUI failed (${reason}). The file is still in ComfyUI's output folder.`);
         }
@@ -699,9 +819,9 @@ async function refresh(job: WanJob, signal?: AbortSignal): Promise<void> {
     }
   }
 
-  const queue = (await comfyJson("queue", {}, signal)) as { queue_running?: unknown[][]; queue_pending?: unknown[][] };
-  const running = (queue.queue_running ?? []).some(item => item[1] === job.job_id);
-  const pendingIndex = (queue.queue_pending ?? []).findIndex(item => item[1] === job.job_id);
+  const queue = await readQueue(signal);
+  const running = queue.running.includes(job.prompt_id);
+  const pendingIndex = queue.pending.indexOf(job.prompt_id);
   // A job cancelled here can linger in ComfyUI's queue for a moment; never move it back out of a final state
   const settled = TERMINAL.has(job.status) || job.status === "timed_out";
   if (running) {
@@ -751,6 +871,8 @@ export async function getJobStatus(jobId: string, signal?: AbortSignal): Promise
   if (!job) {
     job = {
       job_id: jobId,
+      prompt_id: jobId,
+      attempt: 1,
       status: "queued",
       created_at: new Date().toISOString(),
       prompt: "(queued before this server started)",
@@ -758,7 +880,7 @@ export async function getJobStatus(jobId: string, signal?: AbortSignal): Promise
       width: 0,
       height: 0,
       frames: 0,
-      fps: DEFAULT_FPS,
+      fps: 0,
       duration_seconds: 0,
       model: "unknown",
       workflow: "unknown",
@@ -782,19 +904,60 @@ export function listJobs(): WanJob[] {
 export async function cancelJob(jobId: string, signal?: AbortSignal): Promise<{ job: WanJob; action: "dequeued" | "interrupted" | "none" }> {
   const job = await getJobStatus(jobId, signal);
   if (TERMINAL.has(job.status)) return { job, action: "none" };
-  const queue = (await comfyJson("queue", {}, signal)) as { queue_running?: unknown[][]; queue_pending?: unknown[][] };
-  if ((queue.queue_pending ?? []).some(item => item[1] === jobId)) {
-    await comfyJson("queue", { json: { delete: [jobId] } }, signal);
+  const queue = await readQueue(signal);
+  if (queue.pending.includes(job.prompt_id)) {
+    await comfyJson("queue", { json: { delete: [job.prompt_id] } }, signal);
     finish(job, "cancelled");
     return { job, action: "dequeued" };
   }
-  if ((queue.queue_running ?? []).some(item => item[1] === jobId)) {
-    await comfyJson("interrupt", { json: { prompt_id: jobId } }, signal);
+  if (queue.running.includes(job.prompt_id)) {
+    await comfyJson("interrupt", { json: { prompt_id: job.prompt_id } }, signal);
     finish(job, "cancelled");
     return { job, action: "interrupted" };
   }
   await refresh(job, signal);
   return { job, action: "none" };
+}
+
+// ---------------------------------------------------------------------------
+// Shutdown
+// ---------------------------------------------------------------------------
+
+/**
+ * Cancels what this process queued, so a closed session leaves no renders orphaned in ComfyUI: waiting jobs are
+ * removed from its queue and the running one is interrupted. Jobs queued by anyone else are left alone.
+ */
+export async function shutdownWan(): Promise<{ dequeued: number; interrupted: number }> {
+  const result = { dequeued: 0, interrupted: 0 };
+  const active = [...owned].map(id => jobs.get(id)).filter((job): job is WanJob => job !== undefined && !TERMINAL.has(job.status));
+  closeSocket();
+  if (active.length === 0) return result;
+
+  const ours = new Set(active.map(job => job.prompt_id));
+  const interrupted = new Set<string>();
+  try {
+    // Two passes: a job that was waiting can start between reading the queue and deleting it
+    for (let pass = 0; pass < 2; pass++) {
+      const queue = await readQueue(undefined, SHUTDOWN_TIMEOUT_MS);
+      const pending = queue.pending.filter(id => ours.has(id));
+      const running = queue.running.filter(id => ours.has(id) && !interrupted.has(id));
+      if (pending.length === 0 && running.length === 0) break;
+      if (pending.length) {
+        await comfyJson("queue", { json: { delete: pending }, timeoutMs: SHUTDOWN_TIMEOUT_MS });
+        result.dequeued += pending.length;
+      }
+      for (const id of running) {
+        await comfyJson("interrupt", { json: { prompt_id: id }, timeoutMs: SHUTDOWN_TIMEOUT_MS });
+        interrupted.add(id);
+        result.interrupted++;
+      }
+    }
+  } catch (error) {
+    console.error(`[wan] could not cancel every job on shutdown: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  for (const job of active) finish(job, "cancelled");
+  console.error(`[wan] shutdown: removed ${result.dequeued} waiting and interrupted ${result.interrupted} running job(s) in ComfyUI`);
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -819,7 +982,7 @@ function ensureProgressSocket(): void {
     } catch {
       return;
     }
-    const job = typeof message.data?.prompt_id === "string" ? jobs.get(message.data.prompt_id) : undefined;
+    const job = typeof message.data?.prompt_id === "string" ? promptIndex.get(message.data.prompt_id) : undefined;
     if (!job || TERMINAL.has(job.status)) return;
     if (message.type === "execution_start") {
       job.status = "running";
@@ -842,11 +1005,14 @@ function ensureProgressSocket(): void {
   });
 }
 
-function closeProgressSocketIfIdle(): void {
+function closeSocket(): void {
   if (!socket) return;
-  const active = [...jobs.values()].some(job => !TERMINAL.has(job.status) && job.status !== "timed_out");
-  if (!active) {
-    socket.close();
-    socket = undefined;
-  }
+  socket.close();
+  socket = undefined;
 }
+
+function closeProgressSocketIfIdle(): void {
+  const active = [...jobs.values()].some(job => !TERMINAL.has(job.status) && job.status !== "timed_out");
+  if (!active) closeSocket();
+}
+

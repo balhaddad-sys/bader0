@@ -149,9 +149,9 @@ function buildTools(allowImages: boolean, enableLocalVideo: boolean): FunctionTo
             properties: {
               prompt: { type: "string", description: "What happens in the clip: subject, action, setting, camera movement, style" },
               negative_prompt: { type: "string", description: "What to avoid" },
-              duration_seconds: { type: "number", minimum: 1, maximum: 10, description: "Clip length in seconds (default 5)" },
-              width: { type: "integer", minimum: 256, maximum: 1920, description: "Width in pixels (default from the GPU)" },
-              height: { type: "integer", minimum: 256, maximum: 1920, description: "Height in pixels (default from the GPU)" },
+              duration_seconds: { type: "number", minimum: 1, maximum: 10, description: "Clip length in seconds (about 5 if omitted)" },
+              width: { type: "integer", minimum: 256, maximum: 1920, description: "Width in pixels. Only the sizes the local model accepts work (an error lists them); omit to use the default" },
+              height: { type: "integer", minimum: 256, maximum: 1920, description: "Height in pixels. Only the sizes the local model accepts work (an error lists them); omit to use the default" },
               seed: { type: "integer", minimum: 0, description: "Seed, for a reproducible clip" }
             },
             required: ["prompt"]

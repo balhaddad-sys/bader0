@@ -16,6 +16,26 @@ export interface RecordedRequest {
   path: string;
   query: Record<string, string>;
   body: any;
+  /** The Authorization header as received, so tests can check that the API key is never sent to a download URL. */
+  authorization?: string;
+}
+
+export interface MockVeniceOptions {
+  /** Video models the catalog lists. Defaults to two wan-3-0 models plus models the tool must filter out. */
+  videoModels?: string[];
+  /** Reject quotes that carry anything beyond model and duration, like a stricter upstream. */
+  strictQuote?: boolean;
+}
+
+/** What a finished hosted video is: tiny, but with a recognisable body. */
+export const FAKE_VIDEO = Buffer.from("\x00\x00\x00\x18ftypmp42-fake-venice-clip", "latin1");
+
+const DEFAULT_VIDEO_MODELS = ["wan-3-0-text-to-video", "wan-3-0-image-to-video", "wan-2-7-reference-to-video", "veo3.1-fast-text-to-video"];
+
+interface VideoJob {
+  model: string;
+  mode: "binary" | "download_url" | "stuck" | "fail";
+  polls: number;
 }
 
 const TEXT_MODELS = [
@@ -130,20 +150,72 @@ async function readBody(req: IncomingMessage): Promise<any> {
   return text ? JSON.parse(text) : undefined;
 }
 
-export async function startMockVenice(): Promise<{ url: string; requests: RecordedRequest[]; close: () => Promise<void> }> {
+export async function startMockVenice(options: MockVeniceOptions = {}): Promise<{ url: string; requests: RecordedRequest[]; close: () => Promise<void> }> {
   const requests: RecordedRequest[] = [];
+  const videoModels = options.videoModels ?? DEFAULT_VIDEO_MODELS;
+  const videoJobs = new Map<string, VideoJob>();
+  let queueCounter = 0;
+  let baseUrl = "";
 
   const server = createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
     const path = url.pathname.replace(/^\/api\/v1/, "");
     const body = await readBody(req);
-    requests.push({ method: req.method ?? "GET", path, query: Object.fromEntries(url.searchParams), body });
+    requests.push({ method: req.method ?? "GET", path, query: Object.fromEntries(url.searchParams), body, ...(req.headers.authorization ? { authorization: req.headers.authorization } : {}) });
+
+    // A pre-signed download URL: no API key needed, and none should be sent
+    if (req.method === "GET" && path.startsWith("/files/")) {
+      res.writeHead(200, { "Content-Type": "video/mp4" });
+      return res.end(FAKE_VIDEO);
+    }
 
     if (req.headers.authorization !== `Bearer ${MOCK_API_KEY}`) return json(res, 401, { error: "Authentication failed" });
 
     switch (`${req.method} ${path}`) {
-      case "GET /models":
-        return json(res, 200, { object: "list", data: url.searchParams.get("type") === "image" ? IMAGE_MODELS : TEXT_MODELS });
+      case "GET /models": {
+        const type = url.searchParams.get("type");
+        const video = videoModels.map(id => ({ id, type: "video", model_spec: { name: id } }));
+        return json(res, 200, { object: "list", data: type === "video" ? video : type === "image" ? IMAGE_MODELS : TEXT_MODELS });
+      }
+      case "POST /video/quote": {
+        const extra = Object.keys(body ?? {}).filter(key => key !== "model" && key !== "duration");
+        if (options.strictQuote && extra.length) return json(res, 400, { error: `Unrecognized keys: ${extra.join(", ")}` });
+        if (!videoModels.includes(body?.model) || !/^\d+s$/.test(body?.duration ?? "")) return json(res, 400, { error: "model and a duration like '5s' are required" });
+        return json(res, 200, { quote: Number((0.084 * parseInt(body.duration, 10)).toFixed(2)) });
+      }
+      case "POST /video/queue": {
+        if (!videoModels.includes(body?.model) || !/^\d+s$/.test(body?.duration ?? "")) return json(res, 400, { error: "model and a duration like '5s' are required" });
+        const prompt: string = body.prompt ?? "";
+        if (prompt.includes("NEEDS_CONSENT")) {
+          return json(res, 409, {
+            error: { code: "needs_consent", message: "Consent required" },
+            consent: { consent_version: "2026-03-01", policy_text: "You confirm you have the right to use every person shown." },
+            face_media_roles: ["image_url"],
+            docs_url: "https://venice.ai/consent"
+          });
+        }
+        if (prompt.includes("NO_CREDITS")) return json(res, 402, { error: { code: "insufficient_balance", message: "Insufficient balance" } });
+        if (prompt.includes("BAD_PROMPT")) return json(res, 422, { error: { code: "prompt_rejected", message: "The prompt was refused" }, suggested_prompt: "A calm fox walking through a snowy forest" });
+        if (prompt.includes("TOO_BIG")) return json(res, 413, { error: "Payload too large" });
+        const queueId = `q-${++queueCounter}`;
+        const mode: VideoJob["mode"] = prompt.includes("DOWNLOAD_URL") ? "download_url" : prompt.includes("STUCK") ? "stuck" : prompt.includes("VIDEO_FAILS") ? "fail" : "binary";
+        videoJobs.set(queueId, { model: body.model, mode, polls: 0 });
+        return json(res, 200, { queue_id: queueId, model: body.model, status: "QUEUED", ...(mode === "download_url" ? { download_url: `${baseUrl}/files/${queueId}.mp4` } : {}) });
+      }
+      case "POST /video/retrieve": {
+        const job = videoJobs.get(body?.queue_id);
+        if (!job || job.model !== body?.model) return json(res, 404, { error: "No such job" });
+        job.polls++;
+        if (job.mode === "fail") return json(res, 200, { status: "FAILED", error: "The model could not render this" });
+        if (job.mode === "stuck" || job.polls <= 2) {
+          return json(res, 200, { status: "PROCESSING", average_execution_time: 8000, execution_duration: job.polls * 2000 });
+        }
+        if (job.mode === "download_url") return json(res, 200, { status: "COMPLETED" });
+        res.writeHead(200, { "Content-Type": "video/mp4" });
+        return res.end(FAKE_VIDEO);
+      }
+      case "POST /video/complete":
+        return json(res, 200, { success: videoJobs.has(body?.queue_id) });
       case "POST /chat/completions":
         if (body.model === "rate-limited") return json(res, 429, { error: "Too many requests for this model" });
         return json(res, 200, body.tools ? agentReply(body) : chatReply(body));
@@ -197,6 +269,7 @@ export async function startMockVenice(): Promise<{ url: string; requests: Record
 
   await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
   const { port } = server.address() as AddressInfo;
+  baseUrl = `http://127.0.0.1:${port}`;
   return {
     url: `http://127.0.0.1:${port}/api/v1`,
     requests,

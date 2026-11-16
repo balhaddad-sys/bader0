@@ -13,11 +13,12 @@ interface RequestOptions {
   timeoutMs?: number;
 }
 
-/** An HTTP error from Venice. Keeps the status so callers can tell a 404 from a 401 or 429. */
+/** An HTTP error from Venice. Keeps the status and the parsed body so callers can tell a 404 from a 401 or 429, and read fields such as a consent policy. */
 export class VeniceApiError extends Error {
   constructor(
     readonly status: number,
-    readonly detail?: string
+    readonly detail?: string,
+    readonly body?: unknown
   ) {
     super(httpErrorMessage(status, detail));
     this.name = "VeniceApiError";
@@ -50,13 +51,13 @@ function httpErrorMessage(status: number, detail?: string): string {
   }
 }
 
-/** Pulls a short human-readable message out of a Venice error body. */
-async function readErrorDetail(response: Response): Promise<string | undefined> {
+/** Pulls a short human-readable message, and the parsed body when it is JSON, out of a Venice error response. */
+async function readErrorDetail(response: Response): Promise<{ detail?: string; body?: unknown }> {
   let text: string;
   try {
-    text = (await response.text()).slice(0, 4_000);
+    text = (await response.text()).slice(0, 100_000);
   } catch {
-    return undefined;
+    return {};
   }
   try {
     const body = JSON.parse(text) as Record<string, unknown>;
@@ -65,10 +66,11 @@ async function readErrorDetail(response: Response): Promise<string | undefined> 
       (error && typeof error === "object" ? (error as Record<string, unknown>).message : error) ??
       body.message ??
       body.details;
-    if (typeof candidate === "string") return candidate.slice(0, 500);
-    return JSON.stringify(candidate ?? body).slice(0, 500);
+    const detail = typeof candidate === "string" ? candidate.slice(0, 500) : JSON.stringify(candidate ?? body).slice(0, 500);
+    return { detail, body };
   } catch {
-    return text.trim().slice(0, 500) || undefined;
+    const detail = text.trim().slice(0, 500);
+    return detail ? { detail } : {};
   }
 }
 
@@ -117,8 +119,19 @@ async function send(path: string, options: RequestOptions, accept: string, signa
     throw new Error(`Could not reach Venice at ${config.baseUrl} (${reason}). Check the network connection and VENICE_BASE_URL.`);
   }
 
-  if (!response.ok) throw new VeniceApiError(response.status, await readErrorDetail(response));
+  if (!response.ok) {
+    const { detail, body } = await readErrorDetail(response);
+    throw new VeniceApiError(response.status, detail, body);
+  }
   return response;
+}
+
+/**
+ * Calls an endpoint whose success response may be JSON or a file (video retrieval) and hands back the unread response,
+ * so the caller can look at the content type and stream a file to disk instead of buffering it.
+ */
+export async function veniceRaw(path: string, options: RequestOptions, signal: AbortSignal): Promise<Response> {
+  return send(path, options, "*/*", signal);
 }
 
 /** Calls a JSON endpoint and returns the parsed body. Callers validate the shape they rely on. */

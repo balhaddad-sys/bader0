@@ -1,0 +1,26 @@
+{
+  "description": "Wan 2.1 text-to-video (1.3B or 14B)",
+  "family": "2.1",
+  "fps": 16,
+  "default_frames": 81,
+  "min_frames": 5,
+  "max_frames": 241,
+  "allowed_sizes": [
+    {
+      "width": 832,
+      "height": 480
+    },
+    {
+      "width": 480,
+      "height": 832
+    },
+    {
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "width": 720,
+      "height": 1280
+    }
+  ]
+}

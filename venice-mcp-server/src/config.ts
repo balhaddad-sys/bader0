@@ -33,6 +33,13 @@ function readPositiveNumber(raw: string | undefined, fallback: number): number {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
+/** Zero is a valid setting here (it switches the feature off), so only blanks and junk fall back. */
+function readNonNegativeNumber(raw: string | undefined, fallback: number): number {
+  if (raw === undefined || raw.trim() === "") return fallback;
+  const value = Number(raw);
+  return Number.isFinite(value) && value >= 0 ? value : fallback;
+}
+
 /** True for localhost, 127.0.0.0/8 and ::1. ComfyUI has no auth, so anything else is reachable by others. */
 export function isLoopbackUrl(url: string): boolean {
   try {
@@ -67,5 +74,15 @@ export const wanConfig = {
   /** Optional API-format workflows exported from ComfyUI, replacing the bundled Wan 2.1 ones. */
   workflowT2V: readString(process.env.WAN_WORKFLOW_T2V),
   workflowI2V: readString(process.env.WAN_WORKFLOW_I2V),
-  pollIntervalMs: readPositiveInt(process.env.WAN_POLL_INTERVAL_MS, 2_000)
+  pollIntervalMs: readPositiveInt(process.env.WAN_POLL_INTERVAL_MS, 2_000),
+  /** Finished clips older than this are deleted on startup. 0 keeps them forever. Hosted clips share the directory. */
+  retainHours: readNonNegativeNumber(process.env.WAN_RETAIN_HOURS, 48)
+};
+
+/** Hosted Venice video (the venice_video tool). Billed to the Venice account. */
+export const videoConfig = {
+  /** Only catalog models whose ID starts with this are offered; the IDs themselves are read from the live catalog. */
+  modelPrefix: (readString(process.env.VENICE_VIDEO_MODEL_PREFIX) ?? "wan-3-0").toLowerCase(),
+  timeoutSeconds: readPositiveNumber(process.env.VENICE_VIDEO_TIMEOUT, 1_800),
+  pollIntervalMs: readPositiveInt(process.env.VENICE_VIDEO_POLL_INTERVAL_MS, 5_000)
 };

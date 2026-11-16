@@ -2,17 +2,8 @@ import type { CallToolResult, McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import { wanConfig } from "../config.js";
 import { jsonResult, responseFormatField, ResponseFormat, textResult } from "../format.js";
-import {
-  cancelJob,
-  chooseDefaults,
-  DEFAULT_FRAMES,
-  getJobStatus,
-  getRunnerProfile,
-  listJobs,
-  MAX_FRAMES,
-  queueWanVideo,
-  type WanJob
-} from "../wan.js";
+import { sizeLabel } from "../wan-workflows.js";
+import { cancelJob, describeDefaults, getJobStatus, getRunnerProfile, listJobs, queueWanVideo, type WanJob, type WanModeDefaults } from "../wan.js";
 
 // Local tools: nothing leaves the machine, so openWorldHint is false
 const LOCAL_GENERATES = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false } as const;
@@ -39,10 +30,11 @@ function jobMarkdown(job: WanJob): string {
   if (job.error) lines.push(`- ${job.status === "timed_out" ? "Note" : "Error"}: ${job.error}`);
   if (job.width) {
     lines.push(
-      `- Clip: ${job.width}x${job.height}, ${job.frames} frames at ${job.fps} fps (${job.duration_seconds} s), seed ${job.seed}`,
+      `- Clip: ${job.width}x${job.height}, ${job.frames} frames at ${job.fps} fps (${job.duration_seconds} s), seed ${job.seed}${job.family ? `, Wan ${job.family}` : ""}`,
       `- Model: ${job.model}${job.steps ? ` · steps ${job.steps}` : ""}${job.cfg !== undefined ? ` · cfg ${job.cfg}` : ""}${job.sampler ? ` · ${job.sampler}` : ""}`
     );
   }
+  if (job.attempt > 1) lines.push(`- Attempt ${job.attempt}: the first attempt ran out of memory and was retried once at a lower setting (current ComfyUI prompt ${job.prompt_id})`);
   for (const warning of job.warnings) lines.push(`- Warning: ${warning}`);
   if (job.status === "queued" || job.status === "running") lines.push("", `Still working. Call wan_status with job_id="${job.job_id}" again later.`);
   return lines.join("\n");
@@ -68,9 +60,9 @@ export function registerWanTools(server: McpServer): void {
       title: "Wan Video (local)",
       description: `Queue a video clip on the local Wan model through ComfyUI. It is free and private: nothing is sent to Venice.
 
-This call is slow to finish but returns at once: you get { job_id, status: "queued" }, not a video. Do not wait for it. Poll wan_status with the job_id (renders take minutes), and use wan_cancel to stop one.
+This call is slow to finish but returns at once: you get { job_id, status: "queued" }, not a video. Do not wait for it. Poll wan_status with the job_id (renders take minutes), and use wan_cancel to stop one. If ComfyUI already has two jobs ahead, the call is refused with "queue is busy" rather than stacking a third.
 
-Wan renders at 16 fps by default, so 81 frames ≈ 5 s. Give frames (snapped to 4k+1) or duration in seconds, not both. Width and height default from the GPU's VRAM: 832x480 under 24 GB, 1280x720 from 24 GB. Pass start_image (a local file path, or an image name already in ComfyUI's input folder) for image-to-video. The seed is always returned, so a result can be reproduced.
+Frame rate, default length and the sizes that are allowed come from the workflow's metadata and differ by Wan family, so wan_status (with no job_id) shows them for this machine. A width/height outside the allowed list is refused before anything is queued, with the permitted sizes in the message. Give frames (snapped to 4k+1 within the workflow's range) or duration in seconds (converted at the workflow's own fps), not both. Pass start_image (a local file path, or an image name already in ComfyUI's input folder) for image-to-video. The seed is always returned, so a result can be reproduced.
 
 Examples:
   - "A paper boat drifting down a rain gutter, macro shot" -> prompt=that text
@@ -79,14 +71,14 @@ Examples:
       inputSchema: z.strictObject({
         prompt: z.string().min(1).max(2_000).describe("What happens in the clip: subject, action, setting, camera, style"),
         negative_prompt: z.string().max(2_000).optional().describe("What to avoid. Defaults to a standard Wan quality negative"),
-        width: z.number().int().min(256).max(1_920).multipleOf(16).optional().describe("Width in pixels, a multiple of 16. Defaults from VRAM"),
-        height: z.number().int().min(256).max(1_920).multipleOf(16).optional().describe("Height in pixels, a multiple of 16. Defaults from VRAM"),
-        frames: z.number().int().min(5).max(MAX_FRAMES).optional().describe(`Frame count, snapped to 4k+1. Default ${DEFAULT_FRAMES} (≈5 s at 16 fps)`),
-        duration: z.number().min(0.3).max(15).optional().describe("Clip length in seconds, converted to frames at the workflow's fps. Use instead of frames"),
+        width: z.number().int().min(256).max(4_096).multipleOf(16).optional().describe("Width in pixels. Must be an allowed size for the workflow (see wan_status). Defaults from VRAM"),
+        height: z.number().int().min(256).max(4_096).multipleOf(16).optional().describe("Height in pixels. Must be an allowed size for the workflow (see wan_status). Defaults from VRAM"),
+        frames: z.number().int().min(1).max(1_000).optional().describe("Frame count, snapped to 4k+1 within the workflow's range. Defaults to the workflow's own default length"),
+        duration: z.number().min(0.1).max(60).optional().describe("Clip length in seconds, converted to frames at the workflow's fps. Use instead of frames"),
         seed: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).optional().describe("Seed for a reproducible result. Random (and returned) when omitted"),
-        start_image: z.string().min(1).max(10_000).optional().describe("First frame for image-to-video: a local file path, file:// URL, data:image URI, or an image name in ComfyUI's input folder"),
-        steps: z.number().int().min(1).max(100).optional().describe("Sampling steps (bundled workflow default 30)"),
-        cfg: z.number().min(0).max(30).optional().describe("Prompt guidance (bundled workflow default 6)"),
+        start_image: z.string().min(1).max(10_000).optional().describe("First frame for image-to-video: a local file path, file:// URL, data:image URI, or an image name in ComfyUI's input folder. Must not contain '..'"),
+        steps: z.number().int().min(1).max(100).optional().describe("Sampling steps (the workflow's own default otherwise)"),
+        cfg: z.number().min(0).max(30).optional().describe("Prompt guidance (the workflow's own default otherwise)"),
         sampler: z.string().max(64).optional().describe("ComfyUI sampler name, e.g. 'uni_pc' (default), 'euler', 'dpmpp_2m'"),
         response_format: responseFormatField
       }),
@@ -108,6 +100,7 @@ Examples:
           frames: job.frames,
           fps: job.fps,
           duration_seconds: job.duration_seconds,
+          family: job.family ?? null,
           model: job.model,
           workflow: job.workflow,
           defaults_reason: job.defaults_reason ?? null,
@@ -129,9 +122,9 @@ Examples:
     "wan_status",
     {
       title: "Wan Job Status (local)",
-      description: `Check a local Wan video job: queued (with queue position), rendering (with step progress), completed (with the saved file path and a resource link), failed, cancelled, or timed_out. When a render finishes, the video is saved to ${wanConfig.outputDir}.
+      description: `Check a local Wan video job: queued (with queue position), rendering (with step progress), completed (with the saved file path and a resource link), failed, cancelled, or timed_out. When a render finishes, the video is saved to ${wanConfig.outputDir}; clips older than ${wanConfig.retainHours > 0 ? `${wanConfig.retainHours} hours` : "(retention is off)"} are deleted when the server starts.
 
-With no job_id, lists this server's recent jobs and the runner's GPU, VRAM-based defaults and installed Wan checkpoints. Use that to check the local setup.`,
+With no job_id, lists this server's recent jobs and the runner's GPU, the workflow metadata (fps, default frames, allowed sizes), the defaults chosen from VRAM, and the installed Wan checkpoints. Use that to check the local setup.`,
       inputSchema: z.strictObject({
         job_id: jobIdField.optional(),
         response_format: responseFormatField
@@ -149,10 +142,9 @@ With no job_id, lists this server's recent jobs and the runner's GPU, VRAM-based
       let runner: Record<string, unknown>;
       try {
         const profile = await getRunnerProfile(ctx.mcpReq.signal);
-        const defaults = (mode: "t2v" | "i2v") => {
+        const defaults = async (mode: "t2v" | "i2v"): Promise<WanModeDefaults | { error: string }> => {
           try {
-            const chosen = chooseDefaults(profile, mode, !(mode === "t2v" ? wanConfig.workflowT2V : wanConfig.workflowI2V) || Boolean(wanConfig.model));
-            return { width: chosen.width, height: chosen.height, model: chosen.checkpoint?.file ?? "from workflow", reason: chosen.reason };
+            return await describeDefaults(profile, mode);
           } catch (error) {
             return { error: error instanceof Error ? error.message : String(error) };
           }
@@ -162,14 +154,16 @@ With no job_id, lists this server's recent jobs and the runner's GPU, VRAM-based
           base_url: wanConfig.baseUrl,
           gpu: profile.gpu ?? null,
           vram_gb: profile.vramGB ?? null,
-          text_to_video: defaults("t2v"),
-          image_to_video: defaults("i2v"),
+          comfyui_gguf: profile.ggufLoader,
+          text_to_video: await defaults("t2v"),
+          image_to_video: await defaults("i2v"),
           checkpoints: profile.checkpoints.map(checkpoint => ({
             file: checkpoint.file,
             size: checkpoint.params ? `${checkpoint.params}B` : "unknown",
             task: checkpoint.mode,
             family: checkpoint.family,
-            quantized: checkpoint.quantized
+            quantized: checkpoint.quantized,
+            loader: checkpoint.loader
           }))
         };
       } catch (error) {
@@ -183,9 +177,15 @@ With no job_id, lists this server's recent jobs and the runner's GPU, VRAM-based
         lines.push(`- ${runner.error}`);
       } else {
         lines.push(`- GPU: ${runner.gpu ?? "none reported"}${runner.vram_gb ? ` (${runner.vram_gb} GB VRAM)` : ""}`);
+        lines.push(`- ComfyUI-GGUF: ${runner.comfyui_gguf ? "installed" : "not installed (GGUF checkpoints are not listed or loadable)"}`);
         for (const [label, key] of [["Text-to-video", "text_to_video"], ["Image-to-video", "image_to_video"]] as const) {
-          const entry = runner[key] as { reason?: string; error?: string };
-          lines.push(`- ${label}: ${entry.reason ?? entry.error}`);
+          const entry = runner[key] as Partial<WanModeDefaults> & { error?: string };
+          if (entry.error) {
+            lines.push(`- ${label}: ${entry.error}`);
+            continue;
+          }
+          lines.push(`- ${label}: ${entry.reason}`);
+          lines.push(`  - Workflow: ${entry.workflow} (Wan ${entry.family}): ${entry.fps} fps, ${entry.default_frames} frames by default, sizes ${(entry.allowed_sizes ?? []).map(sizeLabel).join(", ")}`);
         }
         const checkpoints = runner.checkpoints as { file: string; size: string; task: string; family: string; quantized: boolean }[];
         lines.push(`- Wan checkpoints: ${checkpoints.length ? checkpoints.map(c => `${c.file} (${c.size} ${c.task}${c.quantized ? ", quantized" : ""})`).join("; ") : "none installed"}`);
@@ -202,7 +202,7 @@ With no job_id, lists this server's recent jobs and the runner's GPU, VRAM-based
     {
       title: "Wan Cancel (local)",
       description:
-        "Stop a local Wan video job. A job still waiting in ComfyUI's queue is removed from it; a job that is rendering is interrupted. Jobs that already finished are left as they are.",
+        "Stop a local Wan video job. A job still waiting in ComfyUI's queue is removed from it; a job that is rendering is interrupted. Jobs that already finished are left as they are. Jobs this server queued are also cancelled automatically when the server shuts down.",
       inputSchema: z.strictObject({ job_id: jobIdField, response_format: responseFormatField }),
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false }
     },
