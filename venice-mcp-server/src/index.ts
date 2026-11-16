@@ -11,11 +11,12 @@ import { toNodeHandler } from "@modelcontextprotocol/node";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import type { NextFunction, Request, Response } from "express";
-import { config, SERVER_NAME, SERVER_VERSION } from "./config.js";
+import { config, isLoopbackUrl, SERVER_NAME, SERVER_VERSION, wanConfig } from "./config.js";
 import { registerAgentTools } from "./tools/agent.js";
 import { registerCatalogTools } from "./tools/catalog.js";
 import { registerChatTools } from "./tools/chat.js";
 import { registerMediaTools } from "./tools/media.js";
+import { registerWanTools } from "./tools/wan.js";
 import { registerWebTools } from "./tools/web.js";
 
 /** Builds a fresh server. serveStdio calls it once; createMcpHandler calls it for every HTTP request. */
@@ -27,7 +28,8 @@ function createServer(): McpServer {
         "Venice.ai tools. For research or multi-step tasks that need current information, call venice_agent: it searches, reads pages and returns a cited answer. " +
         "Use venice_chat for a single prompt to a Venice model, venice_web_search / venice_web_scrape for raw web data, " +
         "venice_generate_image and venice_text_to_speech for media, and venice_list_models / venice_list_characters to find IDs. " +
-        "Every generation call is billed to the user's Venice account."
+        "Every venice_* generation call is billed to the user's Venice account. " +
+        "wan_video renders video locally (free, private, never sent to Venice); it returns a job ID at once, so poll wan_status instead of waiting."
     }
   );
   registerAgentTools(server);
@@ -35,6 +37,7 @@ function createServer(): McpServer {
   registerWebTools(server);
   registerMediaTools(server);
   registerCatalogTools(server);
+  registerWanTools(server);
   return server;
 }
 
@@ -77,7 +80,15 @@ function serveHttp(): void {
 
 if (!config.apiKey) {
   // Start anyway so hosts can list the tools; each call explains how to set the key
-  console.error(`${SERVER_NAME}: VENICE_API_KEY is not set. Tool calls will fail until it is.`);
+  console.error(`${SERVER_NAME}: VENICE_API_KEY is not set. venice_* tool calls will fail until it is (the local wan_* tools do not need it).`);
+}
+
+if (!isLoopbackUrl(wanConfig.baseUrl)) {
+  // ComfyUI has no authentication: anyone who can reach it can queue jobs, read outputs and upload files
+  console.error(
+    `${SERVER_NAME}: WARNING: WAN_BASE_URL (${wanConfig.baseUrl}) is not a loopback address. ComfyUI has no authentication, ` +
+      "so keep it on 127.0.0.1 unless it is behind an authenticating proxy."
+  );
 }
 
 if (process.env.TRANSPORT === "http") {

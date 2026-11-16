@@ -14,6 +14,13 @@ function renderMarkdown(result: AgentResult): string {
     });
   }
 
+  if (result.video_jobs.length > 0) {
+    lines.push("", "## Local video jobs", "Rendering on the local Wan runner. Poll each with wan_status; they take minutes.");
+    for (const job of result.video_jobs) {
+      lines.push(`- \`${job.job_id}\` ${job.status} · seed ${job.seed} · ${job.duration_seconds} s · ${job.prompt.slice(0, 100)}`);
+    }
+  }
+
   if (result.tool_calls.length > 0) {
     lines.push("", "## Agent trace");
     for (const call of result.tool_calls) {
@@ -42,6 +49,7 @@ Examples:
   - "Compare the three most recent open-weight LLM releases by context length and license" -> task=that text, max_steps=6
   - "Summarize https://example.com/post and find two critical responses to it" -> task=that text
   - "Design a logo concept for a privacy-first note app and generate it" -> allow_image_generation=true
+  - "Storyboard a 3-shot product teaser and render the shots" -> enable_local_video=true (queues clips on the local Wan runner; poll wan_status)
 
 The agent runs on a Venice model that supports function calling (chosen from the live catalog unless model is set). Each round makes one model call plus its tool calls, all billed to the Venice account. Returns the answer, sources, a step trace and token usage; generated images are attached as image content.`,
       inputSchema: z.strictObject({
@@ -63,6 +71,10 @@ The agent runs on a Venice model that supports function calling (chosen from the
         character_slug: z.string().optional().describe("Venice character to run the agent as. Find slugs with venice_list_characters"),
         max_steps: z.number().int().min(1).max(15).default(6).describe("Maximum rounds of tool calls before the agent must answer"),
         allow_image_generation: z.boolean().default(false).describe("Let the agent generate images (extra cost). Off by default"),
+        enable_local_video: z
+          .boolean()
+          .default(false)
+          .describe("Let the agent queue clips on the local Wan runner (free, never sent to Venice). Clips render in the background; poll the returned job IDs with wan_status. Off by default"),
         search_provider: z.enum(SEARCH_PROVIDERS).optional().describe("Web search backend: brave (default), google, or exa"),
         temperature: z.number().min(0).max(2).optional().describe("Sampling temperature for the agent model"),
         response_format: responseFormatField
@@ -82,6 +94,7 @@ The agent runs on a Venice model that supports function calling (chosen from the
         ...(args.character_slug ? { characterSlug: args.character_slug } : {}),
         maxSteps: args.max_steps,
         allowImages: args.allow_image_generation,
+        enableLocalVideo: args.enable_local_video,
         ...(args.search_provider ? { searchProvider: args.search_provider } : {}),
         ...(args.temperature !== undefined ? { temperature: args.temperature } : {}),
         signal,

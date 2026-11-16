@@ -1,8 +1,8 @@
 /**
  * The Venice agent: a tool-calling loop that runs on a Venice text model.
  *
- * Each round, the model either calls tools (web search, page scraping, image generation)
- * or answers. Tool results go back to the model as `tool` messages. The loop ends when the
+ * Each round, the model either calls tools (web search, page scraping, image generation,
+ * and optionally local Wan video jobs) or answers. Tool results go back to the model as `tool` messages. The loop ends when the
  * model answers without calling tools, or when the round budget runs out, in which case the
  * model is asked for its best answer from what it has gathered.
  */
@@ -20,6 +20,7 @@ import {
   type ToolCall,
   type Usage
 } from "./venice.js";
+import { getJobStatus, queueWanVideo } from "./wan.js";
 
 export interface AgentOptions {
   task: string;
@@ -29,6 +30,8 @@ export interface AgentOptions {
   characterSlug?: string;
   maxSteps: number;
   allowImages: boolean;
+  /** Offer wan_video / wan_status, which queue clips on the local ComfyUI runner (never Venice). */
+  enableLocalVideo: boolean;
   searchProvider?: SearchProvider;
   temperature?: number;
   signal: AbortSignal;
@@ -49,6 +52,14 @@ export interface AgentSource {
   read: boolean;
 }
 
+export interface AgentVideoJob {
+  job_id: string;
+  status: string;
+  prompt: string;
+  seed: number;
+  duration_seconds: number;
+}
+
 export interface AgentResult {
   answer: string;
   model: string;
@@ -57,6 +68,7 @@ export interface AgentResult {
   tool_calls: AgentToolCall[];
   sources: AgentSource[];
   images: GeneratedImage[];
+  video_jobs: AgentVideoJob[];
   usage: Usage;
 }
 
@@ -65,8 +77,11 @@ const MAX_CALLS_PER_ROUND = 6;
 const SEARCH_RESULT_CHARS = 8_000;
 const SCRAPE_RESULT_CHARS = 12_000;
 const MAX_IMAGES = 4;
+/** Local renders take minutes of GPU time each, so the agent may queue only a few. */
+const MAX_VIDEOS_PER_ROUND = 2;
+const MAX_VIDEOS_PER_RUN = 4;
 
-function buildTools(allowImages: boolean): FunctionTool[] {
+function buildTools(allowImages: boolean, enableLocalVideo: boolean): FunctionTool[] {
   const tools: FunctionTool[] = [
     {
       type: "function",
@@ -119,6 +134,46 @@ function buildTools(allowImages: boolean): FunctionTool[] {
       }
     });
   }
+  if (enableLocalVideo) {
+    tools.push(
+      {
+        type: "function",
+        function: {
+          name: "wan_video",
+          description:
+            "Queue a short video clip on the user's local Wan model (free and private). SLOW: a render takes several minutes. " +
+            "This returns a job ID immediately, not a video. Do not wait for it and do not queue the same clip twice. " +
+            `Queue at most ${MAX_VIDEOS_PER_ROUND} clips per round. Put the job IDs in your final answer so the caller can poll wan_status.`,
+          parameters: {
+            type: "object",
+            properties: {
+              prompt: { type: "string", description: "What happens in the clip: subject, action, setting, camera movement, style" },
+              negative_prompt: { type: "string", description: "What to avoid" },
+              duration_seconds: { type: "number", minimum: 1, maximum: 10, description: "Clip length in seconds (default 5)" },
+              width: { type: "integer", minimum: 256, maximum: 1920, description: "Width in pixels (default from the GPU)" },
+              height: { type: "integer", minimum: 256, maximum: 1920, description: "Height in pixels (default from the GPU)" },
+              seed: { type: "integer", minimum: 0, description: "Seed, for a reproducible clip" }
+            },
+            required: ["prompt"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "wan_status",
+          description:
+            "Check a queued local video job once: queued, rendering (with progress), completed (with the file path) or failed. " +
+            "Renders take minutes, so do not spend rounds polling; if it is not finished, report the job ID instead.",
+          parameters: {
+            type: "object",
+            properties: { job_id: { type: "string", description: "Job ID returned by wan_video" } },
+            required: ["job_id"]
+          }
+        }
+      }
+    );
+  }
   return tools;
 }
 
@@ -134,6 +189,12 @@ function systemPrompt(options: AgentOptions): string {
     "- web_search: find current information.",
     "- scrape_url: read a page in full when snippets are not enough.",
     ...(options.allowImages ? ["- generate_image: create an image when the task asks for one."] : []),
+    ...(options.enableLocalVideo
+      ? [
+          `- wan_video: queue a local video clip when the task asks for one. It is slow and returns a job ID, not a video: never wait for it, and queue at most ${MAX_VIDEOS_PER_ROUND} clips per round.`,
+          "- wan_status: check a video job once. Report unfinished job IDs in your answer so the caller can poll wan_status."
+        ]
+      : []),
     "",
     "Rules:",
     `- You have at most ${options.maxSteps} rounds of tool calls. Put independent calls in the same round (at most ${MAX_CALLS_PER_ROUND} per round).`,
@@ -175,7 +236,7 @@ function errorMessage(error: unknown): string {
 }
 
 export async function runAgent(options: AgentOptions): Promise<AgentResult> {
-  const tools = buildTools(options.allowImages);
+  const tools = buildTools(options.allowImages, options.enableLocalVideo);
   const messages: ChatMessage[] = [
     { role: "system", content: systemPrompt(options) },
     { role: "user", content: userPrompt(options) }
@@ -192,6 +253,10 @@ export async function runAgent(options: AgentOptions): Promise<AgentResult> {
   const toolLog: AgentToolCall[] = [];
   const sources = new Map<string, AgentSource>();
   const images: GeneratedImage[] = [];
+  const videoJobs: AgentVideoJob[] = [];
+  // Counted synchronously when a call starts, so parallel calls in one round see each other
+  let videosThisRound = 0;
+  let videosThisRun = 0;
   let model = options.model;
   const totalProgress = options.maxSteps + 1;
 
@@ -268,6 +333,64 @@ export async function runAgent(options: AgentOptions): Promise<AgentResult> {
           record(true, `generated ${result.images.length} image(s) with ${result.model}`);
           return `Generated ${result.images.length} image(s) with ${result.model}. They will be attached to the final result; describe them briefly in your answer.`;
         }
+        case "wan_video": {
+          if (!options.enableLocalVideo) throw new Error("local video generation is disabled for this run");
+          videosThisRound++;
+          if (videosThisRound > MAX_VIDEOS_PER_ROUND) {
+            throw new Error(`at most ${MAX_VIDEOS_PER_ROUND} clips can be queued per round; queue it next round if it is still needed`);
+          }
+          if (videosThisRun >= MAX_VIDEOS_PER_RUN) throw new Error(`the limit of ${MAX_VIDEOS_PER_RUN} clips per run has been reached`);
+          videosThisRun++;
+          const prompt = stringArg(args, "prompt");
+          if (!prompt) {
+            videosThisRun--;
+            throw new Error("'prompt' is required");
+          }
+          const negative = stringArg(args, "negative_prompt");
+          const duration = Number(args.duration_seconds);
+          const toSize = (key: string) => {
+            const value = intArg(args, key, 256, 1920);
+            return value === undefined ? undefined : Math.round(value / 16) * 16;
+          };
+          const width = toSize("width");
+          const height = toSize("height");
+          const seed = intArg(args, "seed", 0, Number.MAX_SAFE_INTEGER);
+          let job;
+          try {
+            job = await queueWanVideo(
+              {
+                prompt,
+                ...(negative ? { negative_prompt: negative } : {}),
+                ...(Number.isFinite(duration) && duration > 0 ? { duration: Math.min(10, Math.max(1, duration)) } : {}),
+                ...(width ? { width } : {}),
+                ...(height ? { height } : {}),
+                ...(seed !== undefined ? { seed } : {})
+              },
+              options.signal
+            );
+          } catch (error) {
+            videosThisRun--;
+            throw error;
+          }
+          videoJobs.push({ job_id: job.job_id, status: job.status, prompt, seed: job.seed, duration_seconds: job.duration_seconds });
+          record(true, `queued local video job ${job.job_id} (seed ${job.seed}, ${job.duration_seconds} s)`);
+          return (
+            `Queued local video job ${job.job_id} (status: queued; ${job.width}x${job.height}, ${job.frames} frames, seed ${job.seed}). ` +
+            "It renders in the background for several minutes. Do not wait for it; include the job ID in your final answer so the caller can poll wan_status."
+          );
+        }
+        case "wan_status": {
+          if (!options.enableLocalVideo) throw new Error("local video generation is disabled for this run");
+          const jobId = stringArg(args, "job_id");
+          if (!jobId || !/^[A-Za-z0-9-]{8,64}$/.test(jobId)) throw new Error("'job_id' must be a job ID returned by wan_video");
+          const job = await getJobStatus(jobId, options.signal);
+          const tracked = videoJobs.find(entry => entry.job_id === jobId);
+          if (tracked) tracked.status = job.status;
+          record(true, `job ${jobId} is ${job.status}`);
+          const progress = job.progress ? `, ${job.progress.percent}% done` : "";
+          const detail = job.output_path ? ` Saved to ${job.output_path}.` : job.error ? ` ${job.error}` : "";
+          return `Job ${jobId}: ${job.status}${progress}.${detail}`;
+        }
         default:
           record(false, "unknown tool");
           return `Error: there is no tool named "${call.function.name}". Available tools: ${tools.map(tool => tool.function.name).join(", ")}.`;
@@ -309,6 +432,7 @@ export async function runAgent(options: AgentOptions): Promise<AgentResult> {
     await options.onProgress?.(step - 0.5, totalProgress, `Round ${step}: running ${names}`);
 
     // Calls run in parallel; each gets its own log so the trace stays in call order
+    videosThisRound = 0;
     const logs = calls.map((): AgentToolCall[] => []);
     const outputs = await Promise.all(
       calls.map((call, index) => {
@@ -355,6 +479,7 @@ export async function runAgent(options: AgentOptions): Promise<AgentResult> {
       // Pages the agent read come first; the list is capped so a search-heavy run stays readable
       sources: [...sources.values()].sort((a, b) => Number(b.read) - Number(a.read)).slice(0, 25),
       images,
+      video_jobs: videoJobs,
       usage
     };
   }

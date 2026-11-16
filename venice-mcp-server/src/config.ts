@@ -1,6 +1,8 @@
 /**
  * Configuration read once from the environment at startup.
  */
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 
 export const SERVER_NAME = "venice-mcp-server";
 export const SERVER_VERSION = "1.0.0";
@@ -26,6 +28,21 @@ function readPositiveInt(raw: string | undefined, fallback: number): number {
   return Number.isInteger(value) && value > 0 ? value : fallback;
 }
 
+function readPositiveNumber(raw: string | undefined, fallback: number): number {
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+/** True for localhost, 127.0.0.0/8 and ::1. ComfyUI has no auth, so anything else is reachable by others. */
+export function isLoopbackUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.replace(/^\[|\]$/g, "");
+    return host === "localhost" || host === "::1" || /^127(\.\d{1,3}){3}$/.test(host);
+  } catch {
+    return false;
+  }
+}
+
 export const config = {
   apiKey: readSecret(process.env.VENICE_API_KEY),
   baseUrl: (readString(process.env.VENICE_BASE_URL) ?? "https://api.venice.ai/api/v1").replace(/\/+$/, ""),
@@ -37,4 +54,18 @@ export const config = {
   ttsVoice: readString(process.env.VENICE_TTS_VOICE) ?? "af_sky",
   embeddingModel: readString(process.env.VENICE_EMBEDDING_MODEL) ?? "text-embedding-bge-m3",
   timeoutMs: readPositiveInt(process.env.VENICE_TIMEOUT_MS, 120_000)
+};
+
+/** Local Wan video generation through a ComfyUI runner. Never touches Venice. */
+export const wanConfig = {
+  baseUrl: (readString(process.env.WAN_BASE_URL) ?? "http://127.0.0.1:8188").replace(/\/+$/, ""),
+  outputDir: resolve(readString(process.env.WAN_OUTPUT_DIR) ?? join(tmpdir(), "venice-mcp-wan")),
+  /** Diffusion model file to load instead of the one chosen from VRAM, e.g. wan2.1_t2v_14B_fp8_e4m3fn.safetensors */
+  model: readString(process.env.WAN_MODEL),
+  /** Seconds a render may take before its job is reported as timed out. */
+  timeoutSeconds: readPositiveNumber(process.env.WAN_TIMEOUT, 1_800),
+  /** Optional API-format workflows exported from ComfyUI, replacing the bundled Wan 2.1 ones. */
+  workflowT2V: readString(process.env.WAN_WORKFLOW_T2V),
+  workflowI2V: readString(process.env.WAN_WORKFLOW_I2V),
+  pollIntervalMs: readPositiveInt(process.env.WAN_POLL_INTERVAL_MS, 2_000)
 };

@@ -84,6 +84,17 @@ function agentReply(body: any) {
 
   if (body.tool_choice === "none") return completion(body.model, { content: "Forced final answer from gathered notes." });
 
+  // Asks for three clips in one round, so the two-per-round cap has to reject one
+  if (/video/i.test(task)) {
+    if (toolMessages.length === 0) {
+      return completion(body.model, {
+        content: null,
+        tool_calls: [1, 2, 3].map(n => toolCall(`v${n}`, "wan_video", JSON.stringify({ prompt: `fox shot ${n}`, duration_seconds: 2, seed: n })))
+      });
+    }
+    return completion(body.model, { content: "Queued the fox shots; poll the job IDs with wan_status." });
+  }
+
   if (/image/i.test(task)) {
     if (toolMessages.length === 0) {
       return completion(body.model, { content: null, tool_calls: [toolCall("img", "generate_image", JSON.stringify({ prompt: "a fox logo", width: 512, height: 512 }))] });
