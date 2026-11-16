@@ -1,0 +1,11 @@
+{
+  "name": "NeuroConvert — evidence-based converters for neurology",
+  "short_name": "NeuroConvert",
+  "description": "Evidence-based medication converters for neurology with evidence tiers and sources.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#0f5f7a",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
