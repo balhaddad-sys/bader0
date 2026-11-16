@@ -57,6 +57,16 @@ npm run verify:references   # re-check every PMID/DOI and DailyMed set ID agains
 
 Requires Node ≥ 20.19 (≥ 22.18 for `verify:references`, which imports the TypeScript data file directly).
 
+## Deploy
+
+NeuroConvert is a static site, so it deploys anywhere. `vercel.json` carries the production settings: a strict Content-Security-Policy (no inline script, no third-party origins), `nosniff`, frame denial, no-referrer, a restrictive Permissions-Policy, immutable caching for hashed assets, no-cache for the HTML shell and service worker, and **`X-Robots-Tag: noindex`**. Remove that header only after the clinical content has had independent review and you want the site discoverable.
+
+**Vercel via Git:** import the repository and set **Root Directory to `neuroconvert`**. This matters because the repository root contains another app's `vercel.json`. The build command and output directory come from this folder's `vercel.json`.
+
+**Vercel via CLI:** `cd neuroconvert && npx vercel --prod`.
+
+**Access:** new Vercel projects have Vercel Authentication enabled, which puts `*.vercel.app` URLs behind a Vercel login. Switch it off under *Settings → Deployment Protection* when you are ready for clinicians without Vercel accounts to open the site.
+
 ## How it is built
 
 ```
