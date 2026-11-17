@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0d0f14" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f3f4f8" media="(prefers-color-scheme: light)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Venice Video">
+  <title>Venice Video</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%235b4bff'/%3E%3Cpath d='M25 17l23 15-23 15z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <noscript><p class="noscript">This app needs JavaScript.</p></noscript>
+
+  <div class="shell">
+    <header class="top">
+      <div class="brand">
+        <span class="logo" aria-hidden="true"></span>
+        <h1>Venice Video</h1>
+      </div>
+      <div class="pills">
+        <span id="pill-local" class="pill" title="Wan on your computer's GPU, through ComfyUI">Local</span>
+        <span id="pill-hosted" class="pill" title="Venice's hosted video model">Hosted</span>
+      </div>
+    </header>
+
+    <main>
+      <section id="view-create" class="view" aria-label="Create a video">
+        <div class="seg" role="group" aria-label="Where to make the video">
+          <button type="button" id="eng-local" data-engine="local" aria-pressed="true"><b>Local</b><small>Your GPU · free</small></button>
+          <button type="button" id="eng-hosted" data-engine="hosted" aria-pressed="false"><b>Hosted</b><small>Venice · billed</small></button>
+        </div>
+        <p id="engine-note" class="note"></p>
+
+        <form id="form" novalidate>
+          <label class="field">
+            <span>Prompt</span>
+            <textarea id="prompt" rows="4" maxlength="4000" placeholder="A paper boat drifting down a rainy street at night, cinematic" autocapitalize="sentences" enterkeyhint="done"></textarea>
+          </label>
+
+          <div class="field">
+            <span>Start from a photo <em>optional</em></span>
+            <div class="photo">
+              <input id="photo" type="file" accept="image/*" hidden>
+              <button type="button" id="photo-btn" class="btn ghost">Choose a photo</button>
+              <div id="photo-preview" class="preview" hidden>
+                <img alt="The photo you chose">
+                <button type="button" id="photo-clear" aria-label="Remove the photo">×</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <span>Length</span>
+            <div class="chips" id="length-chips" role="group" aria-label="Length in seconds"></div>
+            <label class="inline">
+              <input id="duration" type="number" inputmode="numeric" min="1" max="30" step="1" value="5" aria-label="Length in seconds">
+              <span>seconds</span>
+            </label>
+          </div>
+
+          <div id="opts-local" class="grid">
+            <label class="field">
+              <span>Size</span>
+              <select id="size"></select>
+            </label>
+            <label class="field">
+              <span>Seed <em>optional</em></span>
+              <input id="seed" type="number" inputmode="numeric" min="0" step="1" placeholder="random">
+            </label>
+          </div>
+
+          <div id="opts-hosted" class="grid" hidden>
+            <label class="field wide">
+              <span>Model</span>
+              <select id="model"></select>
+            </label>
+            <label class="field">
+              <span>Aspect ratio <em>optional</em></span>
+              <input id="aspect" type="text" list="dl-aspect" placeholder="Venice default" autocomplete="off" autocapitalize="off" spellcheck="false">
+            </label>
+            <label class="field">
+              <span>Resolution <em>optional</em></span>
+              <input id="resolution" type="text" list="dl-resolution" placeholder="Venice default" autocomplete="off" autocapitalize="off" spellcheck="false">
+            </label>
+            <datalist id="dl-aspect"><option value="16:9"><option value="9:16"><option value="1:1"><option value="4:3"><option value="3:4"><option value="21:9"></datalist>
+            <datalist id="dl-resolution"><option value="480p"><option value="720p"><option value="1080p"></datalist>
+          </div>
+
+          <details class="more">
+            <summary>More options</summary>
+            <label class="field">
+              <span>Avoid</span>
+              <textarea id="negative" rows="2" placeholder="blurry, text, watermark"></textarea>
+            </label>
+          </details>
+
+          <div id="quote" class="quote" role="status" hidden></div>
+          <button id="submit" class="btn primary" type="submit">Generate</button>
+        </form>
+      </section>
+
+      <section id="view-jobs" class="view" aria-label="Your videos in progress" hidden>
+        <p id="jobs-empty" class="empty">Nothing yet. Make a video from the Create tab and it shows up here.</p>
+        <ul id="jobs" class="cards"></ul>
+      </section>
+
+      <section id="view-library" class="view" aria-label="Saved clips" hidden>
+        <p id="library-empty" class="empty">No saved clips yet.</p>
+        <ul id="library" class="cards"></ul>
+      </section>
+
+      <footer class="foot">
+        <button id="signout" class="link" type="button" hidden>Sign out of this phone</button>
+      </footer>
+    </main>
+
+    <nav class="tabs" aria-label="Sections">
+      <button type="button" data-tab="create" aria-current="page">Create</button>
+      <button type="button" data-tab="jobs">Jobs<span id="badge" class="badge" hidden></span></button>
+      <button type="button" data-tab="library">Library</button>
+    </nav>
+  </div>
+
+  <section id="login" class="login" hidden>
+    <form id="login-form" class="card" novalidate>
+      <h2>Sign in</h2>
+      <p>Paste the token from the computer running this app, or scan the QR code it shows.</p>
+      <label class="field">
+        <span>Token</span>
+        <input id="token" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+      </label>
+      <p id="login-error" class="error" role="alert" hidden></p>
+      <button class="btn primary" type="submit">Sign in</button>
+    </form>
+  </section>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 /**
  * Configuration read once from the environment at startup.
  */
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 export const SERVER_NAME = "venice-mcp-server";
@@ -77,6 +77,16 @@ export const wanConfig = {
   pollIntervalMs: readPositiveInt(process.env.WAN_POLL_INTERVAL_MS, 2_000),
   /** Finished clips older than this are deleted on startup. 0 keeps them forever. Hosted clips share the directory. */
   retainHours: readNonNegativeNumber(process.env.WAN_RETAIN_HOURS, 48)
+};
+
+/** The phone-friendly web app (npm run web). It can spend Venice credits and use the GPU, so it always needs a token. */
+export const webConfig = {
+  /** All interfaces by default so a phone on the same network can reach it; set 127.0.0.1 to keep it local or behind a proxy. */
+  host: readString(process.env.WEB_HOST) ?? "0.0.0.0",
+  port: readPositiveInt(process.env.WEB_PORT, 8787),
+  /** Unset: a random token is generated once and kept in tokenFile, so a phone bookmark survives restarts. */
+  token: readSecret(process.env.WEB_TOKEN),
+  tokenFile: resolve(readString(process.env.WEB_TOKEN_FILE) ?? join(homedir(), ".venice-mcp", "web-token"))
 };
 
 /** Hosted Venice video (the venice_video tool). Billed to the Venice account. */

@@ -42,7 +42,7 @@ It quotes the price, queues the job on Venice, and returns at once with { queue_
 
 duration is in seconds (1-30) and each model accepts only certain lengths. model, aspect_ratio and resolution are optional: the model is chosen from Venice's live catalog (IDs starting "${videoConfig.modelPrefix}"; image-to-video when image_url is given), and unset values use Venice's defaults. image_url (an https URL or a data: URI) turns it into image-to-video. Prefer an https URL: Venice's request limit is 25 MB, but the MCP transport caps a whole message far lower (about 10 MB over stdio, 4 MB over HTTP), so only small images fit as a data: URI.
 
-Unlike local Wan, hosted Wan can generate native audio. Refusals are specific: out of credits (with the balance), consent required (with Venice's policy text and version; this tool never consents for the user), payload over 25 MB, or a rejected prompt (with Venice's suggested prompt when it has one).
+Pass max_usd to cap the price: the video is only queued if the quote is at or below it (an unreadable quote also stops it). Unlike local Wan, hosted Wan can generate native audio. Refusals are specific: over your price limit, out of credits (with the balance), consent required (with Venice's policy text and version; this tool never consents for the user), payload over 25 MB, or a rejected prompt (with Venice's suggested prompt when it has one).
 
 Examples:
   - "A 5-second clip of waves at dusk" -> prompt=that text, duration=5
@@ -54,6 +54,7 @@ Examples:
         aspect_ratio: z.string().max(16).optional().describe("Aspect ratio such as '16:9' or '9:16'. Model-specific; Venice rejects unsupported values"),
         resolution: z.string().max(16).optional().describe("Resolution such as '720p' or '1080p'. Model-specific; Venice rejects unsupported values"),
         negative_prompt: z.string().max(4_096).optional().describe("What to avoid"),
+        max_usd: z.number().positive().max(1_000).optional().describe("Price limit in USD. If Venice's quote is above it, or cannot be read, the video is not queued"),
         image_url: z.string().max(10_000_000).optional().describe("First frame for image-to-video: an https URL (preferred) or a small data:image URI. Venice limits a request to 25 MB, and the MCP transport limits a message to less than that"),
         response_format: responseFormatField
       }),

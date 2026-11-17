@@ -56,6 +56,8 @@ export interface VideoRequest {
   negative_prompt?: string;
   /** An https URL or a data: URI. */
   image_url?: string;
+  /** Refuse to queue when the quote is above this many USD, or when no quote could be read. */
+  max_usd?: number;
 }
 
 /** A refusal the caller can act on, with the fields behind it. The tool turns it into an error result with structuredContent. */
@@ -107,7 +109,7 @@ function extractUsd(value: unknown, depth = 0): number | null {
 // Error mapping
 // ---------------------------------------------------------------------------
 
-async function readBalances(signal: AbortSignal): Promise<string | undefined> {
+export async function fetchBalances(signal: AbortSignal): Promise<string | undefined> {
   try {
     const raw = await veniceJson("api_keys/rate_limits", { timeoutMs: 5_000 }, signal);
     const balances = dig(raw, "data.balances");
@@ -141,7 +143,7 @@ async function mapVideoError(error: unknown, options: { signal: AbortSignal; quo
 
   switch (error.status) {
     case 402: {
-      const balance = await readBalances(options.signal);
+      const balance = await fetchBalances(options.signal);
       const quoted = options.quoteUsd != null ? ` The clip was quoted at $${options.quoteUsd.toFixed(2)}.` : "";
       return new VideoRequestError(
         "insufficient_credits",
@@ -325,6 +327,29 @@ async function fetchDownload(start: URL): Promise<Response> {
   throw new FatalVideoError("Venice's download URL redirected too many times.");
 }
 
+/** The price of a clip without queueing anything: what a phone shows before the user commits. */
+export async function quoteVideoRequest(
+  request: { duration: number; model?: string; aspect_ratio?: string; resolution?: string; has_image?: boolean },
+  signal: AbortSignal
+): Promise<{ model: string; quote_usd: number | null; warning?: string }> {
+  const model = await resolveVideoModel(request.model, Boolean(request.has_image), signal);
+  try {
+    const quote = await getQuote(
+      model,
+      {
+        prompt: "",
+        duration: request.duration,
+        ...(request.aspect_ratio ? { aspect_ratio: request.aspect_ratio } : {}),
+        ...(request.resolution ? { resolution: request.resolution } : {})
+      },
+      signal
+    );
+    return { model, quote_usd: quote.usd, ...(quote.warning ? { warning: quote.warning } : {}) };
+  } catch (error) {
+    throw await mapVideoError(error, { signal });
+  }
+}
+
 /** Validates, quotes, queues, and starts the background poll. Returns as soon as Venice has queued it. */
 export async function startVideo(request: VideoRequest, signal: AbortSignal): Promise<VideoJob> {
   if (request.image_url) checkImageUrl(request.image_url);
@@ -345,6 +370,24 @@ export async function startVideo(request: VideoRequest, signal: AbortSignal): Pr
     quote = await getQuote(model, request, signal);
   } catch (error) {
     throw await mapVideoError(error, { signal });
+  }
+
+  // A price limit fails closed: a quote that cannot be read is a reason not to spend
+  if (request.max_usd !== undefined) {
+    if (quote.usd === null) {
+      throw new VideoRequestError(
+        "quote_unavailable",
+        "Venice's price quote could not be read and max_usd was set, so the video was not queued. Retry without max_usd to queue it anyway.",
+        { max_usd: request.max_usd }
+      );
+    }
+    if (quote.usd > request.max_usd + 1e-9) {
+      throw new VideoRequestError(
+        "over_budget",
+        `Venice quotes $${quote.usd.toFixed(2)} for this video, over the max_usd limit of $${request.max_usd.toFixed(2)}, so it was not queued.`,
+        { quote_usd: quote.usd, max_usd: request.max_usd }
+      );
+    }
   }
 
   let queued: unknown;

@@ -4,17 +4,21 @@
   "description": "MCP server for Venice.ai: an autonomous research agent plus chat, web search, scraping, images, speech, embeddings and account tools",
   "type": "module",
   "bin": {
-    "venice-mcp-server": "dist/index.js"
+    "venice-mcp-server": "dist/index.js",
+    "venice-web": "dist/web.js"
   },
   "files": [
     "dist",
-    "workflows"
+    "workflows",
+    "web"
   ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "smoke": "tsx scripts/smoke.ts"
+    "smoke": "tsx scripts/smoke.ts",
+    "web": "node dist/web.js",
+    "smoke:web": "tsx scripts/web-smoke.ts"
   },
   "engines": {
     "node": ">=20.3"
@@ -25,6 +29,7 @@
     "@modelcontextprotocol/node": "^2.1.2",
     "@modelcontextprotocol/server": "^2.4.0",
     "express": "^5.3.0",
+    "qrcode-terminal": "^0.12.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {

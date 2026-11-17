@@ -640,6 +640,36 @@ await check("a payload over 25 MB is refused before any quote or queue call", as
   }
 });
 
+await check("max_usd caps the price: over it nothing is queued, at or above it queues, and an unreadable quote fails closed", async () => {
+  mock.requests.length = 0;
+  const over = await call("venice_video", { prompt: "too dear", duration: 5, max_usd: 0.3 });
+  assert.equal(over.isError, true);
+  assert.match(text(over), /Venice quotes \$0\.42 for this video, over the max_usd limit of \$0\.30, so it was not queued\./);
+  assert.deepEqual([over.structuredContent.error, over.structuredContent.quote_usd, over.structuredContent.max_usd], ["over_budget", 0.42, 0.3]);
+  assert.ok(mock.requests.some(r => r.path === "/video/quote"), "it was quoted");
+  assert.ok(!mock.requests.some(r => r.path === "/video/queue"), "but nothing was queued");
+
+  const fair = await call("venice_video", { prompt: "fair price", duration: 5, max_usd: 0.42, response_format: "json" });
+  assert.ok(!fair.isError, text(fair));
+  await waitVideo(client, fair.structuredContent.queue_id, job => job.status === "completed");
+
+  const blind = await startMockVenice({ noQuote: true });
+  const c = await connect({ VENICE_API_KEY: MOCK_API_KEY, VENICE_BASE_URL: blind.url, ...VIDEO_ENV, ...WAN_ENV });
+  try {
+    const refused = await wcall(c, "venice_video", { prompt: "x", duration: 5, max_usd: 1 });
+    assert.equal(refused.isError, true);
+    assert.match(text(refused), /price quote could not be read and max_usd was set, so the video was not queued/);
+    assert.equal(refused.structuredContent.error, "quote_unavailable");
+    assert.ok(!blind.requests.some(r => r.path === "/video/queue"), "an unreadable price is not a reason to spend");
+    const allowed = await wcall(c, "venice_video", { prompt: "x", duration: 5, response_format: "json" });
+    assert.ok(!allowed.isError, text(allowed));
+    assert.equal(allowed.structuredContent.quote_usd, null, "without a limit it still queues, and says the price is unknown");
+  } finally {
+    await c.close();
+    await blind.close();
+  }
+});
+
 await client.close();
 
 await check("a missing API key gives setup instructions", async () => {

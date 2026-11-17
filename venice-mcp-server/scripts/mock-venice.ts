@@ -25,6 +25,8 @@ export interface MockVeniceOptions {
   videoModels?: string[];
   /** Reject quotes that carry anything beyond model and duration, like a stricter upstream. */
   strictQuote?: boolean;
+  /** Answer quotes with a body that has no price in it, so the price cannot be read. */
+  noQuote?: boolean;
 }
 
 /** What a finished hosted video is: tiny, but with a recognisable body. */
@@ -181,6 +183,7 @@ export async function startMockVenice(options: MockVeniceOptions = {}): Promise<
         const extra = Object.keys(body ?? {}).filter(key => key !== "model" && key !== "duration");
         if (options.strictQuote && extra.length) return json(res, 400, { error: `Unrecognized keys: ${extra.join(", ")}` });
         if (!videoModels.includes(body?.model) || !/^\d+s$/.test(body?.duration ?? "")) return json(res, 400, { error: "model and a duration like '5s' are required" });
+        if (options.noQuote) return json(res, 200, { note: "no price today" });
         return json(res, 200, { quote: Number((0.084 * parseInt(body.duration, 10)).toFixed(2)) });
       }
       case "POST /video/queue": {

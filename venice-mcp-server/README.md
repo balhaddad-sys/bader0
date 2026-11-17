@@ -1,6 +1,6 @@
 # venice-mcp-server
 
-An MCP server that gives Claude and other MCP clients a **Venice.ai agent**, direct access to Venice's private AI APIs, hosted **Venice video**, and **free local video generation** with Wan through ComfyUI.
+An MCP server that gives Claude and other MCP clients a **Venice.ai agent**, direct access to Venice's private AI APIs, hosted **Venice video**, and **free local video generation** with Wan through ComfyUI. It also includes a **phone-friendly web app** ([below](#web-app-control-it-from-your-phone)) so you can make videos from your phone while the work runs on your computer.
 
 The main tool is `venice_agent`. You give it a task, and it runs an autonomous loop on a Venice model that supports function calling. Each round, the model searches the web, reads pages, and (if you allow it) generates images or queues local video clips. It then returns a cited answer with a trace of what it did. The other `venice_*` tools wrap single Venice endpoints. The `wan_*` tools render video on your own GPU and never contact Venice.
 
@@ -34,6 +34,7 @@ Every tool accepts `response_format: "json"` for structured output, except the i
 | `wan_video`, `wan_status`, `wan_cancel` | Your GPU, through local ComfyUI | **Free.** Prompts, images and videos stay on your machine and never reach Venice |
 | `venice_video` | Venice | **Billed.** The price is quoted (`POST /video/quote`) before the job is queued, and `quote_usd` is returned. Nothing gates on the price |
 | `venice_video_status` | Venice | Polls a job that was already quoted and queued; it does not start a new generation |
+| The web app | Local: your GPU. Hosted: Venice | Local clips are **free**. Hosted clips are **billed**, and the app shows the price and asks before spending (it sends it as a `max_usd` cap) |
 | `venice_agent` | Venice | **Billed.** Each round is one model call plus its searches, scrapes and images. Clips it queues locally (`enable_local_video`) are free |
 | `venice_chat`, `venice_generate_image`, `venice_text_to_speech`, `venice_embeddings` | Venice | **Billed**, per call |
 | `venice_web_search`, `venice_web_scrape` | Venice | **Billed**, per call |
@@ -184,12 +185,13 @@ ComfyUI has **no authentication**. Anyone who can reach it can queue jobs, uploa
 
 `venice_video_status` reports progress, the saved path and a resource link. There is no way to cancel a hosted job. A job past `VENICE_VIDEO_TIMEOUT` is reported as `timed_out` and may still finish on Venice's side.
 
-**Inputs.** `prompt` and `duration` (whole seconds, 1–30, sent as `"5s"`; each model accepts only certain lengths) are required. `model`, `aspect_ratio`, `resolution`, `negative_prompt` and `image_url` (an https URL or a small `data:` URI) are optional. Model IDs are read from `GET /models?type=video` at runtime and limited to IDs starting `wan-3-0` (`VENICE_VIDEO_MODEL_PREFIX`): the text-to-video one by default, the image-to-video one when `image_url` is given. If the catalog has none, the call says so and lists what exists.
+**Inputs.** `prompt` and `duration` (whole seconds, 1–30, sent as `"5s"`; each model accepts only certain lengths) are required. `model`, `aspect_ratio`, `resolution`, `negative_prompt`, `image_url` (an https URL or a small `data:` URI) and `max_usd` are optional. **`max_usd` is a price cap:** the video is only queued if Venice's quote is at or below it, and a quote that cannot be read also stops it (it fails closed). Model IDs are read from `GET /models?type=video` at runtime and limited to IDs starting `wan-3-0` (`VENICE_VIDEO_MODEL_PREFIX`): the text-to-video one by default, the image-to-video one when `image_url` is given. If the catalog has none, the call says so and lists what exists.
 
 **Errors:**
 
 | Venice says | What you get |
 |---|---|
+| the quote is over `max_usd`, or unreadable with `max_usd` set | A refusal with the quote and your limit; nothing is queued |
 | 402 | Out of credits, with the account's balance (read from `/api_keys/rate_limits`) and the quoted price |
 | 409 `needs_consent` | Venice's consent **policy text and version**. `venice_video` never consents on the user's behalf and has no consent parameter |
 | 413 | "Payload over 25 MB". The size is also checked before sending |
@@ -209,6 +211,49 @@ They look alike but their parameters do not converge, and merging them would hid
 - **Lifecycle:** local can be cancelled and is cleaned up at shutdown. Hosted cannot be cancelled.
 - **Cost and privacy:** local is free and stays on your machine. Hosted is billed and goes to Venice.
 - **Sound:** hosted Wan generates native audio; local Wan (2.1 and 2.2) does not.
+
+## Web app: control it from your phone
+
+`npm run web` starts a small web app on your computer, the one that has ComfyUI and your Venice key. You open it on your phone, type a prompt (optionally pick a photo to animate), and watch the video render. Local (your GPU, free) and hosted (Venice, billed) are one tap apart.
+
+```bash
+npm install
+npm run build
+VENICE_API_KEY=your-key npm run web      # the key is only needed for hosted video; local works without it
+```
+
+It prints the addresses to use and a **QR code**. With your phone on the same Wi-Fi, scan it: the page opens and signs you in. Nothing to type.
+
+**Using it**
+- **Create:** choose **Local** or **Hosted**, write the prompt, pick a length (3, 5, 8 or 10 s, or any whole number up to 30), and optionally a photo. A photo is shrunk in the browser first, so a 12-megapixel picture becomes a few hundred KB.
+  - **Local** shows your GPU and the model it will use, and lets you pick a size and a seed. Free.
+  - **Hosted** shows your Venice balance and the models available. **It asks for the price first**: tap *Get the price*, see the quote, then tap *Generate for $0.42*. The app sends that quote as `max_usd`, so it only starts if the price stays at or below what you saw.
+- **Jobs:** every video with live progress, the player when it is done, *Download*, *Cancel* (local jobs), and *Use this prompt* to start again from the same text. The page keeps updating while you wait.
+- **Library:** clips saved on the computer, including ones from before the app was restarted.
+
+**Sign-in and security.** The app can spend your Venice credits and use your GPU, so it is never open:
+- Every API call needs a token. If you don't set `WEB_TOKEN` (16+ characters), one is generated the first time and kept in `~/.venice-mcp/web-token` (mode 0600), so your phone's bookmark survives restarts.
+- The QR code and link carry the token in the URL **fragment** (`/#t=…`), which browsers never send to a server, so it stays out of logs. The page signs in and clears it from the address bar. After that the phone holds an `HttpOnly`, `SameSite=Strict` cookie that contains an HMAC of the token, not the token.
+- Wrong tokens are rate limited (8 tries, then a few minutes' lockout from that address). State-changing requests must come from the app's own origin. The page runs under a strict content policy with no inline script.
+- The phone can only supply **a photo** (PNG, JPEG or WebP, sent as a data URI) as a start image. It cannot name a file or URL for the server to read, so a signed-in phone can't point the server at other files on your computer.
+- **ComfyUI stays on loopback.** The phone talks only to this app, and the app talks to ComfyUI from the same machine, which is the setup the ComfyUI warning above asks for.
+- It is **plain HTTP on your network**: anyone who can watch your Wi-Fi traffic could see the token when you sign in. For use away from home, or if you want HTTPS, set `WEB_HOST=127.0.0.1` and put it behind an HTTPS front end that you control, such as Tailscale or a Cloudflare Tunnel. The app honours `X-Forwarded-For` and `X-Forwarded-Proto` from a proxy on the same machine and marks the cookie `Secure` over HTTPS. (I could not test those front ends here, only the app itself.)
+- If the phone can't connect, your computer's firewall is the usual reason: allow incoming connections on the app's port (8787 by default).
+
+**Good to know**
+- The job list lives in the app's memory, so restarting it forgets the list. The clips themselves stay in `WAN_OUTPUT_DIR` and show up in **Library**, until `WAN_RETAIN_HOURS` deletes them.
+- Quitting the app (Ctrl+C) cancels the local renders it queued, as the MCP server does. A hosted video can't be cancelled and keeps going on Venice's side.
+- The MCP server and the web app are separate programs. They can run at the same time, but each only knows about the jobs it queued itself, and they share ComfyUI's queue.
+- A phone's own web player decides what it can play. If a clip won't play inline, use *Download*.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `WEB_PORT` | `8787` | Port to listen on |
+| `WEB_HOST` | `0.0.0.0` | Address to listen on. `127.0.0.1` keeps it to this computer (for a proxy) |
+| `WEB_TOKEN` | generated | Sign-in token, 16 or more characters |
+| `WEB_TOKEN_FILE` | `~/.venice-mcp/web-token` | Where a generated token is kept |
+
+It also uses `VENICE_API_KEY`, `WAN_BASE_URL`, `WAN_OUTPUT_DIR` and the other settings below.
 
 ## Setup
 
@@ -272,6 +317,7 @@ To expose it beyond localhost, set `HOST=0.0.0.0`, `ALLOWED_HOSTS=your.domain`, 
 | `WAN_WORKFLOW_T2V` / `WAN_WORKFLOW_I2V` | bundled | API-format workflow files exported from ComfyUI. Each needs a sibling `.meta.json` |
 | `WAN_POLL_INTERVAL_MS` | `2000` | How often the background poller checks ComfyUI |
 | `TRANSPORT`, `PORT`, `HOST`, `MCP_AUTH_TOKEN`, `ALLOWED_HOSTS` | stdio | HTTP serving (see above) |
+| `WEB_PORT`, `WEB_HOST`, `WEB_TOKEN`, `WEB_TOKEN_FILE` | `8787`, `0.0.0.0`, generated, `~/.venice-mcp/web-token` | The phone web app (see its section) |
 
 ## Example prompts for Claude
 
@@ -286,11 +332,12 @@ To expose it beyond localhost, set `HOST=0.0.0.0`, `ALLOWED_HOSTS=your.domain`, 
 
 ```bash
 npm run build     # compile TypeScript to dist/
-npm run smoke     # end-to-end self-check against local mocks of the Venice API and ComfyUI
+npm run smoke     # end-to-end self-check of the MCP server against local mocks of the Venice API and ComfyUI
+npm run smoke:web # the same for the web app's HTTP API
 npx @modelcontextprotocol/inspector node dist/index.js   # interactive testing
 ```
 
-The smoke test (`scripts/smoke.ts`) drives every tool through a real MCP client over stdio. It needs no key, no GPU and no network access, and runs 62 checks.
+The smoke test (`scripts/smoke.ts`) drives every tool through a real MCP client over stdio. It needs no key, no GPU and no network access, and runs 63 checks. The web smoke test (`scripts/web-smoke.ts`) starts the built app against the same mocks and runs 17 checks: sign-in, the cookie flags, the origin check, the local and hosted flows, Range streaming (iOS will not play a video without it), the price cap and its refusals, the library, the token file, the rate limit, and shutdown cancelling renders. The page itself was checked in a real browser at phone and desktop sizes, but that check is not part of the repository.
 
 - **Mock Venice API** (`scripts/mock-venice.ts`) covers the agent loop, error handling, and the hosted video flow: quote, queue, retrieve and complete; a `download_url` present and absent; 402, 409, 413 and 422; a missing `wan-3-0` catalog; a strict quote; a failed job and a timeout.
 - **Mock ComfyUI** (`scripts/mock-comfy.ts`) implements queue, history, view, upload, interrupt and progress over a websocket, validates model files the way ComfyUI does, and can be told to run out of memory, hang, lose its output or name it `../evil.mp4`. The Wan checks against it cover:
@@ -321,11 +368,16 @@ src/
   output.ts        output directory: names, retention, safe paths, streamed saves
   format.ts        response formats, truncation, pagination
   tools/           one register*Tools(server) per area
+  web.ts           the web app's entry: sign-in token, QR code, shutdown
+  web/auth.ts      token, cookie session, login rate limit
+  web/app.ts       the web app's JSON API over the same wan.ts and video.ts code
 workflows/         bundled Wan workflows (API format) and their .meta.json
+web/               the phone page: index.html, app.css, app.js (no build step)
 scripts/
   mock-venice.ts   local Venice API stand-in
   mock-comfy.ts    local ComfyUI stand-in
-  smoke.ts         self-check
+  smoke.ts         self-check of the MCP server
+  web-smoke.ts     self-check of the web app
 ```
 
 Built with the MCP TypeScript SDK v2 (`@modelcontextprotocol/server`) and Zod 4.
