@@ -5,6 +5,8 @@ import {
   invertInterval,
   lookupTable,
   parseAmount,
+  parseDecimalInput,
+  readingNote,
   resolveRoutes,
 } from '../src/engine/convert';
 import { formatAmount, formatRange } from '../src/engine/format';
@@ -37,6 +39,88 @@ describe('parseAmount', () => {
     expect(parseAmount(NaN)).toBeNull();
     expect(parseAmount(Infinity)).toBeNull();
     expect(parseAmount(-1)).toBeNull();
+  });
+});
+
+describe('number entry in other regional formats', () => {
+  it.each([
+    // Arabic-Indic, Persian and fullwidth digits (phone keyboards in Arabic / Persian settings)
+    ['٨٠٠', 800],
+    ['۸۰۰', 800],
+    ['１２３', 123],
+    ['٠٫٥', 0.5],
+    ['٢٫٢٥', 2.25],
+    ['١٬٢٥٠', 1250],
+    // decimal comma
+    ['0,5', 0.5],
+    ['0,375', 0.375],
+    ['0,0625', 0.0625],
+    ['2,25', 2.25],
+    ['12,5', 12.5],
+    ['1,5', 1.5],
+    // thousands separators
+    ['1,000', 1000],
+    ['12,500', 12500],
+    ['1.000.000', 1000000],
+    ['1 000', 1000],
+    ['1 000', 1000],
+    ['1 250', 1250],
+    // both separators: the last one is the decimal mark
+    ['1.000,5', 1000.5],
+    ['1,000.5', 1000.5],
+  ])('reads %j as %d', (input, expected) => {
+    expect(parseAmount(input)).toBeCloseTo(expected, 10);
+  });
+
+  it.each([
+    '1,2,3',
+    '1.2.3',
+    '1,000,5',
+    '12,34,567',
+    '0.5,0',
+    '1 0',
+    '1 00',
+    '12 3456',
+    '٣a',
+    '−5', // unicode minus
+    '1٬2٬3',
+    '1e3',
+    '١٢٣abc',
+  ])('rejects the ambiguous or malformed entry %j instead of guessing', (input) => {
+    expect(parseAmount(input)).toBeNull();
+  });
+
+  it('SAFETY: a decimal comma always reads the same as the decimal point (no 10x or 1000x misreads)', () => {
+    for (const dose of ['0.25', '0.375', '0.0625', '0.125', '0.5', '1.5', '2.25', '4.5', '7.5', '12.5', '0.088', '0.7']) {
+      const comma = dose.replace('.', ',');
+      expect(parseAmount(comma), `${comma} vs ${dose}`).toBe(parseAmount(dose));
+    }
+  });
+
+  it('SAFETY: Arabic-Indic digits always read the same as the Western digits', () => {
+    const toArabic = (t: string) => t.replace(/\d/g, (d) => String.fromCharCode(0x0660 + Number(d))).replace('.', '٫');
+    for (const dose of ['1000', '800', '0.5', '0.375', '2.25', '1500', '12.5']) {
+      expect(parseAmount(toArabic(dose)), toArabic(dose)).toBe(parseAmount(dose));
+    }
+  });
+
+  it('allows zero for fields where zero means "not taking" (parseDecimalInput) but not as a dose (parseAmount)', () => {
+    expect(parseDecimalInput('0')).toBe(0);
+    expect(parseDecimalInput('٠')).toBe(0);
+    expect(parseAmount('0')).toBeNull();
+    expect(parseDecimalInput('-1')).toBeNull();
+  });
+
+  it('echoes how a non-plain entry was read, and stays silent for plain numbers', () => {
+    expect(readingNote('0,5', 0.5)).toBe('Read as 0.5');
+    expect(readingNote('٨٠٠', 800)).toBe('Read as 800');
+    expect(readingNote('1,375', 1375)).toBe('Read as 1,375');
+    expect(readingNote('1 000', 1000)).toBe('Read as 1,000');
+    expect(readingNote('1.000,5', 1000.5)).toBe('Read as 1,000.5');
+    expect(readingNote('0,0625', 0.0625)).toBe('Read as 0.0625');
+    expect(readingNote('800', 800)).toBeUndefined();
+    expect(readingNote('0.5', 0.5)).toBeUndefined();
+    expect(readingNote('', 1)).toBeUndefined();
   });
 });
 

@@ -2,7 +2,7 @@
  * Pages: network-first (clinicians always get the newest data when online),
  * falling back to the cache when offline. Hashed assets: cache-first.
  */
-const CACHE = 'neuroconvert-v1.0.0';
+const CACHE = 'neuroconvert-v1.0.1';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (event) => {
@@ -26,8 +26,11 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put('./index.html', copy));
+          // Only keep a genuine page: never cache an error, a login page or a redirect as the app.
+          if (res.ok && res.type === 'basic') {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put('./index.html', copy));
+          }
           return res;
         })
         .catch(() => caches.match('./index.html').then((r) => r || caches.match('./'))),

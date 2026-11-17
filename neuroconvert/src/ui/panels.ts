@@ -5,6 +5,7 @@ import {
   lookupTable,
   MAX_AMOUNT,
   parseAmount,
+  readingNote,
   resolveRoutes,
   typicalOf,
 } from '../engine/convert';
@@ -37,12 +38,12 @@ export interface PanelCtx {
 /* ------------------------------------------------------------------ */
 
 /** Validate a free-text dose and return an amount or an error message. */
-function readAmount(raw: string): { amount?: number; error?: string; empty?: boolean } {
+function readAmount(raw: string): { amount?: number; error?: string; empty?: boolean; note?: string } {
   if (raw.trim() === '') return { empty: true };
   const amount = parseAmount(raw);
   if (amount === null) return { error: 'Enter a positive number, for example 1000 or 0.5.' };
   if (amount > MAX_AMOUNT) return { error: 'That value is unrealistically large. Check the units and try again.' };
-  return { amount };
+  return { amount, note: readingNote(raw, amount) };
 }
 
 function doseField(id: string, hint: string, initial: string, onInput: () => void) {
@@ -59,14 +60,16 @@ function doseField(id: string, hint: string, initial: string, onInput: () => voi
     value: initial,
     onInput,
   });
+  const reading = h('p', { class: 'field-hint reading', 'aria-live': 'polite' });
   const wrap = h(
     'div',
     { class: 'field' },
     h('label', { for: id }, 'Your dose'),
     h('div', { class: 'input-wrap' }, input, unit),
+    reading,
     h('p', { class: 'field-hint', id: `${id}-hint` }, hint),
   );
-  return { wrap, input, unit };
+  return { wrap, input, unit, reading };
 }
 
 /** Radio buttons styled as a segmented control (native keyboard behaviour). */
@@ -212,6 +215,7 @@ export function directedPanel(conv: DirectedConverter, ctx: PanelCtx): HTMLEleme
     clear(result);
 
     const read = readAmount(dose.input.value);
+    dose.reading.textContent = read.note ?? '';
     if (read.empty) {
       result.appendChild(h('p', { class: 'hint' }, 'Type your dose above to see the answer.'));
       append(result, [...(ctx.caution?.(splitCallouts(route.callouts).lead !== null) ?? []), routeDetails(route, undefined)]);
@@ -450,6 +454,7 @@ export function equivalencePanel(conv: EquivalenceConverter, ctx: PanelCtx): HTM
     clear(result);
 
     const read = readAmount(dose.input.value);
+    dose.reading.textContent = read.note ?? '';
     if (read.empty) {
       result.appendChild(h('p', { class: 'hint' }, 'Type your dose above to see the answer.'));
       append(result, [...(ctx.caution?.() ?? []), equivDetails(conv, from, to, undefined)]);

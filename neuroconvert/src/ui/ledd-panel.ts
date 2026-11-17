@@ -1,6 +1,6 @@
 import { computeLedd, type LeddEntry } from '../engine/ledd';
 import { formatAmount } from '../engine/format';
-import { MAX_AMOUNT } from '../engine/convert';
+import { MAX_AMOUNT, parseDecimalInput } from '../engine/convert';
 import type { LeddCalculator, LeddItem } from '../types';
 import { append, clear, h, nextId } from './dom';
 import { buildSummary } from './summary';
@@ -143,17 +143,17 @@ export function leddPanel(conv: LeddCalculator, ctx: PanelCtx): HTMLElement {
       let touched = false;
       let bad = false;
       for (const raw of r.values) {
-        const t = raw.trim().replace(/,/g, '');
-        if (t === '') {
+        if (raw.trim() === '') {
           nums.push(0);
           continue;
         }
         touched = true;
-        if (!/^\d*\.?\d+$|^\d+\.$/.test(t) || Number(t) > MAX_AMOUNT) {
+        const n = parseDecimalInput(raw);
+        if (n === null || n > MAX_AMOUNT) {
           bad = true;
           break;
         }
-        nums.push(Number(t));
+        nums.push(n);
       }
       if (bad) invalid.push(`${item.name}: enter a number of 0 or more (for example 600 or 1.5).`);
       else if (touched) entries.push({ itemId: r.itemId, values: nums });

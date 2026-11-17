@@ -28,18 +28,90 @@ export function typicalOf(i: Interval): number | undefined {
   return isPoint(i) ? i.low : undefined;
 }
 
+/** Map non-ASCII digits and separators (Arabic-Indic, Persian, fullwidth) to ASCII. */
+function normaliseNumerals(s: string): string {
+  return s
+    .replace(/[\u0660-\u0669]/g, (c) => String(c.charCodeAt(0) - 0x0660)) // Arabic-Indic digits
+    .replace(/[\u06f0-\u06f9]/g, (c) => String(c.charCodeAt(0) - 0x06f0)) // Extended Arabic-Indic (Persian) digits
+    .replace(/[\uff10-\uff19]/g, (c) => String(c.charCodeAt(0) - 0xff10)) // fullwidth digits
+    .replace(/[\u066b\uff0e]/g, '.') //                                    Arabic decimal separator, fullwidth full stop
+    .replace(/[\u066c\u060c\uff0c]/g, ','); //                            Arabic thousands separator, Arabic comma, fullwidth comma
+}
+
+const PLAIN_NUMBER = /^\d*\.?\d+$|^\d+\.$/;
+const SPACES = /[\s\u00a0\u202f\u2009]/;
+
 /**
- * Parse a user-entered dose. Returns null unless it is a finite, strictly
- * positive number (so "", "abc", "-5", "0", "Infinity" are all rejected).
+ * Parse a typed number, tolerating the formats phone keyboards produce in
+ * different regions, but never guessing where a wrong guess could change a dose
+ * by a large factor:
+ *
+ *   800  ٨٠٠  ۸۰۰        → 800        (Arabic-Indic / Persian digits)
+ *   0.5  0,5  ٠٫٥        → 0.5        (decimal point or decimal comma)
+ *   1,250  1.250.000     → 1250 / 1250000   (thousands separators in exact groups of three)
+ *   1 000                → 1000       (space as thousands separator)
+ *   1.000,5  1,000.5     → 1000.5     (both present: the last one is the decimal mark)
+ *
+ * Returns null for anything else (letters, signs, exponents, "1,2,3", "1.2.3"…).
+ * A single comma followed by exactly three digits and a non-zero lead ("1,375")
+ * is read as a thousands separator; the UI echoes how the entry was read.
  */
-export function parseAmount(raw: string | number | null | undefined): number | null {
+export function parseDecimalInput(raw: string | number | null | undefined): number | null {
   if (raw === null || raw === undefined) return null;
-  const s = typeof raw === 'number' ? String(raw) : raw.trim().replace(/,/g, '');
+  if (typeof raw === 'number') return Number.isFinite(raw) && raw >= 0 ? raw : null;
+
+  let s = normaliseNumerals(raw).trim();
   if (s === '') return null;
-  // Strict decimal syntax: no hex, no exponent, no stray characters.
-  if (!/^\d*\.?\d+$|^\d+\.$/.test(s)) return null;
-  const n = Number(s);
-  return Number.isFinite(n) && n > 0 ? n : null;
+
+  if (SPACES.test(s)) {
+    // A space is only accepted as a thousands separator between groups of exactly three digits.
+    if (!/^\d{1,3}(?:[\s\u00a0\u202f\u2009]\d{3})+(?:[.,]\d+)?$/.test(s)) return null;
+    s = s.replace(/[\s\u00a0\u202f\u2009]/g, '');
+  }
+  if (!/^[\d.,]+$/.test(s)) return null;
+
+  const dots = (s.match(/\./g) ?? []).length;
+  const commas = (s.match(/,/g) ?? []).length;
+  let canonical: string;
+
+  if (dots > 0 && commas > 0) {
+    const decimalMark = s.lastIndexOf('.') > s.lastIndexOf(',') ? '.' : ',';
+    const groupMark = decimalMark === '.' ? ',' : '.';
+    const parts = s.split(decimalMark);
+    if (parts.length !== 2 || !/^\d+$/.test(parts[1])) return null;
+    const grouped = new RegExp(`^\\d{1,3}(?:\\${groupMark}\\d{3})+$`);
+    if (!grouped.test(parts[0])) return null;
+    canonical = `${parts[0].split(groupMark).join('')}.${parts[1]}`;
+  } else if (commas > 0) {
+    if (/^[1-9]\d{0,2}(?:,\d{3})+$/.test(s)) canonical = s.replace(/,/g, '');
+    else if (commas === 1 && /^\d+,\d+$/.test(s)) canonical = s.replace(',', '.');
+    else return null;
+  } else if (dots > 1) {
+    if (/^[1-9]\d{0,2}(?:\.\d{3})+$/.test(s)) canonical = s.replace(/\./g, '');
+    else return null;
+  } else {
+    canonical = s;
+  }
+
+  if (!PLAIN_NUMBER.test(canonical)) return null;
+  const n = Number(canonical);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** A dose: finite and strictly greater than zero. */
+export function parseAmount(raw: string | number | null | undefined): number | null {
+  const n = parseDecimalInput(raw);
+  return n !== null && n > 0 ? n : null;
+}
+
+/**
+ * When the typed text is not a plain ASCII number (different digits, a comma, a
+ * space), say how it was read so a misread separator is visible, e.g. "Read as 1,375".
+ */
+export function readingNote(raw: string, value: number): string | undefined {
+  const t = raw.trim();
+  if (t === '' || PLAIN_NUMBER.test(t)) return undefined;
+  return `Read as ${value.toLocaleString('en-US', { maximumFractionDigits: 4 })}`;
 }
 
 /** Upper bound for any user-entered amount; rejects absurd typos. */

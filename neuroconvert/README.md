@@ -40,6 +40,7 @@ Where no evidence-based conversion could be traced, the app says so instead of g
 - "Show the math" for every result; copy a plain-text summary **with sources**; shareable links; print stylesheet
 - A simple flow: pick the drug, pick the switch, type the dose, read the answer. Sources, cautions and workings are one tap away; evidence tiers, the full rules index and references are on the Methods and References pages
 - Searchable by drug name
+- Numbers can be typed the way your phone keyboard produces them: Arabic-Indic or Persian digits (٨٠٠), decimal commas (0,5), thousands separators (1,000 or 1 000). Ambiguous entries such as `1,2,3` are rejected instead of guessed, and the screen states how an entry was read ("Read as 0.5")
 - Input validation (positive numbers only, sanity cap), accessible (labels, `aria-live` results, focus states, keyboard-only use, skip link), responsive, light/dark
 - Works **offline** (service worker) and as a **single HTML file** you can open from disk
 - No accounts, no analytics, no network calls with your inputs
@@ -49,7 +50,7 @@ Where no evidence-based conversion could be traced, the app says so instead of g
 ```bash
 npm install
 npm run dev            # http://localhost:5173
-npm test               # 114 tests
+npm test               # 151 tests
 npm run typecheck
 npm run build          # static site in dist/
 npm run build:single   # one portable file: dist-single/index.html (works from file://)

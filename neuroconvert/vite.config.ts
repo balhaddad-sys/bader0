@@ -11,6 +11,7 @@ export default defineConfig({
   define: {
     __SINGLE_FILE__: JSON.stringify(singleFile),
   },
-  build: { target: 'es2022', sourcemap: false },
+  // Older phones (iOS 14+, Chrome 87+) must still run the calculators: a script error would blank the page.
+  build: { target: ['es2020', 'chrome87', 'safari14', 'firefox78', 'edge88'], sourcemap: false },
   test: { environment: 'node', include: ['tests/**/*.test.ts'] },
 });
