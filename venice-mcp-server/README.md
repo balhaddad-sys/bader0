@@ -217,10 +217,11 @@ They look alike but their parameters do not converge, and merging them would hid
 `npm run web` starts a small web app on your computer, the one that has ComfyUI and your Venice key. You open it on your phone, type a prompt (optionally pick a photo to animate), and watch the video render. Local (your GPU, free) and hosted (Venice, billed) are one tap apart.
 
 ```bash
-npm install
-npm run build
-VENICE_API_KEY=your-key npm run web      # the key is only needed for hosted video; local works without it
+cd venice-mcp-server
+npm run phone       # checks Node, installs, builds, looks for ComfyUI, then starts the app
 ```
+
+`npm run phone` works on Windows, macOS and Linux. Start ComfyUI first (with the Wan model files in its models folder), or the page will show "Local off" until it can reach it. To also make hosted Venice videos, set `VENICE_API_KEY` first. If you'd rather run the steps yourself: `npm install`, `npm run build`, `npm run web`.
 
 It prints the addresses to use and a **QR code**. With your phone on the same Wi-Fi, scan it: the page opens and signs you in. Nothing to type.
 
