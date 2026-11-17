@@ -25,7 +25,7 @@ const items: EquivItem[] = [
 const equivalence: EquivalenceConverter = {
   id: 'steroid-equivalence',
   kind: 'equivalence',
-  title: 'Glucocorticoid equivalence (oral / IV)',
+  title: 'Equivalent doses',
   summary: 'Approximate equivalent doses of systemic glucocorticoids (prednisone 5 mg anchor).',
   doseBasis: 'Daily dose (mg) of the starting glucocorticoid.',
   referenceLabel: 'prednisone 5 mg',
@@ -51,7 +51,7 @@ const equivalence: EquivalenceConverter = {
 const msRelapse: DirectedConverter = {
   id: 'steroid-ms-relapse',
   kind: 'directed',
-  title: 'MS relapse: IV ⇄ oral methylprednisolone',
+  title: 'MS relapse: IV ⇄ oral',
   summary: 'High-dose methylprednisolone for relapses: the oral regimen tested against IV in a non-inferiority trial.',
   doseBasis: 'Daily dose of methylprednisolone (mg).',
   refs: ['lepage2015', 'burton2012'],

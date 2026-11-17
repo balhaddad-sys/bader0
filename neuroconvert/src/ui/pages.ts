@@ -1,10 +1,10 @@
 import { APP_VERSION, DATA_VERSION, MODULES, MODULE_MAP, REFERENCES } from '../data';
 import { resolveRoutes } from '../engine/convert';
-import type { Converter, EvidenceTier, Module, Reference } from '../types';
+import type { Converter, EvidenceTier, Reference } from '../types';
 import { copyText, h } from './dom';
 import { calloutList, referenceLinks, referencesAsText, tierBadge, TIERS } from './evidence';
 import { leddPanel } from './ledd-panel';
-import { directedPanel, equivalencePanel, type PanelCtx } from './panels';
+import { directedPanel, equivalencePanel, leadWarning, segmented, splitCallouts, type PanelCtx } from './panels';
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -24,12 +24,6 @@ function converterRules(c: Converter): { label: string; tier: EvidenceTier; deri
     case 'ledd':
       return [{ label: `${c.title} (${c.items.length} agents)`, tier: c.provenance.tier, derived: false, refs: c.provenance.refs }];
   }
-}
-
-function tierMix(m: Module): Map<EvidenceTier, number> {
-  const out = new Map<EvidenceTier, number>();
-  for (const c of m.converters) for (const r of converterRules(c)) out.set(r.tier, (out.get(r.tier) ?? 0) + 1);
-  return out;
 }
 
 /* ------------------------------------------------------------------ */
@@ -95,13 +89,22 @@ function search(query: string): SearchEntry[] {
 /* Home                                                                */
 /* ------------------------------------------------------------------ */
 
+const TILE_BLURB: Record<string, string> = {
+  epilepsy: 'Switch between IV and tablets, or between formulations',
+  benzodiazepines: 'Equivalent doses: lorazepam, clonazepam, clobazam, diazepam…',
+  parkinson: 'Total levodopa dose, and formulation switches',
+  steroids: 'Equivalent doses: prednisone, dexamethasone, methylprednisolone…',
+  botulinum: 'Unit ratios between Botox, Dysport and Xeomin',
+  dementia: 'Rivastigmine patch and memantine XR switches',
+};
+
 export function homePage(): HTMLElement {
   const resultsHost = h('ul', { class: 'search-results', id: 'search-results', role: 'list' });
   const searchInput = h('input', {
     id: 'search',
     type: 'search',
     class: 'search-input',
-    placeholder: 'Search a drug or conversion: levetiracetam, ropinirole, clobazam…',
+    placeholder: 'Search a drug, e.g. levetiracetam',
     autocomplete: 'off',
     'aria-controls': 'search-results',
     onInput: (e: Event) => {
@@ -109,7 +112,9 @@ export function homePage(): HTMLElement {
       resultsHost.replaceChildren();
       const hits = search(q);
       if (q.trim() && hits.length === 0) {
-        resultsHost.appendChild(h('li', { class: 'no-hits' }, 'No matching conversion. Not every drug has an evidence-based conversion: see “Intentionally not provided” in Methods.'));
+        resultsHost.appendChild(
+          h('li', { class: 'no-hits' }, 'No conversion for that. Not every drug has an evidence-based conversion.'),
+        );
       }
       for (const e2 of hits) {
         resultsHost.appendChild(h('li', null, h('a', { href: e2.href }, h('strong', null, e2.label), h('span', { class: 'sub' }, e2.sub))));
@@ -123,71 +128,23 @@ export function homePage(): HTMLElement {
     h(
       'section',
       { class: 'hero' },
-      h('p', { class: 'eyebrow' }, 'Evidence-based · Traceable · Offline-capable'),
-      h('h1', null, 'Neurology medication converters, with the evidence on screen'),
-      h(
-        'p',
-        { class: 'lede' },
-        'Every conversion shows how strong its support is (FDA label, pharmacokinetics, clinical studies or consensus) and the exact source it came from. Where the evidence does not support a single number, you get a range, and where there is no evidence-based conversion, the app says so.',
-      ),
+      h('h1', null, 'What do you want to convert?'),
       h('label', { for: 'search', class: 'sr-only' }, 'Search conversions'),
       searchInput,
       resultsHost,
     ),
     h(
-      'section',
-      { 'aria-labelledby': 'modules-h' },
-      h('h2', { id: 'modules-h' }, 'Converters'),
-      h(
-        'div',
-        { class: 'cards' },
-        MODULES.map((m) => {
-          const mix = tierMix(m);
-          return h(
-            'a',
-            { class: 'card module-card', href: `#/m/${m.id}` },
-            h('span', { class: 'area' }, m.area),
-            h('h3', null, m.title),
-            h('p', null, m.summary),
-            h(
-              'div',
-              { class: 'card-foot' },
-              h('span', { class: 'count' }, `${m.converters.length} ${m.converters.length === 1 ? 'converter' : 'converters'}`),
-              h(
-                'span',
-                { class: 'mini-tiers', 'aria-label': 'Evidence tiers present' },
-                (['A', 'B', 'C', 'D'] as EvidenceTier[]).filter((t) => mix.has(t)).map((t) => h('span', { class: `tier-dot tier-${t}`, title: `Evidence ${t}: ${TIERS[t].name}` }, t)),
-              ),
-            ),
-          );
-        }),
+      'div',
+      { class: 'cards' },
+      MODULES.map((m) =>
+        h('a', { class: 'card module-card', href: `#/m/${m.id}` }, h('h2', null, m.title), h('p', null, TILE_BLURB[m.id] ?? m.summary)),
       ),
     ),
     h(
-      'section',
-      { 'aria-labelledby': 'tiers-h', class: 'legend' },
-      h('h2', { id: 'tiers-h' }, 'How to read the evidence tiers'),
-      h(
-        'div',
-        { class: 'tier-grid' },
-        (['A', 'B', 'C', 'D'] as EvidenceTier[]).map((t) =>
-          h('div', { class: 'tier-card' }, tierBadge(t), h('p', null, TIERS[t].detail)),
-        ),
-      ),
-      h('p', { class: 'fine' }, 'These tiers are this app’s own transparent rubric for how directly a source supports each number. They are not a formal GRADE assessment. See Methods.'),
-    ),
-    h(
-      'section',
-      { class: 'readfirst', 'aria-labelledby': 'rf-h' },
-      h('h2', { id: 'rf-h' }, 'Read before use'),
-      h(
-        'ul',
-        null,
-        h('li', null, 'For qualified healthcare professionals. Results are decision support, never a substitute for clinical judgement or the current prescribing information.'),
-        h('li', null, 'Conversions apply to the same drug (route or formulation) unless a section says otherwise. There is no dose equivalence between different antiseizure drugs.'),
-        h('li', null, 'Adult conversions unless stated. Renal or hepatic impairment, interactions, pregnancy and local product differences are not applied.'),
-        h('li', null, 'Nothing you enter leaves your device. No accounts, no analytics. Do not enter patient identifiers (none are needed).'),
-      ),
+      'p',
+      { class: 'fine home-note' },
+      'Every answer shows where the number comes from. ',
+      h('a', { href: '#/methods' }, 'How reliable are these numbers?'),
     ),
   );
 }
@@ -200,10 +157,23 @@ export function modulePage(moduleId: string, query: URLSearchParams, setParams: 
   const m = MODULE_MAP.get(moduleId);
   if (!m) return notFound();
 
-  const activeConverter = query.get('c');
-  const sections = m.converters.map((c) => {
-    const params = c.id === activeConverter ? query : new URLSearchParams();
-    const ctx: PanelCtx = { params, setParams };
+  const requested = query.get('c');
+  const activeId = m.converters.some((c) => c.id === requested) ? (requested as string) : m.converters[0].id;
+
+  const sections = new Map<string, HTMLElement>();
+  for (const c of m.converters) {
+    const { lead, rest } = splitCallouts(c.callouts);
+    // When the chosen conversion has its own, more specific caution, the converter-wide one moves into the collapsed list.
+    const caution = (routeHasLead = false) => {
+      const hidden = routeHasLead && lead ? [lead, ...rest] : rest;
+      return [
+        routeHasLead ? null : leadWarning(lead),
+        hidden.length > 0
+          ? h('details', { class: 'more inline' }, h('summary', null, 'More cautions and notes'), h('div', { class: 'more-body' }, calloutList(hidden)))
+          : null,
+      ];
+    };
+    const ctx: PanelCtx = { params: c.id === activeId ? query : new URLSearchParams(), setParams, caution };
     let panel: HTMLElement;
     switch (c.kind) {
       case 'directed':
@@ -216,30 +186,39 @@ export function modulePage(moduleId: string, query: URLSearchParams, setParams: 
         panel = leddPanel(c, ctx);
         break;
     }
-    return h(
-      'section',
-      { class: 'card converter', id: c.id, 'aria-labelledby': `${c.id}-h` },
-      h('h2', { id: `${c.id}-h` }, c.title),
-      h('p', { class: 'conv-summary' }, c.summary),
-      calloutList(c.callouts),
-      panel,
+    sections.set(
+      c.id,
+      h(
+        'section',
+        { class: 'card converter', id: c.id, 'aria-labelledby': `${c.id}-h`, hidden: c.id !== activeId },
+        h('h2', { id: `${c.id}-h` }, c.title),
+        h('p', { class: 'conv-summary' }, c.summary),
+        panel,
+      ),
     );
-  });
+  }
+
+  const tabs =
+    m.converters.length > 1
+      ? segmented(
+          'Converter',
+          m.converters.map((c) => ({ value: c.id, label: c.title })),
+          activeId,
+          (id) => {
+            for (const [cid, el] of sections) el.hidden = cid !== id;
+            setParams({ c: id });
+          },
+          'tabs',
+        )
+      : null;
 
   return h(
     'div',
     { class: 'page module' },
-    h('p', { class: 'eyebrow' }, m.area),
+    h('p', { class: 'crumb' }, h('a', { href: '#/' }, '← All converters')),
     h('h1', null, m.title),
-    h('p', { class: 'lede' }, m.summary),
-    m.converters.length > 1
-      ? h(
-          'nav',
-          { class: 'toc no-print', 'aria-label': 'On this page' },
-          m.converters.map((c) => h('a', { href: `#/m/${m.id}?c=${c.id}`, onClick: (e: Event) => { e.preventDefault(); document.getElementById(c.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }, c.title)),
-        )
-      : null,
-    sections,
+    tabs,
+    [...sections.values()],
   );
 }
 

@@ -2,7 +2,6 @@ import { APP_VERSION, DATA_VERSION, MODULES } from '../data';
 import { clear, h, safeStorage } from './dom';
 import { homePage, methodsPage, modulePage, notFound, referencesPage } from './pages';
 
-const ACK_KEY = 'neuroconvert.ack.v1';
 const THEME_KEY = 'neuroconvert.theme';
 
 /* ------------------------------ routing ------------------------------ */
@@ -85,16 +84,16 @@ export function mountApp(root: HTMLElement): void {
   const banner = h(
     'div',
     { class: 'safety-banner', role: 'note' },
-    h('strong', null, 'Clinical decision support. '),
-    'For qualified healthcare professionals. Not a substitute for clinical judgement or current prescribing information; verify every dose. ',
-    h('a', { href: '#/methods' }, 'Methods & limitations'),
+    h('strong', null, 'For clinicians. '),
+    'Always check the dose against the drug’s label. ',
+    h('a', { href: '#/methods' }, 'About these numbers'),
   );
 
   const footer = h(
     'footer',
     { class: 'site-footer' },
-    h('p', null, `NeuroConvert v${APP_VERSION} · data curated ${DATA_VERSION} · not a regulated medical device · calculations run entirely in your browser.`),
-    h('p', null, h('a', { href: '#/methods' }, 'Methods'), ' · ', h('a', { href: '#/references' }, 'References')),
+    h('p', null, h('a', { href: '#/methods' }, 'How reliable are these numbers?'), ' · ', h('a', { href: '#/references' }, 'References')),
+    h('p', null, `NeuroConvert v${APP_VERSION} · data ${DATA_VERSION} · not a regulated medical device · nothing you type leaves your device`),
   );
 
   root.append(
@@ -110,8 +109,6 @@ export function mountApp(root: HTMLElement): void {
     const items: [string, string, string][] = [
       ['', 'Home', '#/'],
       ...MODULES.map((m): [string, string, string] => [m.id, m.title, `#/m/${m.id}`]),
-      ['methods', 'Methods', '#/methods'],
-      ['references', 'References', '#/references'],
     ];
     for (const [key, label, href] of items) {
       nav.appendChild(h('a', { href, class: 'nav-link', 'aria-current': key === active ? 'page' : undefined }, label));
@@ -164,48 +161,4 @@ export function mountApp(root: HTMLElement): void {
   lastPath = parseHash().path.join('/');
   render();
 
-  showAcknowledgement();
-}
-
-/* --------------------------- first-run notice --------------------------- */
-
-function showAcknowledgement(): void {
-  if (safeStorage.get(ACK_KEY) === 'yes') return;
-  if (typeof HTMLDialogElement === 'undefined') return;
-
-  const dialog = h(
-    'dialog',
-    { class: 'ack', 'aria-labelledby': 'ack-title' },
-    h('h2', { id: 'ack-title' }, 'Before you use NeuroConvert'),
-    h(
-      'ul',
-      null,
-      h('li', null, 'This tool is for qualified healthcare professionals. It supports, and never replaces, clinical judgement and the current prescribing information.'),
-      h('li', null, 'Each result shows its evidence tier and sources. Some conversions are approximate or ranges; others are deliberately not provided.'),
-      h('li', null, 'The content was curated from primary sources with AI assistance and has not yet been independently reviewed by a clinical pharmacist or neurologist. It is not a regulated medical device.'),
-      h('li', null, 'Verify every dose against the product information for your patient and jurisdiction.'),
-    ),
-    h(
-      'div',
-      { class: 'actions' },
-      h(
-        'button',
-        {
-          type: 'button',
-          class: 'btn primary',
-          autofocus: true,
-          onClick: () => {
-            safeStorage.set(ACK_KEY, 'yes');
-            dialog.close();
-            dialog.remove();
-          },
-        },
-        'I understand',
-      ),
-      h('a', { class: 'btn ghost', href: '#/methods', onClick: () => { dialog.close(); dialog.remove(); } }, 'Read the methods first'),
-    ),
-  );
-  dialog.addEventListener('cancel', (e) => e.preventDefault()); // Esc must not skip the notice
-  document.body.appendChild(dialog);
-  dialog.showModal();
 }

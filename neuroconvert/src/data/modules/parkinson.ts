@@ -106,7 +106,7 @@ export const LED_ITEMS: LeddItem[] = [
 const ledd: LeddCalculator = {
   id: 'ledd',
   kind: 'ledd',
-  title: 'Levodopa equivalent daily dose (LEDD)',
+  title: 'LEDD calculator',
   summary: 'Sum a patient’s antiparkinsonian medication on one scale using the 2023 MDS-endorsed conversion formulae.',
   doseBasis: 'Daily dose of each agent, in the unit shown beside it.',
   refs: ['jost2023', 'schade2020', 'cilia2023', 'snineh2020', 'tomlinson2010'],
@@ -155,7 +155,7 @@ const daItems: EquivItem[] = DA_IDS.map((id) => {
 const daEquivalence: EquivalenceConverter = {
   id: 'da-equivalence',
   kind: 'equivalence',
-  title: 'Dopamine agonist equivalence (via LED)',
+  title: 'Dopamine agonist equivalence',
   summary: 'Approximate equivalent doses between oral/transdermal dopamine agonists, derived from the LED factors.',
   doseBasis: 'Daily dose of the starting dopamine agonist.',
   referenceLabel: 'an LED of 100 mg',

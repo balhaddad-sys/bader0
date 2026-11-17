@@ -12,10 +12,9 @@ import { pt, rng } from '../helpers';
 const ivOral: DirectedConverter = {
   id: 'asm-iv-oral',
   kind: 'directed',
-  title: 'IV ⇄ oral (same drug)',
+  title: 'IV ⇄ oral',
   summary: 'Switch one antiseizure drug between intravenous and oral/enteral routes.',
-  doseBasis:
-    'Total daily dose of the drug being switched (mg/day). The fosphenytoin mg ⇄ mg PE conversions are ratios and apply to any single or total dose.',
+  doseBasis: 'Total daily dose, mg/day.',
   refs: ['lbl-keppra-iv', 'lbl-vimpat', 'lbl-briviact', 'lbl-valproate-iv', 'lbl-cerebyx'],
   callouts: [
     {
@@ -188,6 +187,10 @@ const ivOral: DirectedConverter = {
       },
       callouts: [
         {
+          kind: 'note',
+          text: 'This is a ratio, so it applies to any single or total dose, not only a daily total.',
+        },
+        {
           kind: 'warning',
           text: 'Fosphenytoin is always prescribed, labelled and dosed in mg PE (phenytoin sodium equivalents). Fatal overdoses have occurred when the vial concentration (50 mg PE/mL) was misread as the vial total: a 2 mL vial contains 100 mg PE and a 10 mL vial 500 mg PE.',
         },
@@ -226,9 +229,9 @@ const ivOral: DirectedConverter = {
 const oralSwitch: DirectedConverter = {
   id: 'asm-oral',
   kind: 'directed',
-  title: 'Oral formulation switches (same drug)',
+  title: 'Formulation switches',
   summary: 'Immediate-release ⇄ extended-release, salt/acid and suspension changes, using label tables where they exist.',
-  doseBasis: 'Total daily dose of the drug being switched (mg/day).',
+  doseBasis: 'Total daily dose, mg/day.',
   refs: ['lbl-depakote-er', 'lbl-tegretol', 'lbl-lamictal-xr', 'lbl-oxtellar-xr', 'lbl-keppra-xr', 'lbl-dilantin'],
   callouts: [
     {

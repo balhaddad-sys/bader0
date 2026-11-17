@@ -2,10 +2,9 @@ import { computeLedd, type LeddEntry } from '../engine/ledd';
 import { formatAmount } from '../engine/format';
 import { MAX_AMOUNT } from '../engine/convert';
 import type { LeddCalculator, LeddItem } from '../types';
-import { append, clear, copyText, h, nextId } from './dom';
-import { sourcesBlock, tierBadge } from './evidence';
+import { append, clear, h, nextId } from './dom';
 import { buildSummary } from './summary';
-import type { PanelCtx } from './panels';
+import { copyButton, detailsPanel, type PanelCtx } from './panels';
 
 interface Row {
   key: number;
@@ -162,8 +161,8 @@ export function leddPanel(conv: LeddCalculator, ctx: PanelCtx): HTMLElement {
     return { entries, invalid };
   }
 
-  function update(): void {
-    ctx.setParams({ c: conv.id, e: encodeRows(rows) });
+  function update(fromUser = true): void {
+    if (fromUser) ctx.setParams({ c: conv.id, e: encodeRows(rows) });
     clear(resultHost);
     const { entries, invalid } = toEntries();
     const calc = computeLedd(conv.items, entries);
@@ -214,13 +213,7 @@ export function leddPanel(conv: LeddCalculator, ctx: PanelCtx): HTMLElement {
             ),
           ),
         ),
-        h(
-          'div',
-          { class: 'actions no-print' },
-          h('button', { type: 'button', class: 'btn', onClick: () => void copyText(summaryText(), 'Summary copied') }, 'Copy summary with sources'),
-          h('button', { type: 'button', class: 'btn ghost', onClick: () => void copyText(window.location.href, 'Link copied') }, 'Copy link'),
-          h('button', { type: 'button', class: 'btn ghost', onClick: () => window.print() }, 'Print'),
-        ),
+        h('div', { class: 'actions no-print' }, copyButton(summaryText)),
       ]);
     }
 
@@ -276,13 +269,14 @@ export function leddPanel(conv: LeddCalculator, ctx: PanelCtx): HTMLElement {
   const panel = h(
     'div',
     { class: 'panel' },
-    h('p', { class: 'basis' }, h('strong', null, 'Enter: '), conv.doseBasis, ' Leave a dose blank (or 0) for agents the patient does not take.'),
+    h('p', { class: 'basis' }, 'Enter each daily dose. Leave a dose blank for agents the patient does not take.'),
     rowsHost,
     h('div', { class: 'actions no-print' }, addBtn, exampleBtn, clearBtn),
     resultHost,
-    h('div', { class: 'details-block' }, h('div', { class: 'evidence-row' }, tierBadge(conv.provenance.tier)), sourcesBlock(conv.provenance, conv.refs)),
+    ...(ctx.caution?.() ?? []),
+    detailsPanel({ provenance: conv.provenance, refs: conv.refs, rest: [] }),
   );
   renderRows();
-  update();
+  update(false);
   return panel;
 }

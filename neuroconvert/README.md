@@ -38,7 +38,8 @@ Where no evidence-based conversion could be traced, the app says so instead of g
 
 - Result as a single value, a **range** (when sources only bound the value) or **"no conversion defined"** (when a label table does not cover the dose; the app never interpolates)
 - "Show the math" for every result; copy a plain-text summary **with sources**; shareable links; print stylesheet
-- Searchable by drug name; evidence-tier legend; complete rules index and reference list
+- A simple flow: pick the drug, pick the switch, type the dose, read the answer. Sources, cautions and workings are one tap away; evidence tiers, the full rules index and references are on the Methods and References pages
+- Searchable by drug name
 - Input validation (positive numbers only, sanity cap), accessible (labels, `aria-live` results, focus states, keyboard-only use, skip link), responsive, light/dark
 - Works **offline** (service worker) and as a **single HTML file** you can open from disk
 - No accounts, no analytics, no network calls with your inputs
