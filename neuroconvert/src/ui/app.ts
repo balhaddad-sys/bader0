@@ -101,8 +101,8 @@ export function mountApp(root: HTMLElement): void {
     'div',
     { class: 'safety-banner', role: 'note' },
     h('strong', null, 'For clinicians. '),
-    'Check every dose against the drug’s current label. ',
-    h('a', { href: '#/methods' }, 'How reliable are these numbers?'),
+    'Check every dose against the current label. ',
+    h('a', { class: 'banner-link', href: '#/methods' }, 'How reliable are these numbers?'),
   );
 
   const footer = h(

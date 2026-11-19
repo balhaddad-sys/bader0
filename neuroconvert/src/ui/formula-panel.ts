@@ -2,7 +2,7 @@ import { MAX_AMOUNT, parseDecimalInput, readingNote } from '../engine/convert';
 import { computeFormula, type FormulaValues } from '../engine/formulas';
 import type { FormulaCalculator } from '../types';
 import { append, clear, h, nextId } from './dom';
-import { answerCard, cautionsFor, detailsPanel, emptyAnswer, mathBlock, type PanelCtx } from './panels';
+import { answerCard, cautionsFor, commitOnDone, detailsPanel, emptyAnswer, mathBlock, type PanelCtx } from './panels';
 import { buildSummary } from './summary';
 
 /** Multi-input calculator (pump settings, albumin correction): inputs → several output rows. */
@@ -17,6 +17,7 @@ export function formulaPanel(conv: FormulaCalculator, ctx: PanelCtx): HTMLElemen
       class: 'dose-input',
       type: 'text',
       inputmode: 'decimal',
+      enterkeyhint: 'done',
       autocomplete: 'off',
       spellcheck: 'false',
       placeholder: inp.optional ? 'optional' : 'Type the number',
@@ -135,6 +136,7 @@ export function formulaPanel(conv: FormulaCalculator, ctx: PanelCtx): HTMLElemen
   }
 
   const panel = h('div', { class: 'workspace' }, h('div', { class: 'inputs card' }, ...fields.map((f) => f.wrap)), result);
+  for (const fld of fields) commitOnDone(fld.input, result);
   render(false);
   return panel;
 }

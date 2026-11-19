@@ -260,6 +260,15 @@ main:focus {
   line-height: 1.2;
   min-width: 0;
 }
+.brand-text strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.site-header .menu-btn,
+.theme-btn {
+  flex: none;
+}
 .brand-text small {
   color: var(--muted);
   font-size: 0.78rem;
@@ -385,6 +394,52 @@ main {
   }
   body.nav-open {
     overflow: hidden;
+  }
+}
+
+/* Phones: less chrome, so the steps and the answer fit on the first screens. */
+@media (max-width: 600px) {
+  .banner-link {
+    display: none;
+  }
+  .safety-banner {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  .header-inner {
+    gap: 8px;
+  }
+  .site-header .menu-btn {
+    padding: 6px 10px;
+    min-height: 40px;
+  }
+  .theme-btn {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 6px;
+  }
+  main {
+    padding-top: 14px;
+  }
+  .page-head {
+    margin-bottom: 14px;
+  }
+  .page-head h1 {
+    font-size: 1.6rem;
+  }
+  .page-head .lede {
+    font-size: 0.92rem;
+  }
+  .inputs {
+    padding: 16px;
+  }
+  .field,
+  .segmented,
+  .pair {
+    margin-bottom: 16px;
+  }
+  .answer-card {
+    padding: 16px;
   }
 }
 

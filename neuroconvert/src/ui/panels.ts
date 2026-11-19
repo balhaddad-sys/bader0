@@ -47,6 +47,22 @@ function readAmount(raw: string): { amount?: number; error?: string; empty?: boo
   return { amount, note: readingNote(raw, amount) };
 }
 
+/** On a phone the answer can sit below the keyboard: once the entry is committed, bring it into view. */
+export function revealAnswer(el: HTMLElement): void {
+  const r = el.getBoundingClientRect();
+  if (r.top < window.innerHeight * 0.75 && r.bottom <= window.innerHeight) return;
+  const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  el.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'nearest' });
+}
+
+/** Wire a number input so Enter / Done closes the keyboard and shows the answer. */
+export function commitOnDone(input: HTMLInputElement, answer: HTMLElement): void {
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') input.blur();
+  });
+  input.addEventListener('change', () => revealAnswer(answer));
+}
+
 function doseField(id: string, label: string, hint: string, initial: string, onInput: () => void) {
   const unit = h('span', { class: 'unit', id: `${id}-unit` });
   const input = h('input', {
@@ -54,6 +70,7 @@ function doseField(id: string, label: string, hint: string, initial: string, onI
     class: 'dose-input',
     type: 'text',
     inputmode: 'decimal',
+    enterkeyhint: 'done',
     autocomplete: 'off',
     spellcheck: 'false',
     placeholder: 'Type the number',
@@ -206,6 +223,12 @@ export function emptyAnswer(message: string): HTMLElement {
 /* Directed converter: drug → switch → dose                            */
 /* ------------------------------------------------------------------ */
 
+/** The rule in plain words, so a 1 : 1 switch does not look like a calculator that did nothing. */
+function ruleLine(f: { low: number; high: number }): string {
+  if (f.low === f.high) return f.low === 1 ? 'Same dose: the source gives a 1 : 1 conversion.' : `Rule: multiply by ${formatFactor(f.low)}.`;
+  return `Rule: multiply by ${formatFactor(f.low)} to ${formatFactor(f.high)}.`;
+}
+
 function shortLabel(r: ResolvedRoute): string {
   const prefix = `${r.group}: `;
   return r.label.startsWith(prefix) ? r.label.slice(prefix.length) : r.label;
@@ -228,6 +251,7 @@ export function directedPanel(conv: DirectedConverter, ctx: PanelCtx): HTMLEleme
   const switchHost = h('div', { class: 'switch-host' });
   const dose = doseField(`${id}-dose`, conv.inputLabel ?? 'Your dose', conv.doseBasis, ctx.params.get('d') ?? '', () => render(true));
   const result = h('div', { class: 'answer', 'aria-live': 'polite' });
+  commitOnDone(dose.input, result);
 
   function renderSwitch(): void {
     clear(switchHost);
@@ -381,6 +405,7 @@ function factorResult(conv: DirectedConverter, route: FactorRoute & { isReverse?
       value: toText,
       subs: [
         `From your ${formatAmount(amount)} ${route.fromUnit}`,
+        ruleLine(route.factor),
         isRange && res.typical !== undefined ? `Typical value named by the source: ${formatAmount(res.typical)} ${route.toUnit}` : null,
         isRange ? 'A range: the sources do not support a single exact figure.' : null,
       ],
@@ -478,6 +503,7 @@ export function equivalencePanel(conv: EquivalenceConverter, ctx: PanelCtx): HTM
   const toSel = mkSelect(`${id}-to`, toId, () => render(true));
   const dose = doseField(`${id}-dose`, conv.inputLabel ?? 'Your dose', conv.doseBasis, ctx.params.get('d') ?? '', () => render(true));
   const result = h('div', { class: 'answer', 'aria-live': 'polite' });
+  commitOnDone(dose.input, result);
 
   const swap = h(
     'button',
@@ -637,7 +663,7 @@ function equivResult(conv: EquivalenceConverter, from: EquivItem, to: EquivItem,
       value: text,
       subs: [
         `From your ${formatAmount(amount)} ${from.unit} ${from.name}`,
-        from.id === to.id ? 'Same agent selected: the dose is unchanged.' : null,
+        from.id === to.id ? 'Same agent selected: the dose is unchanged.' : `Basis: ${equivText(from)} ${from.name} ≈ ${equivText(to)} ${to.name}`,
         isRange && res.typical !== undefined ? `Typical value named by the source: ${formatAmount(res.typical)} ${to.unit}` : null,
         isRange ? 'A range: the sources do not support a single exact figure.' : null,
       ],
