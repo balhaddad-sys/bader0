@@ -13,7 +13,7 @@ const ivOral: DirectedConverter = {
   id: 'asm-iv-oral',
   kind: 'directed',
   title: 'IV ⇄ oral',
-  summary: 'Switch one antiseizure drug between intravenous and oral/enteral routes.',
+  summary: 'Most switch at the same dose. Exceptions: carbamazepine IV is 70% of the oral dose, and fosphenytoin is dosed in phenytoin equivalents (PE).',
   doseBasis: 'Total daily dose, mg/day.',
   refs: ['lbl-keppra-iv', 'lbl-vimpat', 'lbl-briviact', 'lbl-valproate-iv', 'lbl-cerebyx'],
   callouts: [

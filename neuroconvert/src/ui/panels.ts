@@ -79,15 +79,17 @@ function doseField(id: string, label: string, hint: string, initial: string, onI
     onInput,
   });
   const reading = h('p', { class: 'field-hint reading', 'aria-live': 'polite' });
+  const labelEl = h('label', { for: id, class: 'step-label' }, label);
+  const hintEl = h('p', { class: 'field-hint', id: `${id}-hint` }, hint);
   const wrap = h(
     'div',
     { class: 'field' },
-    h('label', { for: id, class: 'step-label' }, label),
+    labelEl,
     h('div', { class: 'input-wrap' }, input, unit),
     reading,
-    h('p', { class: 'field-hint', id: `${id}-hint` }, hint),
+    hintEl,
   );
-  return { wrap, input, unit, reading };
+  return { wrap, input, unit, reading, labelEl, hintEl };
 }
 
 /** Radio buttons styled as a segmented control (native keyboard behaviour). */
@@ -229,6 +231,11 @@ function ruleLine(f: { low: number; high: number }): string {
   return `Rule: multiply by ${formatFactor(f.low)} to ${formatFactor(f.high)}.`;
 }
 
+/** An exact 1 : 1 switch in the same unit: the answer is "same dose", not a number to compute. */
+function isSameDose(r: ResolvedRoute): boolean {
+  return r.kind === 'factor' && r.factor.low === 1 && r.factor.high === 1 && r.fromUnit === r.toUnit;
+}
+
 function shortLabel(r: ResolvedRoute): string {
   const prefix = `${r.group}: `;
   return r.label.startsWith(prefix) ? r.label.slice(prefix.length) : r.label;
@@ -284,6 +291,9 @@ export function directedPanel(conv: DirectedConverter, ctx: PanelCtx): HTMLEleme
 
   function render(fromUser: boolean): void {
     dose.unit.textContent = route.fromUnit;
+    const same = isSameDose(route);
+    dose.labelEl.textContent = same ? 'Your dose (optional)' : (conv.inputLabel ?? 'Your dose');
+    dose.hintEl.textContent = same ? 'Not needed: this switch keeps the dose. Enter it only to see it written out.' : conv.doseBasis;
     if (fromUser) ctx.setParams({ c: conv.id, r: route.id, d: dose.input.value.trim() || undefined });
     clear(result);
 
@@ -291,14 +301,26 @@ export function directedPanel(conv: DirectedConverter, ctx: PanelCtx): HTMLEleme
     dose.reading.textContent = read.note ?? '';
     const cautions = cautionsFor(ctx, route.callouts);
     if (read.empty) {
-      append(result, [emptyAnswer('Enter your dose to see the converted dose.'), cautions.lead, routeDetails(route, undefined, [], cautions.rest)]);
+      append(
+        result,
+        route.kind === 'factor' && isSameDose(route)
+          ? sameDoseResult(conv, route, undefined, cautions)
+          : [emptyAnswer('Enter your dose to see the converted dose.'), cautions.lead, routeDetails(route, undefined, [], cautions.rest)],
+      );
       return;
     }
     if (read.error || read.amount === undefined) {
       result.appendChild(h('p', { class: 'error', role: 'alert' }, read.error));
       return;
     }
-    append(result, route.kind === 'factor' ? factorResult(conv, route, read.amount, cautions) : tableResult(conv, route, read.amount, cautions));
+    append(
+      result,
+      route.kind === 'factor'
+        ? isSameDose(route)
+          ? sameDoseResult(conv, route, read.amount, cautions)
+          : factorResult(conv, route, read.amount, cautions)
+        : tableResult(conv, route, read.amount, cautions),
+    );
   }
 
   const panel = h(
@@ -361,6 +383,33 @@ function rowRangeLabel(row: TableRoute['rows'][number]): string {
   return row.from[0] === row.from[1]
     ? formatAmount(row.from[0])
     : `${formatAmount(row.from[0])} to ${formatAmount(row.from[1])}`;
+}
+
+function sameDoseResult(conv: DirectedConverter, route: FactorRoute, amount: number | undefined, cautions: Cautions): Child[] {
+  const written = amount === undefined ? null : `${formatAmount(amount)} ${route.fromUnit} → ${formatAmount(amount)} ${route.toUnit}`;
+  const summaryText = () =>
+    buildSummary({
+      converterTitle: conv.title,
+      ruleLabel: route.label,
+      lines: ['Result: same dose (1 : 1)', ...(written ? [`Dose: ${written}`] : [])],
+      tier: route.provenance.tier,
+      derived: route.provenance.derived,
+      locator: route.provenance.locator,
+      callouts: route.callouts,
+      refs: route.provenance.refs,
+    });
+  return [
+    answerCard({
+      kicker: `${route.group} · ${shortLabel(route)}`,
+      value: 'Same dose',
+      subs: [written, 'The source gives a 1 : 1 conversion: no calculation is needed.'],
+      tier: route.provenance.tier,
+      derived: route.provenance.derived,
+      summary: summaryText,
+    }),
+    cautions.lead,
+    routeDetails(route, undefined, [], cautions.rest),
+  ];
 }
 
 function factorResult(conv: DirectedConverter, route: FactorRoute & { isReverse?: boolean }, amount: number, cautions: Cautions): Child[] {
