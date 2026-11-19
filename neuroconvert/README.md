@@ -40,9 +40,9 @@ Where no evidence-based conversion could be traced, the app says so instead of g
 ## Features
 
 - Result as a single value, a **range** (when sources only bound the value) or **"no conversion defined"** (when a label table does not cover the dose; the app never interpolates)
-- "Show the math" for every result; copy a plain-text summary **with sources**; shareable links; print stylesheet
-- A simple flow: pick the drug, pick the switch, type the dose, read the answer. Sources, cautions and workings are one tap away; evidence tiers, the full rules index and references are on the Methods and References pages
-- Searchable by drug name
+- The workings are shown for every result; copy a plain-text summary **with sources**; shareable links; print stylesheet
+- One layout throughout: a converter menu on the left (a slide-in menu on phones), numbered steps (drug, switch, dose) on the left of the page and the answer beside them. The answer names the drug and the switch, shows the evidence tier, and keeps the main caution directly under it; evidence, further cautions, workings and sources are in a single "Evidence & sources" section. Evidence tiers, the full rules index and references are on the Reliability and References pages
+- Searchable by drug name, from the home page or from the menu, with each hit opening the right converter with that drug already chosen
 - Numbers can be typed the way your phone keyboard produces them: Arabic-Indic or Persian digits (٨٠٠), decimal commas (0,5), thousands separators (1,000 or 1 000). Ambiguous entries such as `1,2,3` are rejected instead of guessed, and the screen states how an entry was read ("Read as 0.5")
 - Input validation (positive numbers only, sanity cap), accessible (labels, `aria-live` results, focus states, keyboard-only use, skip link), responsive, light/dark
 - Works **offline** (service worker) and as a **single HTML file** you can open from disk

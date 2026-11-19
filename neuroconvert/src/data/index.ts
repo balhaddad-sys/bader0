@@ -10,7 +10,7 @@ import { levels } from './modules/levels';
 import { parkinson } from './modules/parkinson';
 
 export const DATA_VERSION = '2026-11-19';
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.1.0';
 
 export const MODULES: Module[] = [
   antiseizure,

@@ -1,6 +1,7 @@
 import { APP_VERSION, DATA_VERSION, MODULES } from '../data';
 import { clear, h, safeStorage } from './dom';
-import { homePage, methodsPage, modulePage, notFound, referencesPage } from './pages';
+import { converterNav } from './nav';
+import { activeConverterId, homePage, methodsPage, modulePage, notFound, referencesPage } from './pages';
 
 const THEME_KEY = 'neuroconvert.theme';
 
@@ -45,11 +46,26 @@ function currentIsDark(): boolean {
 
 /* ------------------------------ layout ------------------------------ */
 
+type View = 'home' | 'workspace' | 'prose';
+
 export function mountApp(root: HTMLElement): void {
   applyTheme(safeStorage.get(THEME_KEY));
 
   const main = h('main', { id: 'main', tabindex: '-1' });
-  const nav = h('nav', { class: 'nav', 'aria-label': 'Sections' });
+  const sidebar = h('aside', { class: 'sidebar' });
+  const shell = h('div', { class: 'shell' }, sidebar, main);
+
+  const setNavOpen = (open: boolean) => {
+    document.body.classList.toggle('nav-open', open);
+    menuBtn.setAttribute('aria-expanded', String(open));
+  };
+
+  const menuBtn = h(
+    'button',
+    { type: 'button', class: 'btn menu-btn no-print', 'aria-controls': 'side-nav', 'aria-expanded': 'false', onClick: () => setNavOpen(!document.body.classList.contains('nav-open')) },
+    h('span', { 'aria-hidden': 'true' }, '☰'),
+    'Converters',
+  );
 
   const themeBtn = h('button', {
     type: 'button',
@@ -70,95 +86,105 @@ export function mountApp(root: HTMLElement): void {
     h(
       'div',
       { class: 'header-inner' },
+      menuBtn,
       h(
         'a',
         { class: 'brand', href: '#/', 'aria-label': 'NeuroConvert home' },
         h('span', { class: 'brand-mark', 'aria-hidden': 'true' }, 'Nc'),
-        h('span', { class: 'brand-text' }, h('strong', null, 'NeuroConvert'), h('small', null, 'Evidence-based converters for neurology')),
+        h('span', { class: 'brand-text' }, h('strong', null, 'NeuroConvert'), h('small', null, 'Medication converters for neurology')),
       ),
       themeBtn,
     ),
-    nav,
   );
 
   const banner = h(
     'div',
     { class: 'safety-banner', role: 'note' },
     h('strong', null, 'For clinicians. '),
-    'Always check the dose against the drug’s label. ',
-    h('a', { href: '#/methods' }, 'About these numbers'),
+    'Check every dose against the drug’s current label. ',
+    h('a', { href: '#/methods' }, 'How reliable are these numbers?'),
   );
 
   const footer = h(
     'footer',
     { class: 'site-footer' },
-    h('p', null, h('a', { href: '#/methods' }, 'How reliable are these numbers?'), ' · ', h('a', { href: '#/references' }, 'References')),
+    h('p', null, h('a', { href: '#/methods' }, 'Reliability and limits'), ' · ', h('a', { href: '#/references' }, 'References')),
     h('p', null, `NeuroConvert v${APP_VERSION} · data ${DATA_VERSION} · not a regulated medical device · nothing you type leaves your device`),
   );
+
+  const backdrop = h('div', { class: 'backdrop', onClick: () => setNavOpen(false) });
 
   root.append(
     h('a', { class: 'skip-link', href: '#main', onClick: (e: Event) => { e.preventDefault(); main.focus(); } }, 'Skip to content'),
     header,
     banner,
-    main,
+    shell,
+    backdrop,
     footer,
   );
 
-  function renderNav(active: string): void {
-    clear(nav);
-    const items: [string, string, string][] = [
-      ['', 'Home', '#/'],
-      ...MODULES.map((m): [string, string, string] => [m.id, m.title, `#/m/${m.id}`]),
-    ];
-    for (const [key, label, href] of items) {
-      nav.appendChild(h('a', { href, class: 'nav-link', 'aria-current': key === active ? 'page' : undefined }, label));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.body.classList.contains('nav-open')) {
+      setNavOpen(false);
+      menuBtn.focus();
     }
-  }
+  });
 
   function render(): void {
     const { path, query } = parseHash();
     let page: HTMLElement;
-    let active = '';
+    let view: View = 'prose';
     let title = 'NeuroConvert — evidence-based medication converters for neurology';
+    clear(sidebar);
 
     if (path.length === 0) {
+      view = 'home';
       page = homePage();
     } else if (path[0] === 'm' && path[1]) {
-      active = path[1];
-      page = modulePage(path[1], query, setHashParams);
       const m = MODULES.find((x) => x.id === path[1]);
-      if (m) title = `${m.title} — NeuroConvert`;
+      if (m) {
+        view = 'workspace';
+        const converterId = activeConverterId(m.id, query);
+        page = modulePage(m.id, query, setHashParams);
+        sidebar.appendChild(converterNav({ moduleId: m.id, converterId }));
+        const conv = m.converters.find((c) => c.id === converterId);
+        title = `${conv?.title ?? m.title} · ${m.title} — NeuroConvert`;
+      } else {
+        page = notFound();
+      }
     } else if (path[0] === 'methods') {
-      active = 'methods';
       page = methodsPage();
-      title = 'Methods & limitations — NeuroConvert';
+      title = 'Reliability and limits — NeuroConvert';
     } else if (path[0] === 'references') {
-      active = 'references';
       page = referencesPage();
       title = 'References — NeuroConvert';
     } else {
       page = notFound();
     }
 
-    renderNav(active);
+    shell.dataset.view = view;
+    document.body.dataset.view = view;
+    setNavOpen(false);
     clear(main);
     main.appendChild(page);
     document.title = title;
   }
 
-  let lastPath = '';
+  // A new page, or a different converter within a module, starts at the top.
+  // Typing into a calculator updates the address without a hashchange, so it never scrolls.
+  const placeKey = (): string => {
+    const { path, query } = parseHash();
+    return `${path.join('/')}|${path[0] === 'm' ? (query.get('c') ?? '') : ''}`;
+  };
+  let lastKey = placeKey();
   window.addEventListener('hashchange', () => {
-    const { path } = parseHash();
-    const key = path.join('/');
+    const key = placeKey();
     render();
-    // New page → top; same page with different params (deep link) → keep scroll.
-    if (key !== lastPath) {
+    if (key !== lastKey) {
       window.scrollTo({ top: 0 });
       main.focus({ preventScroll: true });
     }
-    lastPath = key;
+    lastKey = key;
   });
-  lastPath = parseHash().path.join('/');
   render();
-
 }

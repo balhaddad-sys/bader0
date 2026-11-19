@@ -2,10 +2,11 @@ import { APP_VERSION, DATA_VERSION, FINDINGS, MODULES, MODULE_MAP, OMISSIONS, RE
 import { resolveRoutes } from '../engine/convert';
 import type { Converter, EvidenceTier, Finding, Reference } from '../types';
 import { copyText, h, link } from './dom';
-import { calloutList, referenceLinks, referencesAsText, tierBadge, TIERS } from './evidence';
+import { referenceLinks, referencesAsText, tierBadge, TIERS } from './evidence';
 import { formulaPanel } from './formula-panel';
 import { leddPanel } from './ledd-panel';
-import { directedPanel, equivalencePanel, leadWarning, segmented, splitCallouts, type PanelCtx } from './panels';
+import { directedPanel, equivalencePanel, splitCallouts, type PanelCtx } from './panels';
+import { searchBox } from './search';
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -30,211 +31,98 @@ function converterRules(c: Converter): { label: string; tier: EvidenceTier; deri
 }
 
 /* ------------------------------------------------------------------ */
-/* Search index                                                        */
-/* ------------------------------------------------------------------ */
-
-interface SearchEntry {
-  text: string;
-  label: string;
-  sub: string;
-  href: string;
-}
-
-let searchIndex: SearchEntry[] | null = null;
-
-function buildSearchIndex(): SearchEntry[] {
-  const out: SearchEntry[] = [];
-  for (const m of MODULES) {
-    for (const c of m.converters) {
-      const base = `#/m/${m.id}`;
-      const sub = `${m.title} · ${c.title}`;
-      if (c.kind === 'directed') {
-        for (const r of resolveRoutes(c.routes)) {
-          out.push({
-            text: `${r.label} ${r.group} ${m.title} ${c.title}`.toLowerCase(),
-            label: r.label,
-            sub,
-            href: `${base}?c=${c.id}&r=${encodeURIComponent(r.id)}`,
-          });
-        }
-      } else if (c.kind === 'equivalence') {
-        for (const i of c.items) {
-          out.push({
-            text: `${i.name} ${i.group} ${m.title} ${c.title}`.toLowerCase(),
-            label: i.name,
-            sub,
-            href: `${base}?c=${c.id}&f=${encodeURIComponent(i.id)}`,
-          });
-        }
-      } else if (c.kind === 'formula') {
-        out.push({
-          text: `${c.title} ${m.title} ${c.summary} ${c.inputs.map((i) => i.label).join(' ')}`.toLowerCase(),
-          label: c.title,
-          sub: m.title,
-          href: `${base}?c=${c.id}`,
-        });
-      } else {
-        for (const i of c.items) {
-          out.push({
-            text: `${i.name} ${i.group} ${m.title} ${c.title} ledd levodopa equivalent`.toLowerCase(),
-            label: i.name,
-            sub,
-            href: `${base}?c=${c.id}&e=${encodeURIComponent(i.id)}:`,
-          });
-        }
-      }
-    }
-  }
-  return out;
-}
-
-function search(query: string): SearchEntry[] {
-  searchIndex ??= buildSearchIndex();
-  const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
-  if (tokens.length === 0) return [];
-  return searchIndex.filter((e) => tokens.every((t) => e.text.includes(t))).slice(0, 12);
-}
-
-/* ------------------------------------------------------------------ */
 /* Home                                                                */
 /* ------------------------------------------------------------------ */
 
 const TILE_BLURB: Record<string, string> = {
   epilepsy: 'Switch between IV and tablets, or between formulations',
-  levels: 'Convert drug levels (µg/mL ⇄ µmol/L) and correct phenytoin for albumin',
+  levels: 'Drug-level units, and the low-albumin phenytoin correction',
   benzodiazepines: 'Equivalent doses: lorazepam, clonazepam, clobazam, diazepam…',
-  parkinson: 'Total levodopa dose, formulation switches, Vyalev and Duopa pump settings',
-  steroids: 'Equivalent doses: prednisone, dexamethasone, methylprednisolone…',
+  parkinson: 'Levodopa equivalents, switches and pump settings',
+  steroids: 'Prednisone, dexamethasone, methylprednisolone…',
   botulinum: 'Unit ratios between Botox, Dysport and Xeomin',
   dementia: 'Rivastigmine patch, memantine XR and Namzaric',
-  gabapentinoids: 'Lyrica to Lyrica CR conversion table',
-  immunoglobulin: 'Starting doses for subcutaneous immunoglobulin in CIDP',
+  gabapentinoids: 'Lyrica to Lyrica CR',
+  immunoglobulin: 'Subcutaneous immunoglobulin starting doses',
 };
 
 export function homePage(): HTMLElement {
-  const resultsHost = h('ul', { class: 'search-results', id: 'search-results', role: 'list' });
-  const searchInput = h('input', {
-    id: 'search',
-    type: 'search',
-    class: 'search-input',
-    placeholder: 'Search a drug, e.g. levetiracetam',
-    autocomplete: 'off',
-    'aria-controls': 'search-results',
-    onInput: (e: Event) => {
-      const q = (e.target as HTMLInputElement).value;
-      resultsHost.replaceChildren();
-      const hits = search(q);
-      if (q.trim() && hits.length === 0) {
-        resultsHost.appendChild(
-          h('li', { class: 'no-hits' }, 'No conversion for that. Not every drug has an evidence-based conversion.'),
-        );
-      }
-      for (const e2 of hits) {
-        resultsHost.appendChild(h('li', null, h('a', { href: e2.href }, h('strong', null, e2.label), h('span', { class: 'sub' }, e2.sub))));
-      }
-    },
-  });
-
   return h(
     'div',
     { class: 'page home' },
     h(
       'section',
       { class: 'hero' },
-      h('h1', null, 'What do you want to convert?'),
-      h('label', { for: 'search', class: 'sr-only' }, 'Search conversions'),
-      searchInput,
-      resultsHost,
+      h('h1', null, 'Convert a dose'),
+      h('p', { class: 'lede' }, 'Start with the drug, or pick a converter below. Every answer shows where the number comes from.'),
+      searchBox({ placeholder: 'Search a drug, e.g. levetiracetam', large: true }),
     ),
     h(
       'div',
-      { class: 'cards' },
+      { class: 'areas' },
       MODULES.map((m) =>
-        h('a', { class: 'card module-card', href: `#/m/${m.id}` }, h('h2', null, m.title), h('p', null, TILE_BLURB[m.id] ?? m.summary)),
+        h(
+          'section',
+          { class: 'area' },
+          h('h2', null, m.title),
+          h('p', { class: 'area-blurb' }, TILE_BLURB[m.id] ?? m.summary),
+          h(
+            'ul',
+            { class: 'area-links' },
+            m.converters.map((c) => h('li', null, h('a', { href: `#/m/${m.id}?c=${c.id}` }, c.title))),
+          ),
+        ),
       ),
-    ),
-    h(
-      'p',
-      { class: 'fine home-note' },
-      'Every answer shows where the number comes from. ',
-      h('a', { href: '#/methods' }, 'How reliable are these numbers?'),
     ),
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Module                                                              */
+/* Converter workspace                                                 */
 /* ------------------------------------------------------------------ */
+
+/** The converter shown for this address: the requested one, or the module's first. */
+export function activeConverterId(moduleId: string, query: URLSearchParams): string {
+  const m = MODULE_MAP.get(moduleId);
+  if (!m) return '';
+  const requested = query.get('c');
+  return m.converters.some((c) => c.id === requested) ? (requested as string) : m.converters[0].id;
+}
 
 export function modulePage(moduleId: string, query: URLSearchParams, setParams: (p: Record<string, string | undefined>) => void): HTMLElement {
   const m = MODULE_MAP.get(moduleId);
   if (!m) return notFound();
 
-  const requested = query.get('c');
-  const activeId = m.converters.some((c) => c.id === requested) ? (requested as string) : m.converters[0].id;
+  const c = m.converters.find((x) => x.id === activeConverterId(moduleId, query)) ?? m.converters[0];
+  const ctx: PanelCtx = { params: query, setParams, callouts: splitCallouts(c.callouts) };
 
-  const sections = new Map<string, HTMLElement>();
-  for (const c of m.converters) {
-    const { lead, rest } = splitCallouts(c.callouts);
-    // When the chosen conversion has its own, more specific caution, the converter-wide one moves into the collapsed list.
-    const caution = (routeHasLead = false) => {
-      const hidden = routeHasLead && lead ? [lead, ...rest] : rest;
-      return [
-        routeHasLead ? null : leadWarning(lead),
-        hidden.length > 0
-          ? h('details', { class: 'more inline' }, h('summary', null, 'More cautions and notes'), h('div', { class: 'more-body' }, calloutList(hidden)))
-          : null,
-      ];
-    };
-    const ctx: PanelCtx = { params: c.id === activeId ? query : new URLSearchParams(), setParams, caution };
-    let panel: HTMLElement;
-    switch (c.kind) {
-      case 'directed':
-        panel = directedPanel(c, ctx);
-        break;
-      case 'equivalence':
-        panel = equivalencePanel(c, ctx);
-        break;
-      case 'ledd':
-        panel = leddPanel(c, ctx);
-        break;
-      case 'formula':
-        panel = formulaPanel(c, ctx);
-        break;
-    }
-    sections.set(
-      c.id,
-      h(
-        'section',
-        { class: 'card converter', id: c.id, 'aria-labelledby': `${c.id}-h`, hidden: c.id !== activeId },
-        h('h2', { id: `${c.id}-h` }, c.title),
-        h('p', { class: 'conv-summary' }, c.summary),
-        panel,
-      ),
-    );
+  let panel: HTMLElement;
+  switch (c.kind) {
+    case 'directed':
+      panel = directedPanel(c, ctx);
+      break;
+    case 'equivalence':
+      panel = equivalencePanel(c, ctx);
+      break;
+    case 'ledd':
+      panel = leddPanel(c, ctx);
+      break;
+    case 'formula':
+      panel = formulaPanel(c, ctx);
+      break;
   }
-
-  const tabs =
-    m.converters.length > 1
-      ? segmented(
-          'Converter',
-          m.converters.map((c) => ({ value: c.id, label: c.title })),
-          activeId,
-          (id) => {
-            for (const [cid, el] of sections) el.hidden = cid !== id;
-            setParams({ c: id });
-          },
-          'tabs',
-        )
-      : null;
 
   return h(
     'div',
     { class: 'page module' },
-    h('p', { class: 'crumb' }, h('a', { href: '#/' }, '← All converters')),
-    h('h1', null, m.title),
-    tabs,
-    [...sections.values()],
+    h(
+      'header',
+      { class: 'page-head' },
+      h('p', { class: 'eyebrow' }, m.title),
+      h('h1', null, c.title),
+      h('p', { class: 'lede' }, c.summary),
+    ),
+    panel,
   );
 }
 

@@ -4,7 +4,7 @@ import { MAX_AMOUNT, parseDecimalInput } from '../engine/convert';
 import type { LeddCalculator, LeddItem } from '../types';
 import { append, clear, h, nextId } from './dom';
 import { buildSummary } from './summary';
-import { copyButton, detailsPanel, type PanelCtx } from './panels';
+import { answerCard, cautionsFor, detailsPanel, emptyAnswer, type PanelCtx } from './panels';
 
 interface Row {
   key: number;
@@ -58,7 +58,7 @@ export function leddPanel(conv: LeddCalculator, ctx: PanelCtx): HTMLElement {
   if (rows.length === 0) rows = [{ key: nextKey++, itemId: conv.items[0].id, values: [''] }];
 
   const rowsHost = h('div', { class: 'ledd-rows' });
-  const resultHost = h('div', { class: 'result', 'aria-live': 'polite' });
+  const resultHost = h('div', { class: 'answer-live', 'aria-live': 'polite' });
 
   function optionGroups(): HTMLElement[] {
     const groups = new Map<string, LeddItem[]>();
@@ -169,7 +169,7 @@ export function leddPanel(conv: LeddCalculator, ctx: PanelCtx): HTMLElement {
     const errors = [...invalid, ...calc.errors];
 
     if (entries.length === 0 && invalid.length === 0) {
-      resultHost.appendChild(h('p', { class: 'hint' }, 'Enter daily doses above to calculate the total LEDD.'));
+      resultHost.appendChild(emptyAnswer('Add a daily dose for at least one drug.'));
     } else if (errors.length > 0) {
       resultHost.appendChild(
         h('div', { class: 'callout warning', role: 'alert' }, h('span', { class: 'callout-label' }, 'Fix to continue'), h('ul', null, errors.map((e) => h('li', null, e)))),
@@ -191,29 +191,27 @@ export function leddPanel(conv: LeddCalculator, ctx: PanelCtx): HTMLElement {
         });
 
       append(resultHost, [
-        h(
-          'div',
-          { class: 'result-card' },
-          h('p', { class: 'result-label' }, 'Total levodopa equivalent daily dose'),
-          h('p', { class: 'result-value', 'data-testid': 'result-value' }, totalText),
-          h('p', { class: 'result-sub' }, 'A research-scale comparison figure, not a prescription.'),
-        ),
-        h(
-          'div',
-          { class: 'table-scroll' },
-          h(
-            'table',
-            { class: 'data-table' },
-            h('thead', null, h('tr', null, h('th', null, 'Agent'), h('th', null, 'Calculation'), h('th', { class: 'num' }, 'LED (mg)'))),
+        answerCard({
+          kicker: 'Total levodopa equivalent daily dose',
+          value: totalText,
+          subs: ['A research-scale comparison figure, not a prescription.'],
+          extra: h(
+            'div',
+            { class: 'table-scroll' },
             h(
-              'tbody',
-              null,
-              calc.lines.map((l) => h('tr', null, h('td', null, l.name), h('td', null, l.formula), h('td', { class: 'num' }, formatAmount(l.led)))),
-              h('tr', { class: 'total' }, h('td', { colspan: '2' }, 'Total'), h('td', { class: 'num' }, formatAmount(calc.total))),
+              'table',
+              { class: 'data-table out-rows' },
+              h(
+                'tbody',
+                null,
+                calc.lines.map((l) => h('tr', null, h('td', null, l.name, h('span', { class: 'row-note' }, l.formula)), h('td', { class: 'num strong' }, `${formatAmount(l.led)} mg`))),
+              ),
             ),
           ),
-        ),
-        h('div', { class: 'actions no-print' }, copyButton(summaryText)),
+          tier: conv.provenance.tier,
+          derived: conv.provenance.derived,
+          summary: summaryText,
+        }),
       ]);
     }
 
@@ -237,7 +235,7 @@ export function leddPanel(conv: LeddCalculator, ctx: PanelCtx): HTMLElement {
         update();
       },
     },
-    '+ Add agent',
+    '+ Add a drug',
   );
   const exampleBtn = h(
     'button',
@@ -266,15 +264,24 @@ export function leddPanel(conv: LeddCalculator, ctx: PanelCtx): HTMLElement {
     'Clear all',
   );
 
+  const cautions = cautionsFor(ctx);
   const panel = h(
     'div',
-    { class: 'panel' },
-    h('p', { class: 'basis' }, 'Enter each daily dose. Leave a dose blank for agents the patient does not take.'),
-    rowsHost,
-    h('div', { class: 'actions no-print' }, addBtn, exampleBtn, clearBtn),
-    resultHost,
-    ...(ctx.caution?.() ?? []),
-    detailsPanel({ provenance: conv.provenance, refs: conv.refs, rest: [] }),
+    { class: 'workspace' },
+    h(
+      'div',
+      { class: 'inputs card' },
+      h('p', { class: 'basis' }, 'Enter each daily dose. Leave a dose blank for drugs the patient does not take.'),
+      rowsHost,
+      h('div', { class: 'actions no-print' }, addBtn, exampleBtn, clearBtn),
+    ),
+    h(
+      'div',
+      { class: 'answer' },
+      resultHost,
+      cautions.lead,
+      detailsPanel({ provenance: conv.provenance, refs: conv.refs, rest: cautions.rest }),
+    ),
   );
   renderRows();
   update(false);

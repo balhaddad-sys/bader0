@@ -2,8 +2,7 @@ import { MAX_AMOUNT, parseDecimalInput, readingNote } from '../engine/convert';
 import { computeFormula, type FormulaValues } from '../engine/formulas';
 import type { FormulaCalculator } from '../types';
 import { append, clear, h, nextId } from './dom';
-import { copyButton, detailsPanel, mathBlock, type PanelCtx } from './panels';
-import { tierBadge } from './evidence';
+import { answerCard, cautionsFor, detailsPanel, emptyAnswer, mathBlock, type PanelCtx } from './panels';
 import { buildSummary } from './summary';
 
 /** Multi-input calculator (pump settings, albumin correction): inputs → several output rows. */
@@ -28,7 +27,7 @@ export function formulaPanel(conv: FormulaCalculator, ctx: PanelCtx): HTMLElemen
     const wrap = h(
       'div',
       { class: 'field' },
-      h('label', { for: inputId }, inp.label, inp.optional ? h('span', { class: 'optional' }, ' (optional)') : null),
+      h('label', { for: inputId, class: 'step-label' }, inp.label, inp.optional ? h('span', { class: 'optional' }, ' (optional)') : null),
       h('div', { class: 'input-wrap' }, input, h('span', { class: 'unit' }, inp.unit)),
       reading,
       inp.hint ? h('p', { class: 'field-hint', id: `${inputId}-hint` }, inp.hint) : null,
@@ -36,7 +35,7 @@ export function formulaPanel(conv: FormulaCalculator, ctx: PanelCtx): HTMLElemen
     return { inp, input, reading, wrap };
   });
 
-  const result = h('div', { class: 'result', 'aria-live': 'polite' });
+  const result = h('div', { class: 'answer', 'aria-live': 'polite' });
 
   function render(fromUser: boolean): void {
     if (fromUser) {
@@ -65,17 +64,15 @@ export function formulaPanel(conv: FormulaCalculator, ctx: PanelCtx): HTMLElemen
       f.reading.textContent = readingNote(raw, n) ?? '';
     }
 
-    const cautions = ctx.caution?.() ?? [];
-    const details = (blocks: (HTMLElement | null)[] = []) =>
-      h('div', { class: 'after-result' }, detailsPanel({ provenance: conv.provenance, refs: conv.refs, rest: [], blocks }));
+    const cautions = cautionsFor(ctx);
+    const details = (blocks: (HTMLElement | null)[] = []) => detailsPanel({ provenance: conv.provenance, refs: conv.refs, rest: cautions.rest, blocks });
 
     if (invalid.length > 0) {
       result.appendChild(h('div', { class: 'callout warning', role: 'alert' }, h('span', { class: 'callout-label' }, 'Fix to continue'), h('ul', null, invalid.map((m) => h('li', null, m)))));
       return;
     }
     if (missing.length > 0) {
-      result.appendChild(h('p', { class: 'hint' }, 'Fill in the numbers above to see the answer.'));
-      append(result, [...cautions, details()]);
+      append(result, [emptyAnswer('Fill in the numbers to see the answer.'), cautions.lead, details()]);
       return;
     }
 
@@ -103,40 +100,41 @@ export function formulaPanel(conv: FormulaCalculator, ctx: PanelCtx): HTMLElemen
       });
 
     append(result, [
-      h(
-        'div',
-        { class: 'result-card' },
-        h('p', { class: 'result-label' }, head.label),
-        h('p', { class: 'result-value', 'data-testid': 'result-value' }, head.value),
-        head.note ? h('p', { class: 'result-sub' }, head.note) : null,
-        others.length > 0
-          ? h(
-              'div',
-              { class: 'table-scroll' },
-              h(
-                'table',
-                { class: 'data-table out-rows' },
+      answerCard({
+        kicker: head.label,
+        value: head.value,
+        subs: [head.note],
+        extra:
+          others.length > 0
+            ? h(
+                'div',
+                { class: 'table-scroll' },
                 h(
-                  'tbody',
-                  null,
-                  others.map((r) =>
-                    h('tr', null, h('td', null, r.label, r.note ? h('span', { class: 'row-note' }, r.note) : null), h('td', { class: 'num strong' }, r.value)),
+                  'table',
+                  { class: 'data-table out-rows' },
+                  h(
+                    'tbody',
+                    null,
+                    others.map((r) =>
+                      h('tr', null, h('td', null, r.label, r.note ? h('span', { class: 'row-note' }, r.note) : null), h('td', { class: 'num strong' }, r.value)),
+                    ),
                   ),
                 ),
-              ),
-            )
-          : null,
-        h('div', { class: 'result-foot' }, tierBadge(conv.provenance.tier), copyButton(summaryText)),
-      ),
+              )
+            : null,
+        tier: conv.provenance.tier,
+        derived: conv.provenance.derived,
+        summary: summaryText,
+      }),
       out.warnings.length > 0
         ? h('div', { class: 'callout warning', role: 'alert' }, h('span', { class: 'callout-label' }, 'Check'), h('ul', null, out.warnings.map((w) => h('li', null, w))))
         : null,
-      ...cautions,
+      cautions.lead,
       details([mathBlock(out.steps)]),
     ]);
   }
 
-  const panel = h('div', { class: 'panel' }, ...fields.map((f) => f.wrap), result);
+  const panel = h('div', { class: 'workspace' }, h('div', { class: 'inputs card' }, ...fields.map((f) => f.wrap)), result);
   render(false);
   return panel;
 }

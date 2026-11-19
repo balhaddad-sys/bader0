@@ -2,7 +2,7 @@
  * Pages: network-first (clinicians always get the newest data when online),
  * falling back to the cache when offline. Hashed assets: cache-first.
  */
-const CACHE = 'neuroconvert-v1.0.1';
+const CACHE = 'neuroconvert-v1.1.0';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (event) => {
