@@ -8,9 +8,11 @@ import type { Reference } from '../types';
  */
 
 const ACCESSED = '2026-11-16';
+/** Sources added in the second research pass. */
+const ACCESSED_2 = '2026-11-19';
 
-function article(r: Omit<Reference, 'kind' | 'accessed'>): Reference {
-  return { kind: 'article', accessed: ACCESSED, ...r };
+function article(r: Omit<Reference, 'kind' | 'accessed'> & { accessed?: string }): Reference {
+  return { ...r, kind: 'article', accessed: r.accessed ?? ACCESSED };
 }
 
 function label(
@@ -19,6 +21,7 @@ function label(
   setId: string,
   year: number,
   verifyTitle: string,
+  accessed: string = ACCESSED,
 ): Reference {
   return {
     id,
@@ -28,7 +31,7 @@ function label(
     setId,
     url: `https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=${setId}`,
     verifyTitle,
-    accessed: ACCESSED,
+    accessed,
   };
 }
 
@@ -152,8 +155,175 @@ export const REFERENCES: Reference[] = [
     accessed: ACCESSED,
   },
 
+
+  /* ---------------- Second research pass (2026-11-19) ---------------- */
+  article({
+    id: 'brunner2025',
+    short: 'Brunner 2025',
+    citation:
+      'Brunner E, et al. Joint Clinical Practice Guideline on Benzodiazepine Tapering: considerations when risks outweigh benefits. J Gen Intern Med. 2025;40(12):2814-2859. doi:10.1007/s11606-025-09499-2',
+    year: 2025,
+    pmid: '40526204',
+    doi: '10.1007/s11606-025-09499-2',
+    verifyTitle: 'Joint Clinical Practice Guideline on Benzodiazepine Tapering',
+    accessed: ACCESSED_2,
+  }),
+  article({
+    id: 'benecke2005',
+    short: 'Benecke 2005',
+    citation:
+      'Benecke R, Jost WH, Kanovsky P, Ruzicka E, Comes G, Grafe S. A new botulinum toxin type A free of complexing proteins for treatment of cervical dystonia. Neurology. 2005;64(11):1949-1951. doi:10.1212/01.WNL.0000163767.99354.C3',
+    year: 2005,
+    pmid: '15955951',
+    doi: '10.1212/01.WNL.0000163767.99354.C3',
+    verifyTitle: 'A new botulinum toxin type A free of complexing proteins',
+    accessed: ACCESSED_2,
+  }),
+  article({
+    id: 'odergren1998',
+    short: 'Odergren 1998',
+    citation:
+      'Odergren T, Hjaltason H, Kaakkola S, et al. A double blind, randomised, parallel group study to investigate the dose equivalence of Dysport and Botox in the treatment of cervical dystonia. J Neurol Neurosurg Psychiatry. 1998;64(1):6-12. doi:10.1136/jnnp.64.1.6',
+    year: 1998,
+    pmid: '9436720',
+    doi: '10.1136/jnnp.64.1.6',
+    verifyTitle: 'dose equivalence of Dysport and Botox',
+    accessed: ACCESSED_2,
+  }),
+  article({
+    id: 'ranoux2002',
+    short: 'Ranoux 2002',
+    citation:
+      'Ranoux D, Gury C, Fondarai J, Mas JL, Zuber M. Respective potencies of Botox and Dysport: a double blind, randomised, crossover study in cervical dystonia. J Neurol Neurosurg Psychiatry. 2002;72(4):459-462. doi:10.1136/jnnp.72.4.459',
+    year: 2002,
+    pmid: '11909903',
+    doi: '10.1136/jnnp.72.4.459',
+    verifyTitle: 'Respective potencies of Botox and Dysport',
+    accessed: ACCESSED_2,
+  }),
+  article({
+    id: 'yun2015',
+    short: 'Yun 2015',
+    citation:
+      'Yun JY, Kim JW, Kim HT, et al. Dysport and Botox at a ratio of 2.5:1 units in cervical dystonia: a double-blind, randomized study. Mov Disord. 2015;30(2):206-213. doi:10.1002/mds.26085',
+    year: 2015,
+    pmid: '25476727',
+    doi: '10.1002/mds.26085',
+    verifyTitle: 'Dysport and Botox at a ratio of 2.5:1',
+    accessed: ACCESSED_2,
+  }),
+  article({
+    id: 'lambrecht2011',
+    short: 'Lambrecht 2011',
+    citation:
+      'Lambrecht LJ, Shekh-Ahmad T, Todd WM, Halvorsen MB, Bialer M. Comparative pharmacokinetic analysis of USL255, a new once-daily extended-release formulation of topiramate. Epilepsia. 2011;52(10):1877-1883. doi:10.1111/j.1528-1167.2011.03183.x',
+    year: 2011,
+    pmid: '21770925',
+    doi: '10.1111/j.1528-1167.2011.03183.x',
+    verifyTitle: 'Comparative pharmacokinetic analysis of USL255',
+    accessed: ACCESSED_2,
+  }),
+  article({
+    id: 'hoy2016',
+    short: 'Hoy 2016',
+    citation:
+      'Hoy SM. Topiramate extended release: a review in epilepsy. CNS Drugs. 2016;30(6):559-566. doi:10.1007/s40263-016-0344-5',
+    year: 2016,
+    pmid: '27224993',
+    doi: '10.1007/s40263-016-0344-5',
+    verifyTitle: 'Topiramate Extended Release: A Review in Epilepsy',
+    accessed: ACCESSED_2,
+  }),
+  article({
+    id: 'patsalos2008',
+    short: 'Patsalos 2008',
+    citation:
+      'Patsalos PN, Berry DJ, Bourgeois BFD, et al. Antiepileptic drugs: best practice guidelines for therapeutic drug monitoring. A position paper by the subcommission on therapeutic drug monitoring, ILAE Commission on Therapeutic Strategies. Epilepsia. 2008;49(7):1239-1276. doi:10.1111/j.1528-1167.2008.01561.x',
+    year: 2008,
+    pmid: '18397299',
+    doi: '10.1111/j.1528-1167.2008.01561.x',
+    verifyTitle: 'best practice guidelines for therapeutic drug monitoring',
+    accessed: ACCESSED_2,
+  }),
+  article({
+    id: 'patsalos2018',
+    short: 'Patsalos 2018',
+    citation:
+      'Patsalos PN, Spencer EP, Berry DJ. Therapeutic drug monitoring of antiepileptic drugs in epilepsy: a 2018 update. Ther Drug Monit. 2018;40(5):526-548. doi:10.1097/FTD.0000000000000546',
+    year: 2018,
+    pmid: '29957667',
+    doi: '10.1097/FTD.0000000000000546',
+    verifyTitle: 'Therapeutic Drug Monitoring of Antiepileptic Drugs in Epilepsy: A 2018 Update',
+    accessed: ACCESSED_2,
+  }),
+  article({
+    id: 'kiang2016',
+    short: 'Kiang 2016',
+    citation:
+      'Kiang TKL, Ensom MHH. A comprehensive review on the predictive performance of the Sheiner-Tozer and derivative equations for the correction of phenytoin concentrations. Ann Pharmacother. 2016;50(4):311-325. doi:10.1177/1060028016628166',
+    year: 2016,
+    pmid: '26825643',
+    doi: '10.1177/1060028016628166',
+    verifyTitle: 'Comprehensive Review on the Predictive Performance of the Sheiner-Tozer',
+    accessed: ACCESSED_2,
+  }),
+  article({
+    id: 'kane2013',
+    short: 'Kane 2013',
+    citation:
+      'Kane SP, Bress AP, Tesoro EP. Characterization of unbound phenytoin concentrations in neurointensive care unit patients using a revised Winter-Tozer equation. Ann Pharmacother. 2013;47(5):628-636. doi:10.1345/aph.1R651',
+    year: 2013,
+    pmid: '23606554',
+    doi: '10.1345/aph.1R651',
+    verifyTitle: 'Characterization of unbound phenytoin concentrations in neurointensive care unit patients',
+    accessed: ACCESSED_2,
+  }),
+  article({
+    id: 'buckley2016',
+    short: 'Buckley 2016',
+    citation:
+      'Buckley MS, Reeves BA, Barletta JF, Bikin DS. Correlation of free and total phenytoin serum concentrations in critically ill patients. Ann Pharmacother. 2016;50(4):276-281. doi:10.1177/1060028015627468',
+    year: 2016,
+    pmid: '26783351',
+    doi: '10.1177/1060028015627468',
+    verifyTitle: 'Correlation of Free and Total Phenytoin Serum Concentrations in Critically Ill Patients',
+    accessed: ACCESSED_2,
+  }),
+  article({
+    id: 'aquilonius1980',
+    short: 'Aquilonius 1980',
+    citation:
+      'Aquilonius SM, Eckernäs SA, Hartvig P, Lindström B, Osterman PO. Pharmacokinetics and oral bioavailability of pyridostigmine in man. Eur J Clin Pharmacol. 1980;18(5):423-428. doi:10.1007/BF00636797',
+    year: 1980,
+    pmid: '7439266',
+    doi: '10.1007/BF00636797',
+    verifyTitle: 'Pharmacokinetics and oral bioavailability of pyridostigmine in man',
+    accessed: ACCESSED_2,
+  }),
+  article({
+    id: 'jonasson2020',
+    short: 'Jonasson 2020',
+    citation:
+      'Jonasson E, Sejbaek T. Diroximel fumarate in the treatment of multiple sclerosis. Neurodegener Dis Manag. 2020;10(5):267-276. doi:10.2217/nmt-2020-0025',
+    year: 2020,
+    pmid: '32686599',
+    doi: '10.2217/nmt-2020-0025',
+    verifyTitle: 'Diroximel fumarate in the treatment of multiple sclerosis',
+    accessed: ACCESSED_2,
+  }),
+  {
+    id: 'pubchem',
+    short: 'PubChem',
+    kind: 'web',
+    citation:
+      'National Center for Biotechnology Information. PubChem Compound database (molecular weights): valproic acid CID 3121, phenytoin 1775, carbamazepine 2554, carbamazepine-10,11-epoxide 2555, phenobarbital 4763, primidone 4909, lamotrigine 3878, levetiracetam 5284583, licarbazepine 114709, topiramate 5284627, zonisamide 5734, lacosamide 219078, brivaracetam 9837243, gabapentin 3446, pregabalin 5486971, clobazam 2789, norclobazam 89657, clonazepam 2802, ethosuximide 10630591, rufinamide 129228, perampanel 9924495. https://pubchem.ncbi.nlm.nih.gov/. Accessed 2026-11-19.',
+    year: 2026,
+    url: 'https://pubchem.ncbi.nlm.nih.gov/',
+    accessed: ACCESSED_2,
+  },
+
   /* --------------- FDA prescribing information (DailyMed) --------------- */
-  label('lbl-keppra-iv', 'KEPPRA (levetiracetam) injection, for intravenous use. Prescribing information. UCB, Inc.; label version dated 2 Jul 2025.', 'c6d5784d-abf9-45fe-ac5a-d5c53bd50f7e', 2025, 'KEPPRA'),
+  label('lbl-keppra-iv', 'KEPPRA (levetiracetam) injection, for intravenous use. Prescribing information. UCB, Inc.; label version dated 16 Nov 2026.', 'c6d5784d-abf9-45fe-ac5a-d5c53bd50f7e', 2026, 'KEPPRA', ACCESSED_2),
   label('lbl-keppra-xr', 'KEPPRA XR (levetiracetam) extended-release tablets. Prescribing information. UCB, Inc.; label version dated 26 Jun 2025.', '2919e43b-69a8-434c-a2d2-1f3ecd7554c0', 2025, 'KEPPRA XR'),
   label('lbl-vimpat', 'VIMPAT (lacosamide) tablets, injection, oral solution. Prescribing information. UCB, Inc.; label version dated 13 May 2026.', '9e79b42c-38a3-4b2c-a196-a5a1948250e2', 2026, 'VIMPAT'),
   label('lbl-briviact', 'BRIVIACT (brivaracetam) tablets, oral solution, injection. Prescribing information. UCB, Inc.; label version dated 9 Nov 2026.', '3cf2f439-0e97-443e-8e33-25ecef616f6c', 2026, 'BRIVIACT'),
@@ -176,6 +346,21 @@ export const REFERENCES: Reference[] = [
   label('lbl-xeomin', 'XEOMIN (incobotulinumtoxinA) for injection. Prescribing information. Merz North America, Inc.; label version dated 13 Jul 2026.', '3f35d6e0-3450-4abc-a0da-cc7b277e7c6e', 2026, 'XEOMIN'),
   label('lbl-myobloc', 'MYOBLOC (rimabotulinumtoxinB) injection. Prescribing information. Solstice Neurosciences, LLC; label version dated 8 Oct 2026.', '675cb354-9d13-482e-8ac2-22f709c58b4f', 2026, 'MYOBLOC'),
   label('lbl-daxxify', 'DAXXIFY (daxibotulinumtoxinA) for injection. Prescribing information. Revance Therapeutics, Inc.; label version dated 9 Nov 2026.', '3aaa6e14-a3f7-4fb2-b9f9-d3a9c3ae1f74', 2026, 'DAXXIFY'),
+
+  /* labels added in the second research pass */
+  label('lbl-vyalev', 'VYALEV (foscarbidopa and foslevodopa) injection, for subcutaneous infusion. Prescribing information. AbbVie Inc.; label version dated 9 Apr 2026.', '28e806e4-951c-40a9-9f0c-d0929caf054c', 2026, 'VYALEV', ACCESSED_2),
+  label('lbl-duopa', 'DUOPA (carbidopa and levodopa) enteral suspension. Prescribing information. AbbVie Inc.; label version dated 1 Apr 2026.', '7066d371-dc6a-0d6f-7bed-e5dd4ee912da', 2026, 'DUOPA', ACCESSED_2),
+  label('lbl-namzaric', 'NAMZARIC (memantine hydrochloride extended-release and donepezil hydrochloride) capsules. Prescribing information. Allergan, Inc.; label version dated 6 May 2026.', '90fedc32-19e5-480c-afc6-f35a5cf4b9aa', 2026, 'NAMZARIC', ACCESSED_2),
+  label('lbl-lyrica-cr', 'LYRICA CR (pregabalin) extended-release tablets. Prescribing information. Viatris Specialty LLC; label version dated 15 Apr 2026.', 'f280bbd8-2af2-444a-bd96-e409337ca6dd', 2026, 'LYRICA CR', ACCESSED_2),
+  label('lbl-gralise', 'GRALISE (gabapentin) tablets. Prescribing information. Almatica Pharma LLC; label version dated 20 Aug 2026.', '466273b1-c9fc-3930-c94b-aa11394d5140', 2026, 'GRALISE', ACCESSED_2),
+  label('lbl-horizant', 'HORIZANT (gabapentin enacarbil) extended-release tablets. Prescribing information. Azurity Pharmaceuticals, Inc.; label version dated 7 May 2025.', '4c486fc7-c8c4-4c6c-b30c-366dabaeaadd', 2025, 'HORIZANT', ACCESSED_2),
+  label('lbl-hyqvia', 'HYQVIA (immune globulin infusion 10% with recombinant human hyaluronidase). Prescribing information. Takeda Pharmaceuticals America, Inc.; label version dated 22 Jun 2026.', '7ca2c26f-4be2-48cd-be5b-486e350654ba', 2026, 'HYQVIA', ACCESSED_2),
+  label('lbl-hizentra', 'HIZENTRA (immune globulin subcutaneous [human], 20% liquid). Prescribing information. CSL Behring AG; label version dated 1 May 2023.', '7b58f5ff-0316-49a3-b585-1f6003ddb953', 2023, 'HIZENTRA', ACCESSED_2),
+  label('lbl-fycompa', 'FYCOMPA (perampanel) tablets and oral suspension. Prescribing information. Eisai Inc.; label version dated 28 Jan 2026.', '71cf3309-e182-473c-8b0b-280cabd0e122', 2026, 'FYCOMPA', ACCESSED_2),
+  label('lbl-onfi', 'ONFI (clobazam) tablets and oral suspension. Prescribing information. Lundbeck Pharmaceuticals LLC; label version dated 13 Nov 2026.', 'de03bd69-2dca-459c-93b4-541fd3e9571c', 2026, 'ONFI', ACCESSED_2),
+  label('lbl-mysoline', 'MYSOLINE (primidone) tablets. Prescribing information. Bausch Health US, LLC; label version dated 11 Sep 2026.', 'af593171-dabb-4ea3-b44c-89ed457b2c46', 2026, 'MYSOLINE', ACCESSED_2),
+  label('lbl-vumerity', 'VUMERITY (diroximel fumarate) delayed-release capsules. Prescribing information. Biogen Inc.; label version dated 2 Jun 2025.', '2d74414f-6b83-4ea2-9a95-3cecabbce774', 2025, 'VUMERITY', ACCESSED_2),
+  label('lbl-ocrevus-zunovo', 'OCREVUS ZUNOVO (ocrelizumab and hyaluronidase) injection, for subcutaneous use. Prescribing information. Genentech, Inc.; label version dated 28 Sep 2026.', 'b216af61-99d0-42a3-afc2-b5bf86df1ec0', 2026, 'OCREVUS ZUNOVO', ACCESSED_2),
 ];
 
 export const REFERENCE_MAP: ReadonlyMap<string, Reference> = new Map(REFERENCES.map((r) => [r.id, r]));

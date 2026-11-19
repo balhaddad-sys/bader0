@@ -2,6 +2,7 @@ import type {
   DirectedConverter,
   EquivalenceConverter,
   EquivItem,
+  FormulaCalculator,
   LeddCalculator,
   LeddItem,
   Module,
@@ -40,6 +41,17 @@ export const LED_ITEMS: LeddItem[] = [
     publications: 1,
     levodopaContaining: true,
     note: 'Total daily levodopa delivered: morning, maintenance and extra doses.',
+  },
+  {
+    id: 'foslevodopa',
+    name: 'Foslevodopa/foscarbidopa (Vyalev)',
+    group: LD,
+    kind: 'factor',
+    unit: 'mg foslevodopa/day',
+    factor: 0.75,
+    publications: 0,
+    levodopaContaining: true,
+    note: 'Enter the foslevodopa component (240 mg/mL in Vyalev). Jost 2023 gives 0.75; the Vyalev label converts levodopa to foslevodopa × 1.3, whose inverse is 0.77.',
   },
 
   // COMT inhibitors: ratio applied to the levodopa-containing LED
@@ -128,7 +140,7 @@ const ledd: LeddCalculator = {
     },
     {
       kind: 'note',
-      text: 'Not included because the source table’s dose basis is ambiguous, or its use is restricted: inhaled levodopa, subcutaneous foslevodopa/foscarbidopa, levodopa/carbidopa/entacapone gel (LECIG), extended-release amantadine products (Gocovri, Osmolex ER; salt versus base is not specified) and zonisamide (the paper says it should not be used outside Japan).',
+      text: 'Not included because the source table’s dose basis is ambiguous, or its use is restricted: inhaled levodopa, levodopa/carbidopa/entacapone gel (LECIG), extended-release amantadine products (Gocovri, Osmolex ER; salt versus base is not specified) and zonisamide (the paper says it should not be used outside Japan).',
     },
   ],
 };
@@ -347,10 +359,102 @@ const formulation: DirectedConverter = {
   ],
 };
 
+/* ------------------------------------------------------------------ */
+/* Device-aided therapy: pump settings from the prescribing information */
+/* ------------------------------------------------------------------ */
+
+const vyalevCalc: FormulaCalculator = {
+  id: 'vyalev',
+  kind: 'formula',
+  formulaId: 'vyalev',
+  title: 'Vyalev pump settings',
+  summary: 'Foslevodopa/foscarbidopa subcutaneous infusion: starting rate calculated from the current oral levodopa, as the label sets out.',
+  doseBasis: 'Enter the total daily levodopa dosage and the hours of infusion.',
+  inputLabel: 'Your values',
+  refs: ['lbl-vyalev', 'jost2023'],
+  inputs: [
+    {
+      id: 'tld',
+      label: 'Total daily levodopa dosage (TLD)',
+      unit: 'mg/day',
+      hint: 'Immediate-release levodopa equivalent of everything Vyalev replaces.',
+    },
+    {
+      id: 'hours',
+      label: 'Hours of infusion per day',
+      unit: 'hours',
+      default: '16',
+      hint: 'Usually the waking hours (for example 16). Vyalev can also run for 24 hours.',
+    },
+    {
+      id: 'first',
+      label: 'First morning oral levodopa dose',
+      unit: 'mg',
+      optional: true,
+      hint: 'Only needed for the optional loading dose.',
+    },
+  ],
+  provenance: {
+    tier: 'A',
+    refs: ['lbl-vyalev'],
+    locator: 'Dosage and Administration: Base Continuous Dosage and Hourly Infusion Rate (Steps 1–4), Optional Loading Dose, Maximum Dosage',
+  },
+  callouts: [
+    {
+      kind: 'warning',
+      text: 'Convert every levodopa product to its immediate-release levodopa equivalent first, and adjust the total for COMT inhibitor use (see each drug’s label). Do not include rescue or as-needed levodopa, other antiparkinsonian medicines, or night-time doses. The label maximum is 3,525 mg foslevodopa a day (about 2,500 mg levodopa).',
+    },
+    {
+      kind: 'note',
+      text: 'This gives the starting settings only. Extra-dose volumes, lower overnight rates and titration are described in the label and set on the pump.',
+    },
+  ],
+};
+
+const duopaCalc: FormulaCalculator = {
+  id: 'duopa',
+  kind: 'formula',
+  formulaId: 'duopa',
+  title: 'Duopa pump settings',
+  summary: 'Levodopa/carbidopa intestinal gel: day-1 morning dose and continuous rate from the current oral levodopa, as the label sets out.',
+  doseBasis: 'Enter the oral immediate-release levodopa the patient took on the previous day.',
+  inputLabel: 'Your values',
+  refs: ['lbl-duopa', 'jost2023'],
+  inputs: [
+    {
+      id: 'first',
+      label: 'First morning oral dose (levodopa content)',
+      unit: 'mg',
+      hint: 'The first dose of immediate-release carbidopa-levodopa taken on the previous day.',
+    },
+    {
+      id: 'total',
+      label: 'Total oral levodopa over the 16 waking hours',
+      unit: 'mg',
+      hint: 'Include the first dose. Leave out night-time doses.',
+    },
+  ],
+  provenance: {
+    tier: 'A',
+    refs: ['lbl-duopa'],
+    locator: 'Dosage and Administration: Determine the DUOPA Starting Dose for Day 1 (Step 1 Morning Dose, Step 2 Continuous Dose); maximum daily dose',
+  },
+  callouts: [
+    {
+      kind: 'warning',
+      text: 'Before starting, convert all other forms of levodopa to oral immediate-release carbidopa-levodopa tablets (1:4 ratio), and keep other Parkinson’s medicines stable. This is the day-1 starting dose only: titrate to response. The label maximum is 2,000 mg of levodopa a day (one cassette over 16 hours).',
+    },
+    {
+      kind: 'note',
+      text: 'The extra-dose function starts at 1 mL (20 mg levodopa). Morning and continuous dose adjustments are described in the label.',
+    },
+  ],
+};
+
 export const parkinson: Module = {
   id: 'parkinson',
   title: 'Parkinson’s disease',
   area: 'Movement disorders',
-  summary: 'LEDD calculator (Jost 2023), dopamine-agonist equivalence, and label-defined formulation switches.',
-  converters: [ledd, daEquivalence, formulation],
+  summary: 'LEDD calculator (Jost 2023), dopamine-agonist equivalence, formulation switches, and pump settings for Vyalev and Duopa.',
+  converters: [ledd, daEquivalence, formulation, vyalevCalc, duopaCalc],
 };

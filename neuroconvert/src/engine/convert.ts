@@ -136,17 +136,53 @@ export function invertInterval(f: Interval): Interval {
   };
 }
 
+/** Key used for an item's values when it has no explicit per-source breakdown. */
+export const PRIMARY_SOURCE = 'primary';
+
+export function sourcesOf(item: EquivItem): Record<string, Interval> {
+  return item.bySource ?? { [PRIMARY_SOURCE]: item.equiv };
+}
+
+function convertWithin(amount: number, from: Interval, to: Interval): ConversionResult {
+  const tf = typicalOf(from);
+  const tt = typicalOf(to);
+  return {
+    low: (amount * to.low) / from.high,
+    high: (amount * to.high) / from.low,
+    typical: tf !== undefined && tt !== undefined ? (amount * tt) / tf : undefined,
+  };
+}
+
+export interface SourceConversion {
+  source: string;
+  result: ConversionResult;
+}
+
+/**
+ * The conversion according to each source that defines BOTH agents. Interval
+ * arithmetic is used only within a source, so a source that gives a range for
+ * one agent still gives the widest defensible range for that source.
+ */
+export function convertEquivalenceBySource(amount: number, from: EquivItem, to: EquivItem): SourceConversion[] {
+  const fs = sourcesOf(from);
+  const ts = sourcesOf(to);
+  return Object.keys(fs)
+    .filter((k) => k in ts)
+    .map((source) => ({ source, result: convertWithin(amount, fs[source], ts[source]) }));
+}
+
 /**
  * Convert between two agents that are each defined by "amount equivalent to a
- * common reference amount". Interval arithmetic gives the widest defensible
- * range when either agent's equivalence is itself a range.
+ * common reference amount". If sources disagree the result spans all of them;
+ * where they agree (or only one source exists) the result is a single value.
  */
 export function convertEquivalence(amount: number, from: EquivItem, to: EquivItem): ConversionResult {
-  const low = (amount * to.equiv.low) / from.equiv.high;
-  const high = (amount * to.equiv.high) / from.equiv.low;
-  const tf = typicalOf(from.equiv);
-  const tt = typicalOf(to.equiv);
-  return { low, high, typical: tf !== undefined && tt !== undefined ? (amount * tt) / tf : undefined };
+  const per = convertEquivalenceBySource(amount, from, to);
+  if (per.length === 0) return convertWithin(amount, from.equiv, to.equiv);
+  if (per.length === 1) return per[0].result;
+  const low = Math.min(...per.map((p) => p.result.low));
+  const high = Math.max(...per.map((p) => p.result.high));
+  return { low, high, typical: Math.abs(high - low) < EPS ? low : undefined };
 }
 
 /** Amount of every item equal to `amount` of `from`, in input order. */

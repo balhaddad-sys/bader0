@@ -232,7 +232,7 @@ const oralSwitch: DirectedConverter = {
   title: 'Formulation switches',
   summary: 'Immediate-release ⇄ extended-release, salt/acid and suspension changes, using label tables where they exist.',
   doseBasis: 'Total daily dose, mg/day.',
-  refs: ['lbl-depakote-er', 'lbl-tegretol', 'lbl-lamictal-xr', 'lbl-oxtellar-xr', 'lbl-keppra-xr', 'lbl-dilantin'],
+  refs: ['lbl-depakote-er', 'lbl-tegretol', 'lbl-lamictal-xr', 'lbl-oxtellar-xr', 'lbl-keppra-xr', 'lbl-dilantin', 'lbl-fycompa', 'lbl-onfi', 'lambrecht2011', 'hoy2016'],
   callouts: [
     {
       kind: 'warning',
@@ -417,6 +417,68 @@ const oralSwitch: DirectedConverter = {
         {
           kind: 'warning',
           text: 'The label states only that higher dosages of Oxtellar XR may be necessary. At the same 1,200 mg total daily dose, once-daily XR gave about 19% lower MHD exposure (AUC) than twice-daily IR, so an exposure-matched XR dose is up to about 1.23× (1 ÷ 0.81). This range is an arithmetic estimate, not a labelled factor: titrate to response and tolerability.',
+        },
+      ],
+    },
+    {
+      id: 'prm-tab-susp',
+      kind: 'factor',
+      group: 'Perampanel',
+      label: 'Perampanel tablets → oral suspension',
+      reverseLabel: 'Perampanel oral suspension → tablets',
+      fromUnit: 'mg/day',
+      toUnit: 'mg/day',
+      factor: pt(1),
+      reversible: true,
+      reverseStated: true,
+      provenance: {
+        tier: 'A',
+        refs: ['lbl-fycompa'],
+        locator: 'Clinical Pharmacology: "FYCOMPA oral suspension has comparable bioavailability to FYCOMPA tablets under steady state. Both formulations may be used interchangeably."',
+      },
+      callouts: [{ kind: 'note', text: 'The label states the two formulations may be used interchangeably, so the same dose applies.' }],
+    },
+    {
+      id: 'clb-tab-susp',
+      kind: 'factor',
+      group: 'Clobazam',
+      label: 'Clobazam tablets → oral suspension',
+      reverseLabel: 'Clobazam oral suspension → tablets',
+      fromUnit: 'mg/day',
+      toUnit: 'mg/day',
+      factor: pt(1),
+      reversible: true,
+      reverseStated: false,
+      provenance: {
+        tier: 'B',
+        refs: ['lbl-onfi'],
+        locator: 'Clinical Pharmacology §12.3: tablets and oral suspension had similar bioavailability (Cmax and AUC) under fasted conditions; relative bioavailability of tablets versus an oral solution about 100%',
+      },
+      callouts: [
+        { kind: 'note', text: 'The label documents similar exposure for the tablet and the suspension (2.5 mg/mL) but gives no explicit switching instruction.' },
+      ],
+    },
+    {
+      id: 'tpm-ir-xr',
+      kind: 'factor',
+      group: 'Topiramate',
+      label: 'Topiramate immediate-release → Qudexy XR (USL255)',
+      reverseLabel: 'Qudexy XR (USL255) → topiramate immediate-release',
+      fromUnit: 'mg/day',
+      toUnit: 'mg/day',
+      factor: pt(1),
+      reversible: true,
+      reverseStated: false,
+      provenance: {
+        tier: 'B',
+        refs: ['lambrecht2011', 'hoy2016'],
+        locator:
+          'Single-dose crossover in 36 healthy volunteers: relative bioavailability 91.2% (90% CI 84–99%) versus twice-daily immediate-release; review: bioequivalent exposure at the same total daily dose, and switching between the two did not affect topiramate concentrations',
+      },
+      callouts: [
+        {
+          kind: 'warning',
+          text: 'Not a labelled conversion: the topiramate extended-release labels reviewed give no switching instruction. The data cover the USL255 product (Qudexy XR) only, not Trokendi XR. Relative bioavailability was 91% (90% CI 84–99%) in a single-dose study, so monitor after the switch. XR is once daily.',
         },
       ],
     },

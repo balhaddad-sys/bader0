@@ -15,7 +15,7 @@ const equivalence: EquivalenceConverter = {
   summary: 'Literature-based unit ratios for onabotulinumtoxinA, incobotulinumtoxinA and abobotulinumtoxinA.',
   doseBasis: 'Dose in units of the starting product.',
   referenceLabel: 'onabotulinumtoxinA 1 unit',
-  refs: ['scaglione2016', 'lbl-botox', 'lbl-dysport', 'lbl-xeomin', 'lbl-myobloc', 'lbl-daxxify'],
+  refs: ['scaglione2016', 'odergren1998', 'ranoux2002', 'yun2015', 'benecke2005', 'lbl-botox', 'lbl-dysport', 'lbl-xeomin', 'lbl-myobloc', 'lbl-daxxify'],
   items: [
     {
       id: 'ona',
@@ -44,9 +44,9 @@ const equivalence: EquivalenceConverter = {
   ],
   provenance: {
     tier: 'C',
-    refs: ['scaglione2016'],
+    refs: ['scaglione2016', 'odergren1998', 'ranoux2002', 'yun2015', 'benecke2005'],
     locator:
-      'Review of clinical studies: onabotulinumtoxinA:incobotulinumtoxinA ≈ 1:1 to 1:1.2; onabotulinumtoxinA:abobotulinumtoxinA 1:3 or lower (reported range 1:1 to 1:11)',
+      'Review (Scaglione 2016): onabotulinumtoxinA:incobotulinumtoxinA ≈ 1:1 to 1:1.2; onabotulinumtoxinA:abobotulinumtoxinA 1:3 or lower. Randomised trials in cervical dystonia: abobotulinumtoxinA at 3× the units gave equivalent efficacy (Odergren, n=73); 2.5:1 was non-inferior (Yun, n=103); 1:3 and 1:4 were more potent than onabotulinumtoxinA but with more adverse events (Ranoux, n=54); incobotulinumtoxinA was non-inferior at the same units (Benecke, n=463)',
   },
   callouts: [
     {
@@ -55,7 +55,7 @@ const equivalence: EquivalenceConverter = {
     },
     {
       kind: 'warning',
-      text: 'The review notes that comparability was established by indirect methods and that clinical trials are needed to define the exact ratio. Ratios above 1:3 (onabotulinumtoxinA:abobotulinumtoxinA) were associated with greater efficacy but more adverse events, consistent with abobotulinumtoxinA overdose.',
+      text: 'Randomised trials in cervical dystonia support roughly 1:2.5 to 1:3 (onabotulinumtoxinA:abobotulinumtoxinA): 3× the units gave equivalent efficacy and duration (n=73) and 2.5× was non-inferior (n=103). At 1:3 and 1:4 abobotulinumtoxinA was more potent than onabotulinumtoxinA with more adverse events (dysphagia 15.6% and 17.3% vs 3%; n=54), consistent with overdose at higher ratios. The review notes that comparability was established by indirect methods and that the exact ratio still needs clinical trials.',
     },
     {
       kind: 'note',

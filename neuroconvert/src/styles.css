@@ -1129,3 +1129,24 @@ details.more[open] > summary::before {
   overflow-x: auto;
   margin-top: 8px;
 }
+
+/* multi-input calculators and findings */
+.field label .optional {
+  font-weight: 400;
+  color: var(--muted);
+}
+.out-rows {
+  margin-top: 8px;
+}
+.out-rows td {
+  background: transparent;
+}
+.data-table td.strong {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.finding-sources {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}

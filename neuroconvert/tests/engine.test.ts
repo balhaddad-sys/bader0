@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyFactor,
   convertEquivalence,
+  convertEquivalenceBySource,
   invertInterval,
   lookupTable,
   parseAmount,
@@ -10,6 +11,7 @@ import {
   resolveRoutes,
 } from '../src/engine/convert';
 import { formatAmount, formatRange } from '../src/engine/format';
+import { computeFormula } from '../src/engine/formulas';
 import { computeLedd } from '../src/engine/ledd';
 import type { EquivItem, FactorRoute, LeddItem, TableRoute } from '../src/types';
 
@@ -236,6 +238,151 @@ describe('convertEquivalence', () => {
     const there = convertEquivalence(37, a, b);
     const back = convertEquivalence(there.low, b, a);
     expect(back.low).toBeCloseTo(37);
+  });
+});
+
+describe('equivalence across sources that can disagree', () => {
+  const mk = (id: string, bySource: Record<string, number>): EquivItem => {
+    const vals = Object.values(bySource);
+    return {
+      id,
+      name: id,
+      group: 'g',
+      unit: 'mg',
+      equiv: { low: Math.min(...vals), high: Math.max(...vals) },
+      bySource: Object.fromEntries(Object.entries(bySource).map(([k, v]) => [k, { low: v, high: v }])),
+    };
+  };
+  const diazepam = mk('diazepam', { primary: 10, asam: 10 });
+  const lorazepam = mk('lorazepam', { primary: 1, asam: 2 });
+  const alprazolam = mk('alprazolam', { primary: 0.5, asam: 1 });
+
+  it('computes within each source separately', () => {
+    const per = convertEquivalenceBySource(2, lorazepam, diazepam);
+    expect(per.map((p) => p.source).sort()).toEqual(['asam', 'primary']);
+    expect(per.find((p) => p.source === 'primary')?.result.low).toBeCloseTo(20);
+    expect(per.find((p) => p.source === 'asam')?.result.low).toBeCloseTo(10);
+  });
+
+  it('combines the sources into a range, lowest to highest', () => {
+    const r = convertEquivalence(2, lorazepam, diazepam);
+    expect(r.low).toBeCloseTo(10);
+    expect(r.high).toBeCloseTo(20);
+    expect(r.typical).toBeUndefined();
+  });
+
+  it('adds no false width when both sources agree on the ratio', () => {
+    const r = convertEquivalence(1, alprazolam, lorazepam);
+    expect(r.low).toBeCloseTo(2);
+    expect(r.high).toBeCloseTo(2);
+    expect(r.typical).toBeCloseTo(2);
+  });
+
+  it('uses only the sources both agents share', () => {
+    const ashtonOnly: EquivItem = { id: 'x', name: 'x', group: 'g', unit: 'mg', equiv: { low: 20, high: 20 } };
+    const per = convertEquivalenceBySource(10, diazepam, ashtonOnly);
+    expect(per).toHaveLength(1);
+    expect(per[0].source).toBe('primary');
+    expect(convertEquivalence(10, diazepam, ashtonOnly).low).toBeCloseTo(20);
+  });
+
+  it('is symmetric in range terms: A→B spans the inverse of B→A', () => {
+    const ab = convertEquivalence(1, lorazepam, diazepam);
+    const ba = convertEquivalence(1, diazepam, lorazepam);
+    expect(ab.low * ba.high).toBeCloseTo(1, 9);
+    expect(ab.high * ba.low).toBeCloseTo(1, 9);
+  });
+});
+
+describe('label and literature formulas', () => {
+  const rows = (r: ReturnType<typeof computeFormula>) => {
+    if ('error' in r) throw new Error(r.error);
+    return r;
+  };
+
+  describe('Vyalev (foslevodopa/foscarbidopa)', () => {
+    it('calculates the base rate exactly as the label steps do', () => {
+      const r = rows(computeFormula('vyalev', { tld: 960, hours: 16 }));
+      // Step 2: 960 × 1.3 = 1248 mg; Step 3: 1248 ÷ 240 = 5.2 mL; Step 4: 5.2 ÷ 16 = 0.325 mL/h
+      expect(r.rows[0].value).toBe('0.325 mL/h');
+      expect(r.rows[1].value).toBe('1,248 mg/day');
+      expect(r.rows[2].value).toBe('5.2 mL/day');
+      expect(r.warnings).toEqual([]);
+    });
+
+    it('calculates the optional loading dose from the first morning dose', () => {
+      const r = rows(computeFormula('vyalev', { tld: 960, hours: 16, first: 100 }));
+      expect(r.rows.find((x) => x.label.includes('loading'))?.value).toBe('0.542 mL'); // 100 × 1.3 ÷ 240
+    });
+
+    it('warns above the 3,525 mg foslevodopa daily maximum, and not at it', () => {
+      expect(rows(computeFormula('vyalev', { tld: 2711, hours: 16 })).warnings).toEqual([]); // 3,524.3 mg
+      expect(rows(computeFormula('vyalev', { tld: 2712, hours: 16 })).warnings[0]).toMatch(/exceeds the label maximum of 3,525/);
+    });
+
+    it('warns when the loading dose is outside the pump range of 0.1 to 3 mL', () => {
+      expect(rows(computeFormula('vyalev', { tld: 960, hours: 16, first: 600 })).warnings[0]).toMatch(/above the pump maximum/);
+      expect(rows(computeFormula('vyalev', { tld: 960, hours: 16, first: 10 })).warnings[0]).toMatch(/below the pump minimum/);
+    });
+
+    it('rejects missing or impossible inputs', () => {
+      expect(computeFormula('vyalev', { hours: 16 })).toHaveProperty('error');
+      expect(computeFormula('vyalev', { tld: 960, hours: 0 })).toHaveProperty('error');
+      expect(computeFormula('vyalev', { tld: 960, hours: 25 })).toHaveProperty('error');
+      expect(computeFormula('vyalev', { tld: -5, hours: 16 })).toHaveProperty('error');
+    });
+  });
+
+  describe('Duopa (levodopa/carbidopa intestinal gel)', () => {
+    it('calculates the morning and continuous doses as the label steps do', () => {
+      const r = rows(computeFormula('duopa', { first: 100, total: 800 }));
+      // morning: 100 × 0.8 ÷ 20 = 4 mL (+3 mL prime = 7 mL); continuous: (800 − 100) ÷ 20 = 35 mL; rate 35 ÷ 16 = 2.1875 mL/h
+      expect(r.rows[0].value).toBe('7 mL');
+      expect(r.rows[1].value).toBe('35 mL');
+      expect(r.rows[2].value).toBe('2.19 mL/h');
+      expect(r.rows[3].value).toBe('780 mg'); // (4 + 35) mL × 20 mg/mL
+      expect(r.warnings).toEqual([]);
+    });
+
+    it('warns above the 2,000 mg levodopa daily maximum', () => {
+      const r = rows(computeFormula('duopa', { first: 200, total: 2600 }));
+      expect(r.warnings[0]).toMatch(/exceeds the label maximum of 2,000/);
+    });
+
+    it('rejects a 16-hour total smaller than the first dose, and missing inputs', () => {
+      expect(computeFormula('duopa', { first: 300, total: 200 })).toHaveProperty('error');
+      expect(computeFormula('duopa', { total: 800 })).toHaveProperty('error');
+      expect(computeFormula('duopa', { first: 100 })).toHaveProperty('error');
+    });
+
+    it('notes when there is no continuous dose', () => {
+      expect(rows(computeFormula('duopa', { first: 100, total: 100 })).warnings[0]).toMatch(/no continuous dose/);
+    });
+  });
+
+  describe('Sheiner-Tozer (phenytoin, Kiang & Ensom 2016)', () => {
+    it('corrected = observed ÷ (0.2 × albumin + 0.1)', () => {
+      const r = rows(computeFormula('sheiner-tozer', { observed: 8, albumin: 2.5 }));
+      // 8 ÷ (0.5 + 0.1) = 13.333…
+      expect(r.rows[0].value).toBe('13.3 µg/mL (mg/L)');
+      expect(r.rows[1].value).toBe('× 1.67');
+    });
+
+    it('leaves the value unchanged at albumin 4.5 g/dL, where the denominator is 1', () => {
+      const r = rows(computeFormula('sheiner-tozer', { observed: 12, albumin: 4.5 }));
+      expect(r.rows[0].value).toBe('12 µg/mL (mg/L)');
+      expect(r.warnings).toEqual([]);
+    });
+
+    it('warns that it lowers the level at high albumin, and catches g/L entered as g/dL', () => {
+      expect(rows(computeFormula('sheiner-tozer', { observed: 12, albumin: 5 })).warnings[0]).toMatch(/lowers the level/);
+      expect(computeFormula('sheiner-tozer', { observed: 12, albumin: 25 })).toHaveProperty('error');
+    });
+
+    it('rejects missing inputs', () => {
+      expect(computeFormula('sheiner-tozer', { albumin: 2.5 })).toHaveProperty('error');
+      expect(computeFormula('sheiner-tozer', { observed: 8 })).toHaveProperty('error');
+    });
   });
 });
 

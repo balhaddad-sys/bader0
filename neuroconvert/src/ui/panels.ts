@@ -46,7 +46,7 @@ function readAmount(raw: string): { amount?: number; error?: string; empty?: boo
   return { amount, note: readingNote(raw, amount) };
 }
 
-function doseField(id: string, hint: string, initial: string, onInput: () => void) {
+function doseField(id: string, label: string, hint: string, initial: string, onInput: () => void) {
   const unit = h('span', { class: 'unit', id: `${id}-unit` });
   const input = h('input', {
     id,
@@ -55,7 +55,7 @@ function doseField(id: string, hint: string, initial: string, onInput: () => voi
     inputmode: 'decimal',
     autocomplete: 'off',
     spellcheck: 'false',
-    placeholder: 'Type the dose',
+    placeholder: 'Type the number',
     'aria-describedby': `${id}-unit ${id}-hint`,
     value: initial,
     onInput,
@@ -64,7 +64,7 @@ function doseField(id: string, hint: string, initial: string, onInput: () => voi
   const wrap = h(
     'div',
     { class: 'field' },
-    h('label', { for: id }, 'Your dose'),
+    h('label', { for: id }, label),
     h('div', { class: 'input-wrap' }, input, unit),
     reading,
     h('p', { class: 'field-hint', id: `${id}-hint` }, hint),
@@ -151,7 +151,7 @@ export function copyButton(summary: () => string): HTMLElement {
   );
 }
 
-function mathBlock(lines: string[]): HTMLElement {
+export function mathBlock(lines: string[]): HTMLElement {
   return h('details', { class: 'math' }, h('summary', null, 'Show the math'), h('pre', null, lines.join('\n')));
 }
 
@@ -179,7 +179,7 @@ export function directedPanel(conv: DirectedConverter, ctx: PanelCtx): HTMLEleme
   drugSel.value = route.group;
 
   const switchHost = h('div', { class: 'switch-host' });
-  const dose = doseField(`${id}-dose`, conv.doseBasis, ctx.params.get('d') ?? '', () => render(true));
+  const dose = doseField(`${id}-dose`, conv.inputLabel ?? 'Your dose', conv.doseBasis, ctx.params.get('d') ?? '', () => render(true));
   const result = h('div', { class: 'result', 'aria-live': 'polite' });
 
   function renderSwitch(): void {
@@ -217,7 +217,7 @@ export function directedPanel(conv: DirectedConverter, ctx: PanelCtx): HTMLEleme
     const read = readAmount(dose.input.value);
     dose.reading.textContent = read.note ?? '';
     if (read.empty) {
-      result.appendChild(h('p', { class: 'hint' }, 'Type your dose above to see the answer.'));
+      result.appendChild(h('p', { class: 'hint' }, 'Type the number above to see the answer.'));
       append(result, [...(ctx.caution?.(splitCallouts(route.callouts).lead !== null) ?? []), routeDetails(route, undefined)]);
       return;
     }
@@ -426,7 +426,7 @@ export function equivalencePanel(conv: EquivalenceConverter, ctx: PanelCtx): HTM
 
   const fromSel = mkSelect(`${id}-from`, fromId, () => render(true));
   const toSel = mkSelect(`${id}-to`, toId, () => render(true));
-  const dose = doseField(`${id}-dose`, conv.doseBasis, ctx.params.get('d') ?? '', () => render(true));
+  const dose = doseField(`${id}-dose`, conv.inputLabel ?? 'Your dose', conv.doseBasis, ctx.params.get('d') ?? '', () => render(true));
   const result = h('div', { class: 'result', 'aria-live': 'polite' });
 
   const swap = h(
@@ -456,7 +456,7 @@ export function equivalencePanel(conv: EquivalenceConverter, ctx: PanelCtx): HTM
     const read = readAmount(dose.input.value);
     dose.reading.textContent = read.note ?? '';
     if (read.empty) {
-      result.appendChild(h('p', { class: 'hint' }, 'Type your dose above to see the answer.'));
+      result.appendChild(h('p', { class: 'hint' }, 'Type the number above to see the answer.'));
       append(result, [...(ctx.caution?.() ?? []), equivDetails(conv, from, to, undefined)]);
       return;
     }

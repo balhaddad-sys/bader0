@@ -1,8 +1,9 @@
-import { APP_VERSION, DATA_VERSION, MODULES, MODULE_MAP, REFERENCES } from '../data';
+import { APP_VERSION, DATA_VERSION, FINDINGS, MODULES, MODULE_MAP, OMISSIONS, REFERENCES } from '../data';
 import { resolveRoutes } from '../engine/convert';
-import type { Converter, EvidenceTier, Reference } from '../types';
-import { copyText, h } from './dom';
+import type { Converter, EvidenceTier, Finding, Reference } from '../types';
+import { copyText, h, link } from './dom';
 import { calloutList, referenceLinks, referencesAsText, tierBadge, TIERS } from './evidence';
+import { formulaPanel } from './formula-panel';
 import { leddPanel } from './ledd-panel';
 import { directedPanel, equivalencePanel, leadWarning, segmented, splitCallouts, type PanelCtx } from './panels';
 
@@ -23,6 +24,8 @@ function converterRules(c: Converter): { label: string; tier: EvidenceTier; deri
       return [{ label: `${c.title} (${c.items.length} agents)`, tier: c.provenance.tier, derived: !!c.provenance.derived, refs: c.provenance.refs }];
     case 'ledd':
       return [{ label: `${c.title} (${c.items.length} agents)`, tier: c.provenance.tier, derived: false, refs: c.provenance.refs }];
+    case 'formula':
+      return [{ label: `${c.title} (calculator)`, tier: c.provenance.tier, derived: false, refs: c.provenance.refs }];
   }
 }
 
@@ -63,6 +66,13 @@ function buildSearchIndex(): SearchEntry[] {
             href: `${base}?c=${c.id}&f=${encodeURIComponent(i.id)}`,
           });
         }
+      } else if (c.kind === 'formula') {
+        out.push({
+          text: `${c.title} ${m.title} ${c.summary} ${c.inputs.map((i) => i.label).join(' ')}`.toLowerCase(),
+          label: c.title,
+          sub: m.title,
+          href: `${base}?c=${c.id}`,
+        });
       } else {
         for (const i of c.items) {
           out.push({
@@ -91,11 +101,14 @@ function search(query: string): SearchEntry[] {
 
 const TILE_BLURB: Record<string, string> = {
   epilepsy: 'Switch between IV and tablets, or between formulations',
+  levels: 'Convert drug levels (µg/mL ⇄ µmol/L) and correct phenytoin for albumin',
   benzodiazepines: 'Equivalent doses: lorazepam, clonazepam, clobazam, diazepam…',
-  parkinson: 'Total levodopa dose, and formulation switches',
+  parkinson: 'Total levodopa dose, formulation switches, Vyalev and Duopa pump settings',
   steroids: 'Equivalent doses: prednisone, dexamethasone, methylprednisolone…',
   botulinum: 'Unit ratios between Botox, Dysport and Xeomin',
-  dementia: 'Rivastigmine patch and memantine XR switches',
+  dementia: 'Rivastigmine patch, memantine XR and Namzaric',
+  gabapentinoids: 'Lyrica to Lyrica CR conversion table',
+  immunoglobulin: 'Starting doses for subcutaneous immunoglobulin in CIDP',
 };
 
 export function homePage(): HTMLElement {
@@ -185,6 +198,9 @@ export function modulePage(moduleId: string, query: URLSearchParams, setParams: 
       case 'ledd':
         panel = leddPanel(c, ctx);
         break;
+      case 'formula':
+        panel = formulaPanel(c, ctx);
+        break;
     }
     sections.set(
       c.id,
@@ -230,17 +246,29 @@ export function notFound(): HTMLElement {
 /* Methods                                                             */
 /* ------------------------------------------------------------------ */
 
-const NOT_PROVIDED: [string, string][] = [
-  ['Dose equivalence between different antiseizure drugs', 'Different antiseizure drugs differ in mechanism, spectrum and dose–response, so no dose equivalence between them is established. Moving from one drug to another is done by supervised cross-titration, not arithmetic.'],
-  ['Status epilepticus and weight-based loading doses', 'Dosing rather than conversion; follow current guidelines and labelling.'],
-  ['Pyridostigmine and neostigmine route or agent equivalence', 'No verifiable source was located. The pyridostigmine injection label reviewed concerns reversal of neuromuscular block, not myasthenia gravis dosing.'],
-  ['Topiramate immediate- to extended-release', 'The current extended-release labels reviewed give no conversion instruction.'],
-  ['Equivalence between donepezil, galantamine, rivastigmine and memantine', 'None of the sources reviewed defines one.'],
-  ['rimabotulinumtoxinB, daxibotulinumtoxinA and other botulinum products', 'The sources reviewed support no unit ratio for them.'],
-  ['Gabapentin ⇄ pregabalin, opioids, intrathecal baclofen, IVIG ⇄ SCIG', 'Not evaluated in this version.'],
-  ['Inhaled levodopa, foslevodopa/foscarbidopa, levodopa/carbidopa/entacapone gel, extended-release amantadine, zonisamide (LEDD)', 'Excluded from the LEDD calculator because the source table’s dose basis is ambiguous or its use is restricted (see the LEDD note).'],
-  ['Paediatric, renal, hepatic, pregnancy and interaction adjustments', 'Not applied to any conversion. Check the label for the population in front of you.'],
-];
+function refShort(r: Reference): string {
+  if (r.short) return r.short;
+  if (r.kind === 'label') return `${r.citation.split(/[ (]/)[0]} label`;
+  return r.id;
+}
+
+function refHref(r: Reference): string | undefined {
+  return r.pmid ? `https://pubmed.ncbi.nlm.nih.gov/${r.pmid}/` : r.url;
+}
+
+/** "Sources: Kiang 2016 · Kane 2013 …" as links. */
+function findingSources(f: Finding): HTMLElement | null {
+  if (f.refs.length === 0) return null;
+  const items: (Node | string)[] = [];
+  f.refs.forEach((id, i) => {
+    const r = REFERENCES.find((x) => x.id === id);
+    if (!r) return;
+    if (i > 0) items.push(' · ');
+    const href = refHref(r);
+    items.push(href ? link(href, refShort(r), 'ref-link') : refShort(r));
+  });
+  return h('p', { class: 'finding-sources' }, 'Sources: ', ...items);
+}
 
 export function methodsPage(): HTMLElement {
   const rulesRows: HTMLElement[] = [];
@@ -292,7 +320,7 @@ export function methodsPage(): HTMLElement {
       h('li', null, 'Where an initial recollection or a secondary source disagreed with the primary source, the primary source was used. Example: the ropinirole extended-release table in the current label differs from an older 2011 label (both noted in the app).'),
       h('li', null, 'Every PubMed-indexed reference was checked against its PubMed record (PMID, title, journal, year, DOI). The repository includes `npm run verify:references` to re-check them and the DailyMed set IDs.'),
       h('li', null, 'Automated tests enforce that no conversion exists without an evidence tier and resolvable references, that reversible conversions round-trip, that tables do not overlap, and that every label table and published factor matches its source.'),
-      h('li', null, 'Labels change. A conversion that was current on the curation date (2026-11-16) may have been revised since: check the current prescribing information.'),
+      h('li', null, 'Labels change. A conversion that was current on the curation dates (16 and 19 November 2026) may have been revised since: check the current prescribing information.'),
     ),
 
     h('h2', null, 'Limits you should know'),
@@ -304,9 +332,13 @@ export function methodsPage(): HTMLElement {
       h('li', null, 'Intravenous carbamazepine (Carnexiv) could not be checked against a current US label during curation and has limited availability.'),
     ),
 
+    h('h2', null, 'What the cross-checks found'),
+    h('p', null, 'A second research pass (19 November 2026) compared the existing numbers with independent sources. These findings changed or qualify what the app shows.'),
+    h('dl', { class: 'omissions' }, FINDINGS.flatMap((f) => [h('dt', null, f.title), h('dd', null, f.text, findingSources(f))])),
+
     h('h2', null, 'Intentionally not provided'),
     h('p', null, 'Omission is deliberate where no evidence-based conversion could be traced.'),
-    h('dl', { class: 'omissions' }, NOT_PROVIDED.flatMap(([t, d]) => [h('dt', null, t), h('dd', null, d)])),
+    h('dl', { class: 'omissions' }, OMISSIONS.flatMap((f) => [h('dt', null, f.title), h('dd', null, f.text, findingSources(f))])),
 
     h('h2', null, 'Privacy'),
     h('p', null, 'All calculation happens in your browser. There are no accounts, no analytics and no network requests with your inputs. The app stores only whether you have accepted the notice and your theme choice, in your browser’s local storage. The shareable link contains the numbers you typed in its address, so avoid sharing it if the dose is identifying.'),

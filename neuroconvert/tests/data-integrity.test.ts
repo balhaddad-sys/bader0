@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MODULES, REFERENCES, REFERENCE_MAP } from '../src/data';
+import { FINDINGS, MODULES, OMISSIONS, REFERENCES, REFERENCE_MAP } from '../src/data';
 import { resolveRoutes } from '../src/engine/convert';
 import type { Converter, Provenance } from '../src/types';
 
@@ -20,12 +20,24 @@ function rulesOf(c: Converter): Rule[] {
       return c.routes.map((r) => ({ where: where(r.id), provenance: r.provenance }));
     case 'equivalence':
     case 'ledd':
+    case 'formula':
       return [{ where: where('(set)'), provenance: c.provenance }];
   }
 }
 
 const allConverters: Converter[] = MODULES.flatMap((m) => m.converters);
 const allRules: Rule[] = allConverters.flatMap(rulesOf);
+
+/** Every reference id cited by a converter, a rule, a research finding or an omission. */
+function allCitedIds(): Set<string> {
+  const cited = new Set<string>();
+  for (const c of allConverters) {
+    c.refs.forEach((id) => cited.add(id));
+    rulesOf(c).forEach((r) => r.provenance.refs.forEach((id) => cited.add(id)));
+  }
+  for (const f of [...FINDINGS, ...OMISSIONS]) f.refs.forEach((id) => cited.add(id));
+  return cited;
+}
 
 describe('module structure', () => {
   it('has unique module and converter ids', () => {
@@ -38,7 +50,11 @@ describe('module structure', () => {
   it('has unique route / item ids within each converter', () => {
     for (const c of allConverters) {
       const ids =
-        c.kind === 'directed' ? c.routes.map((r) => r.id) : c.items.map((i) => i.id);
+        c.kind === 'directed'
+          ? c.routes.map((r) => r.id)
+          : c.kind === 'formula'
+            ? c.inputs.map((i) => i.id)
+            : c.items.map((i) => i.id);
       expect(new Set(ids).size, `${c.id} has duplicate ids`).toBe(ids.length);
     }
   });
@@ -65,20 +81,11 @@ describe('provenance', () => {
   });
 
   it('only cites references that exist in the registry', () => {
-    const cited = new Set<string>();
-    for (const c of allConverters) {
-      c.refs.forEach((id) => cited.add(id));
-      rulesOf(c).forEach((r) => r.provenance.refs.forEach((id) => cited.add(id)));
-    }
-    for (const id of cited) expect(REFERENCE_MAP.has(id), `unknown reference "${id}"`).toBe(true);
+    for (const id of allCitedIds()) expect(REFERENCE_MAP.has(id), `unknown reference "${id}"`).toBe(true);
   });
 
   it('cites every reference in the registry at least once (no orphan citations)', () => {
-    const cited = new Set<string>();
-    for (const c of allConverters) {
-      c.refs.forEach((id) => cited.add(id));
-      rulesOf(c).forEach((r) => r.provenance.refs.forEach((id) => cited.add(id)));
-    }
+    const cited = allCitedIds();
     const orphans = REFERENCES.filter((r) => !cited.has(r.id)).map((r) => r.id);
     expect(orphans).toEqual([]);
   });
@@ -231,5 +238,50 @@ describe('safety content', () => {
   it('warns that LED factors are a research tool', () => {
     const led = allConverters.find((c) => c.id === 'ledd');
     expect(led?.callouts.some((x) => x.kind === 'warning' && /research tool/i.test(x.text))).toBe(true);
+  });
+});
+
+describe('research findings and omissions', () => {
+  it('give every entry a title and substantive text', () => {
+    for (const f of [...FINDINGS, ...OMISSIONS]) {
+      expect(f.title.length, f.title).toBeGreaterThan(5);
+      expect(f.text.length, f.title).toBeGreaterThan(20);
+    }
+  });
+
+  it('have unique titles', () => {
+    const titles = [...FINDINGS, ...OMISSIONS].map((f) => f.title);
+    expect(new Set(titles).size).toBe(titles.length);
+  });
+
+  it('do not list as omitted anything the app now provides', () => {
+    const provided = allConverters.map((c) => c.title.toLowerCase()).join(' | ');
+    for (const o of OMISSIONS) {
+      expect(provided.includes(o.title.toLowerCase()), `${o.title} is both provided and omitted`).toBe(false);
+    }
+  });
+});
+
+describe('calculators', () => {
+  it('declare inputs with unique ids, units and a known formula', () => {
+    const formulas = allConverters.filter((c) => c.kind === 'formula');
+    expect(formulas.length).toBeGreaterThanOrEqual(3);
+    for (const c of formulas) {
+      if (c.kind !== 'formula') continue;
+      expect(['vyalev', 'duopa', 'sheiner-tozer']).toContain(c.formulaId);
+      expect(c.inputs.length, c.id).toBeGreaterThan(0);
+      for (const i of c.inputs) {
+        expect(i.unit.length, `${c.id}/${i.id}`).toBeGreaterThan(0);
+        expect(i.label.length, `${c.id}/${i.id}`).toBeGreaterThan(3);
+      }
+    }
+  });
+
+  it('carry a prominent caution where the evidence is weak', () => {
+    const st = allConverters.find((c) => c.id === 'phenytoin-albumin');
+    expect(st?.callouts.some((x) => x.kind === 'warning' && /free phenytoin/i.test(x.text))).toBe(true);
+    const lvl = allConverters.find((c) => c.id === 'benzo-equivalence');
+    expect(lvl?.callouts[0].kind).toBe('warning');
+    expect(lvl?.callouts[0].text).toMatch(/disagree/);
   });
 });

@@ -24,6 +24,8 @@ export interface Interval {
 
 export interface Reference {
   id: string;
+  /** Short label such as "Kiang 2016", for compact display. */
+  short?: string;
   kind: 'article' | 'label' | 'web';
   /** Complete formatted citation (AMA-style). */
   citation: string;
@@ -119,8 +121,15 @@ export interface EquivItem {
   id: string;
   name: string;
   group: string;
-  /** Amount of this agent that is equivalent to the set's reference amount. */
+  /** Amount of this agent that is equivalent to the set's reference amount (the span of all sources). */
   equiv: Interval;
+  /**
+   * Equivalent amount according to each source, where sources disagree. A conversion
+   * between two agents is computed within each source they share and the results
+   * are combined into a range, so two sources that agree on a ratio give no false width.
+   * Items without it have a single source, "primary".
+   */
+  bySource?: Record<string, Interval>;
   unit: string;
   note?: string;
 }
@@ -167,6 +176,8 @@ interface ConverterBase {
   summary: string;
   /** Plain-language description of what number the user should enter. */
   doseBasis: string;
+  /** Label for the number box; defaults to "Your dose" (e.g. "Your level" for drug concentrations). */
+  inputLabel?: string;
   callouts: Callout[];
   /** Key references for the whole converter (individual rules cite their own too). */
   refs: string[];
@@ -182,6 +193,8 @@ export interface EquivalenceConverter extends ConverterBase {
   /** e.g. "Prednisone-equivalent" – the common anchor, for display. */
   referenceLabel: string;
   items: EquivItem[];
+  /** Display names for the keys used in `EquivItem.bySource` (e.g. primary → "Ashton"). */
+  sourceLabels?: Record<string, string>;
   provenance: Provenance;
 }
 
@@ -191,7 +204,34 @@ export interface LeddCalculator extends ConverterBase {
   provenance: Provenance;
 }
 
-export type Converter = DirectedConverter | EquivalenceConverter | LeddCalculator;
+export type FormulaId = 'vyalev' | 'duopa' | 'sheiner-tozer';
+
+export interface FormulaInput {
+  id: string;
+  label: string;
+  unit: string;
+  hint?: string;
+  /** Pre-filled value (e.g. 16 waking hours). */
+  default?: string;
+  optional?: boolean;
+}
+
+/** Multi-input calculator whose arithmetic lives in src/engine/formulas.ts (pinned by tests). */
+export interface FormulaCalculator extends ConverterBase {
+  kind: 'formula';
+  formulaId: FormulaId;
+  inputs: FormulaInput[];
+  provenance: Provenance;
+}
+
+export type Converter = DirectedConverter | EquivalenceConverter | LeddCalculator | FormulaCalculator;
+
+/** A research finding or deliberate omission shown on the Methods page. */
+export interface Finding {
+  title: string;
+  text: string;
+  refs: string[];
+}
 
 export interface Module {
   id: string;

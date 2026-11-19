@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MODULES } from '../src/data';
-import { applyFactor, convertEquivalence, lookupTable, resolveRoutes } from '../src/engine/convert';
+import { applyFactor, convertEquivalence, lookupTable, resolveRoutes, sourcesOf } from '../src/engine/convert';
 import { computeLedd } from '../src/engine/ledd';
 import type {
   DirectedConverter,
@@ -150,28 +150,66 @@ describe('oral formulation switches', () => {
   });
 });
 
-describe('benzodiazepine equivalence (Ashton, diazepam 10 mg anchor)', () => {
-  it('matches the published table for the epilepsy-relevant agents', () => {
-    const c = equivalence('benzo-equivalence');
-    const get = (id: string) => c.items.find((i) => i.id === id)!.equiv;
-    expect(get('diazepam')).toMatchObject({ low: 10, high: 10 });
-    expect(get('clobazam')).toMatchObject({ low: 20, high: 20 });
-    expect(get('clonazepam')).toMatchObject({ low: 0.5, high: 0.5 });
-    expect(get('lorazepam')).toMatchObject({ low: 1, high: 1 });
-    expect(get('alprazolam')).toMatchObject({ low: 0.5, high: 0.5 });
-    expect(get('chlordiazepoxide')).toMatchObject({ low: 25, high: 25 });
-    expect(get('temazepam')).toMatchObject({ low: 20, high: 20 });
-    expect(get('nitrazepam')).toMatchObject({ low: 10, high: 10 });
-    expect(get('bromazepam')).toMatchObject({ low: 5, high: 6 });
-    expect(get('flurazepam')).toMatchObject({ low: 15, high: 30 });
+describe('benzodiazepine equivalence (Ashton + 2025 joint guideline, diazepam 10 mg anchor)', () => {
+  const item = (id: string) => equivalence('benzo-equivalence').items.find((i) => i.id === id)!;
+
+  it('matches the Ashton table for every agent', () => {
+    const ashton = (id: string) => sourcesOf(item(id)).primary;
+    expect(ashton('diazepam')).toMatchObject({ low: 10, high: 10 });
+    expect(ashton('clobazam')).toMatchObject({ low: 20, high: 20 });
+    expect(ashton('clonazepam')).toMatchObject({ low: 0.5, high: 0.5 });
+    expect(ashton('lorazepam')).toMatchObject({ low: 1, high: 1 });
+    expect(ashton('alprazolam')).toMatchObject({ low: 0.5, high: 0.5 });
+    expect(ashton('chlordiazepoxide')).toMatchObject({ low: 25, high: 25 });
+    expect(ashton('temazepam')).toMatchObject({ low: 20, high: 20 });
+    expect(ashton('nitrazepam')).toMatchObject({ low: 10, high: 10 });
+    expect(ashton('bromazepam')).toMatchObject({ low: 5, high: 6 });
+    expect(ashton('flurazepam')).toMatchObject({ low: 15, high: 30 });
   });
 
-  it('worked examples', () => {
-    expect(eq('benzo-equivalence', 'lorazepam', 'diazepam', 2).low).toBeCloseTo(20);
-    expect(eq('benzo-equivalence', 'clonazepam', 'diazepam', 1).low).toBeCloseTo(20);
+  it('matches the 2025 joint guideline (Table 3 footnotes) where it gives a value', () => {
+    const asam = (id: string) => item(id).bySource?.asam;
+    expect(asam('diazepam')).toMatchObject({ low: 10, high: 10 });
+    expect(asam('clonazepam')).toMatchObject({ low: 0.5, high: 0.5 });
+    expect(asam('lorazepam')).toMatchObject({ low: 2, high: 2 });
+    expect(asam('alprazolam')).toMatchObject({ low: 1, high: 1 });
+  });
+
+  it('spans both sources for lorazepam and alprazolam, and agrees for clonazepam', () => {
+    expect(item('lorazepam').equiv).toMatchObject({ low: 1, high: 2 });
+    expect(item('alprazolam').equiv).toMatchObject({ low: 0.5, high: 1 });
+    expect(item('clonazepam').equiv).toMatchObject({ low: 0.5, high: 0.5 });
+  });
+
+  it('shows a range where the sources disagree', () => {
+    const r = eq('benzo-equivalence', 'lorazepam', 'diazepam', 2);
+    expect(r.low).toBeCloseTo(10); // 2025 guideline: lorazepam 2 mg ≈ diazepam 10 mg
+    expect(r.high).toBeCloseTo(20); // Ashton: lorazepam 1 mg ≈ diazepam 10 mg
+    const back = eq('benzo-equivalence', 'diazepam', 'lorazepam', 10);
+    expect(back.low).toBeCloseTo(1);
+    expect(back.high).toBeCloseTo(2);
+    const lc = eq('benzo-equivalence', 'lorazepam', 'clonazepam', 2);
+    expect(lc.low).toBeCloseTo(0.5);
+    expect(lc.high).toBeCloseTo(1);
+  });
+
+  it('gives a single value where the sources agree', () => {
+    const cd = eq('benzo-equivalence', 'clonazepam', 'diazepam', 1);
+    expect(cd.low).toBeCloseTo(20);
+    expect(cd.high).toBeCloseTo(20);
+    // both sources put alprazolam : lorazepam at 1 : 2, so there is no false width
+    const al = eq('benzo-equivalence', 'alprazolam', 'lorazepam', 1);
+    expect(al.low).toBeCloseTo(2);
+    expect(al.high).toBeCloseTo(2);
+  });
+
+  it('uses Ashton alone for agents the guideline does not list', () => {
     expect(eq('benzo-equivalence', 'diazepam', 'clobazam', 10).low).toBeCloseTo(20);
+    expect(eq('benzo-equivalence', 'diazepam', 'clobazam', 10).high).toBeCloseTo(20);
     expect(eq('benzo-equivalence', 'clonazepam', 'clobazam', 2).low).toBeCloseTo(80);
-    expect(eq('benzo-equivalence', 'alprazolam', 'lorazepam', 1).low).toBeCloseTo(2);
+    const bz = eq('benzo-equivalence', 'bromazepam', 'diazepam', 10);
+    expect(bz.low).toBeCloseTo(100 / 6);
+    expect(bz.high).toBeCloseTo(20);
   });
 
   it('covers 23 agents', () => {
@@ -362,5 +400,102 @@ describe('dementia agents', () => {
     expect(t(20)).toMatch(/^28 mg/);
     expect(t(10)).toMatch(/^14 mg/);
     expect(t(15)).toBeUndefined();
+  });
+});
+
+describe('drug level units (µg/mL ⇄ µmol/L)', () => {
+  const unit = (id: string, amount: number) => factorOf('level-units', `${id}-units`, amount).low;
+
+  it('pins the molecular weight behind every factor (PubChem; matches FDA labels where stated)', () => {
+    const mw: Record<string, number> = {
+      vpa: 144.21, pht: 252.27, cbz: 236.27, cbze: 252.27, pb: 232.23, prm: 218.25, ltg: 256.09, lev: 170.21,
+      mhd: 254.28, tpm: 339.36, zns: 212.23, lcm: 250.29, brv: 212.29, gbp: 171.24, pgb: 159.23, clb: 300.74,
+      nclb: 286.71, cnz: 315.71, esm: 141.17, rfn: 238.19, per: 349.4,
+    };
+    for (const [id, w] of Object.entries(mw)) {
+      expect(unit(id, w), id).toBeCloseTo(1000, 6); // 1 mol/L expressed in µg/mL → exactly 1000 µmol/L per MW µg/mL
+    }
+    expect(Object.keys(mw)).toHaveLength(21);
+  });
+
+  it('worked examples', () => {
+    expect(unit('vpa', 100)).toBeCloseTo(693.4, 1);
+    expect(unit('pht', 20)).toBeCloseTo(79.28, 1);
+    expect(unit('cbz', 12)).toBeCloseTo(50.79, 1);
+    expect(unit('lev', 30)).toBeCloseTo(176.26, 1);
+    expect(unit('ltg', 10)).toBeCloseTo(39.05, 1);
+    expect(unit('pb', 40)).toBeCloseTo(172.24, 1);
+  });
+
+  it('converts back exactly', () => {
+    const back = factorOf('level-units', 'vpa-units~rev', 693.4).low;
+    expect(back).toBeCloseTo(99.99, 1);
+    expect(factorOf('level-units', 'lev-units~rev', unit('lev', 30)).low).toBeCloseTo(30, 9);
+  });
+});
+
+describe('antiseizure formulation switches added in the second research pass', () => {
+  it('perampanel, clobazam and topiramate switches keep the total daily dose', () => {
+    expect(factorOf('asm-oral', 'prm-tab-susp', 8).low).toBe(8);
+    expect(factorOf('asm-oral', 'prm-tab-susp~rev', 8).low).toBeCloseTo(8);
+    expect(factorOf('asm-oral', 'clb-tab-susp', 20).low).toBe(20);
+    expect(factorOf('asm-oral', 'tpm-ir-xr', 200).low).toBe(200);
+    expect(factorOf('asm-oral', 'tpm-ir-xr~rev', 200).low).toBeCloseTo(200);
+  });
+});
+
+describe('dementia: Namzaric (label §2.1 and §2.3)', () => {
+  it('memantine IR (+ donepezil 10 mg) → Namzaric', () => {
+    const t = (n: number) => tableOut('dementia-switch', 'mem-ir-namzaric', n);
+    expect(t(20)).toMatch(/^Namzaric 28 mg\/10 mg/);
+    expect(t(10)).toMatch(/^Namzaric 14 mg\/10 mg/);
+    expect(t(15)).toBeUndefined();
+  });
+  it('memantine XR (+ donepezil 10 mg) → Namzaric', () => {
+    const t = (n: number) => tableOut('dementia-switch', 'mem-xr-namzaric', n);
+    expect(t(28)).toMatch(/^Namzaric 28 mg\/10 mg/);
+    expect(t(14)).toMatch(/^Namzaric 14 mg\/10 mg/);
+    expect(t(21)).toBeUndefined();
+  });
+});
+
+describe('pregabalin: Lyrica → Lyrica CR (label Table 1)', () => {
+  it('maps each listed total daily dose and nothing in between', () => {
+    const t = (n: number) => tableOut('pregabalin-switch', 'pgb-ir-cr', n);
+    expect(t(75)).toBe('82.5 mg once daily');
+    expect(t(150)).toBe('165 mg once daily');
+    expect(t(225)).toMatch(/^247\.5 mg once daily/);
+    expect(t(300)).toBe('330 mg once daily');
+    expect(t(450)).toMatch(/^495 mg once daily/);
+    expect(t(600)).toMatch(/^660 mg once daily/);
+    expect(t(200)).toBeUndefined();
+    expect(t(700)).toBeUndefined();
+  });
+});
+
+describe('immunoglobulin in CIDP (HyQvia and Hizentra labels)', () => {
+  it('HyQvia uses the same dose as the previous IGIV', () => {
+    expect(factorOf('cidp-scig', 'hyqvia-cidp', 70).low).toBe(70);
+  });
+  it('Hizentra is 0.2 g/kg a week, or 0.4 g/kg a week', () => {
+    expect(factorOf('cidp-scig', 'hizentra-cidp-02', 70).low).toBeCloseTo(14);
+    expect(factorOf('cidp-scig', 'hizentra-cidp-04', 70).low).toBeCloseTo(28);
+  });
+});
+
+describe('foslevodopa in the LEDD calculator', () => {
+  it('uses 0.75 × the foslevodopa dose and counts as levodopa-containing for the COMT ratio', () => {
+    const item = ledd().items.find((i) => i.id === 'foslevodopa')!;
+    expect(item.factor).toBe(0.75);
+    expect(item.levodopaContaining).toBe(true);
+    // consistency with the Vyalev label: oral levodopa × 1.3 = foslevodopa, so LED ≈ 1 ÷ 1.3 per mg
+    expect(Math.abs(item.factor! - 1 / 1.3)).toBeLessThan(0.03);
+    const r = computeLedd(ledd().items, [
+      { itemId: 'ld-ir', values: [600] },
+      { itemId: 'foslevodopa', values: [1500] },
+      { itemId: 'comt-ent', values: [800] },
+    ]);
+    // levodopa LED = 600 + 1125 = 1725; entacapone = 1725 × 0.33 = 569.25; total 2294.25
+    expect(r.total).toBeCloseTo(2294.25, 6);
   });
 });

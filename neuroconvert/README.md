@@ -8,14 +8,17 @@ Evidence-based medication converters for neurology. Every conversion shows **how
 
 | Module | Conversions | Main sources |
 | --- | --- | --- |
-| **Antiseizure medications** | IV ⇄ oral for levetiracetam, lacosamide, brivaracetam, valproate, phenobarbital, carbamazepine, phenytoin/fosphenytoin (mg PE). Formulation switches: divalproex DR → ER (label table), valproic acid ⇄ divalproex, carbamazepine tablet → XR / suspension, lamotrigine IR → XR, levetiracetam IR ⇄ ER, oxcarbazepine IR → XR, phenytoin sodium ⇄ free acid | FDA labels; Nelson 1982; Vickery 2018 |
-| **Benzodiazepines** | 23 agents, oral equivalents relative to diazepam 10 mg | Ashton table |
-| **Parkinson's disease** | LEDD calculator (27 agents, correct COMT / istradefylline sequencing); dopamine-agonist equivalence; levodopa IR → CR / Rytary, ropinirole IR → ER, pramipexole IR → ER and salt ⇄ base | Jost 2023 (Table 1); FDA labels |
+| **Antiseizure medications** | IV ⇄ oral for levetiracetam, lacosamide, brivaracetam, valproate, phenobarbital, carbamazepine, phenytoin/fosphenytoin (mg PE). Formulation switches: divalproex DR → ER (label table), valproic acid ⇄ divalproex, carbamazepine tablet → XR / suspension, lamotrigine IR → XR, levetiracetam IR ⇄ ER, oxcarbazepine IR → XR, topiramate IR ⇄ XR, perampanel and clobazam tablet ⇄ suspension, phenytoin sodium ⇄ free acid | FDA labels; Nelson 1982; Vickery 2018; Lambrecht 2011 |
+| **Drug levels** | µg/mL ⇄ µmol/L for 21 antiseizure analytes; phenytoin low-albumin correction (with the evidence against it shown) | PubChem + FDA labels; Kiang 2016, Kane 2013, Buckley 2016 |
+| **Benzodiazepines** | 23 agents relative to diazepam 10 mg, as a range where Ashton and the 2025 joint guideline disagree | Ashton table; Brunner 2025 |
+| **Parkinson's disease** | LEDD calculator (28 agents, correct COMT / istradefylline sequencing); dopamine-agonist equivalence; levodopa IR → CR / Rytary, ropinirole IR → ER, pramipexole IR → ER and salt ⇄ base; **Vyalev and Duopa pump settings** | Jost 2023 (Table 1); FDA labels |
 | **Corticosteroids** | Glucocorticoid equivalence; oral ⇄ IV methylprednisolone in MS relapse | Liu 2013; COPOUSEP (Le Page 2015) |
-| **Botulinum toxins** | onabotulinumtoxinA : incobotulinumtoxinA : abobotulinumtoxinA unit ratios | Scaglione 2016, shown beside every label's "not interchangeable" warning |
-| **Dementia agents** | Rivastigmine oral → patch; memantine IR → XR | FDA labels |
+| **Botulinum toxins** | onabotulinumtoxinA : incobotulinumtoxinA : abobotulinumtoxinA unit ratios, shown beside every label's "not interchangeable" warning | Scaglione 2016 and four randomised trials |
+| **Dementia agents** | Rivastigmine oral → patch; memantine IR → XR; memantine + donepezil → Namzaric | FDA labels |
+| **Pregabalin** | Lyrica → Lyrica CR table, with the gabapentin non-substitution warnings | Lyrica CR, Gralise, Horizant labels |
+| **Immunoglobulin (CIDP)** | HyQvia and Hizentra starting doses | HyQvia and Hizentra labels |
 
-44 individually sourced rules (listed on the in-app Methods page), each with an evidence tier and full references (PubMed / DOI / DailyMed links).
+101 individually sourced rules (listed on the in-app Methods page), each with an evidence tier and full references (PubMed / DOI / DailyMed links). The research behind them, including what was searched for and deliberately not added, is in [`docs/RESEARCH.md`](docs/RESEARCH.md).
 
 ### Evidence tiers
 
@@ -50,11 +53,11 @@ Where no evidence-based conversion could be traced, the app says so instead of g
 ```bash
 npm install
 npm run dev            # http://localhost:5173
-npm test               # 151 tests
+npm test               # 188 tests
 npm run typecheck
 npm run build          # static site in dist/
 npm run build:single   # one portable file: dist-single/index.html (works from file://)
-npm run verify:references   # re-check every PMID/DOI and DailyMed set ID against live records
+npm run verify:references   # re-check all 62 PMIDs/DOIs and DailyMed set IDs against live records (flags label revisions)
 ```
 
 Requires Node ≥ 20.19 (≥ 22.18 for `verify:references`, which imports the TypeScript data file directly).
@@ -76,7 +79,8 @@ src/
   types.ts                 data model: a rule cannot exist without a tier and references
   engine/                  pure, DOM-free functions (convert, LEDD, formatting)
   data/
-    references.ts          36 sources, each with PMID/DOI or DailyMed set ID + version date
+    references.ts          64 sources, each with PMID/DOI or DailyMed set ID + version date
+    findings.ts            research findings and deliberate omissions shown on the Methods page
     modules/*.ts           one file per clinical module
   ui/                      small dependency-free DOM layer (text only, no innerHTML)
 tests/
@@ -99,9 +103,10 @@ The tests exist to make transcription errors loud: `clinical-values.test.ts` pin
 ## Curation notes
 
 - Sources were read in full where accessible. Where a recollection or a secondary source disagreed with the primary source, the primary source won. Two examples: the current ropinirole ER label table differs from an older 2011 label (15 mg → 16 mg, 18 mg → 18 mg now), and the Jost 2023 table sets safinamide at a fixed 150 mg LED (Schade 2020 had proposed 100 mg).
-- Labels were read from DailyMed on 2026-11-16; all cited label versions were current that day. Labels change: run `npm run verify:references` to see whether any have been revised.
+- Labels were read from DailyMed on 16 and 19 November 2026; all cited label versions were current when read. Labels change: on 19 November the verification script caught a Keppra injection revision made three days earlier (the switching text was unchanged). Run `npm run verify:references` to see whether any have been revised since.
 - **Not verifiable during curation:** IV carbamazepine (Carnexiv) is not listed in DailyMed, so its 70 % figure rests on a published review of the labelling plus a pharmacokinetic study, and is marked accordingly.
-- The botulinum toxin ratios come from clinical literature; every current US label says units cannot be converted. The app shows both.
+- The botulinum toxin ratios come from clinical literature (a review and four randomised trials); every current US label says units cannot be converted. The app shows both.
+- Where two sources disagree, the app shows the disagreement instead of picking one: benzodiazepine lorazepam and alprazolam equivalents differ by a factor of two between Ashton and the 2025 joint guideline.
 
 ## Reporting an error
 
