@@ -10,6 +10,8 @@ import { CameraGazeSource } from '../camera/source.js';
 import { drawOverlay } from '../camera/overlay.js';
 import { estimateDistanceCm } from '../camera/features.js';
 import { explainCameraError } from '../camera/errors.js';
+import { cameraReportText } from '../camera/diagnostics.js';
+import { saveTextFile } from '../platform.js';
 import { GazeTracker } from '../core/mapper.js';
 import { gridDots, valDots, dotExtent, dwellFrames, scoreCheck, DOT_MS, MAP_NAMES } from '../core/calibration.js';
 import { sleep, escapeHtml as esc } from '../core/util.js';
@@ -110,23 +112,32 @@ function recentlyTracked(buf) {
   return w.length >= 5 && w.filter((x) => x.ok).length / w.length >= 0.8;
 }
 
+const REPORT_AFTER_MS = 10000; // no face for this long: offer the camera report
+
 /** Waits until the face is tracked and the examiner presses "Start check" ('go'), or picks examiner scoring. */
 function positionFace(src, buf, prev) {
   prev.classList.toggle('big', !S.demo);
   return askPanel(`<div class="chk-text"><div id="chk-live" class="dim">Looking for a face…</div>
         <div class="tip">Both eyes inside the oval · face the light · <b>mask below the nose</b>. Then follow the dot.</div></div>
-        <div class="btns"><button class="primary" id="c-start" disabled>Start check</button><button id="c-ex">Examiner scoring</button></div>`,
+        <div class="btns"><button class="primary" id="c-start" disabled>Start check</button><button id="c-ex">Examiner scoring</button><button id="c-report" class="ghost" hidden>Save a camera report</button></div>`,
   { '#c-start': 'go', '#c-ex': 'examiner' },
   {
     bottom: true, compact: true,
     onShow: (card) => {
-      const liveEl = $('#chk-live', card), start = $('#c-start', card);
+      const liveEl = $('#chk-live', card), start = $('#c-start', card), report = $('#c-report', card);
+      let lastTracked = performance.now();
+      report.onclick = () => {
+        const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+        saveTextFile(`camera-report-${stamp}.txt`, cameraReportText(src, { settings: S.settings, width: innerWidth, height: innerHeight }), 'text/plain');
+      };
       const iv = setInterval(() => {
         const ok = recentlyTracked(buf);
         start.disabled = !ok;
         liveEl.innerHTML = positioningStatus(src, ok);
         $('#cam-info').textContent = ok ? 'tracking' : 'no face';
         if (S.demo) start.disabled = false;
+        if (ok) lastTracked = performance.now();
+        report.hidden = S.demo || performance.now() - lastTracked < REPORT_AFTER_MS;
       }, 200);
       return () => clearInterval(iv);
     },

@@ -7727,7 +7727,7 @@
    "touchTimeoutMs": 6000,
    "windowMs": 1800
   },
-  "VERSION": "1.4.1",
+  "VERSION": "1.4.2",
   "afterClear": [
    [],
    3

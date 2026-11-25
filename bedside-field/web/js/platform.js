@@ -40,7 +40,9 @@ export const usesServiceWorker = () => typeof navigator !== 'undefined' && 'serv
 /**
  * How the camera is started. In the Android app a request that never answers would leave a blank screen, so it gets
  * deadlines and a step read-out; some tablets open the back camera first; some WebViews draw a live <video> as a black
- * box, so the preview is also painted into a canvas. Browsers keep the plain behaviour.
+ * box, so the preview is also painted into a canvas, and the face model is given a canvas copy of each frame rather
+ * than the live <video> (uploading a live camera video to WebGL can yield a blank texture on some Android GPUs, and
+ * then no face is ever found). Browsers keep the plain behaviour.
  */
 export function cameraPolicy() {
   const app = isAndroidApp();
@@ -49,6 +51,7 @@ export function cameraPolicy() {
     modelTimeoutMs: app ? 60000 : 0,
     ensureFrontCamera: app,
     canvasPreview: app,
+    canvasFrames: app,
     showSteps: app,
   };
 }

@@ -253,12 +253,16 @@ export class CameraGazeSource {
     }
   }
 
-  /** The image sent to the model: the video itself, or (zoom-out modes) the video shrunk inside a grey margin. */
+  /**
+   * The image sent to the model: the video itself, a canvas copy of the frame (policy.canvasFrames), or (zoom-out
+   * modes) the frame shrunk inside a grey margin.
+   */
   _frameImage(scale) {
-    if (scale === 1) return this.video;
+    if (scale === 1 && !this.policy.canvasFrames) return this.video;
     const W = this.video.videoWidth || 640, H = this.video.videoHeight || 480;
     if (!this.pad || this.pad.width !== W || this.pad.height !== H) { this.pad = document.createElement('canvas'); this.pad.width = W; this.pad.height = H; }
     const c = this.pad.getContext('2d');
+    if (scale === 1) { c.drawImage(this.video, 0, 0, W, H); return this.pad; }
     c.fillStyle = '#7a7a7a'; c.fillRect(0, 0, W, H);
     c.drawImage(this.video, W * (1 - scale) / 2, H * (1 - scale) / 2, W * scale, H * scale);
     return this.pad;

@@ -131,3 +131,18 @@ test('start() without a camera API fails at the permission step with the message
   const src = new CameraGazeSource({});
   await assert.rejects(src.start({}), (e) => e.stage === 'permission' && /Camera API unavailable/.test(e.message));
 });
+
+test('Android app: the model gets a canvas copy of each full-size frame; browsers send the video itself', () => {
+  const drawn = [];
+  globalThis.document = { createElement: () => ({ width: 0, height: 0, getContext: () => ({ fillStyle: '', fillRect: (...a) => drawn.push(['fill', ...a]), drawImage: (img, ...a) => drawn.push(['draw', ...a]) }) }) };
+  const app = makeSrc(0, { ...cameraPolicy(), canvasFrames: true });
+  const img = app._frameImage(1);
+  assert.notStrictEqual(img, app.video);
+  assert.deepStrictEqual(drawn, [['draw', 0, 0, 640, 480]], 'whole frame, no grey margin');
+  assert.deepStrictEqual([img.width, img.height], [640, 480]);
+  drawn.length = 0;
+  app._frameImage(0.4);
+  assert.deepStrictEqual(drawn, [['fill', 0, 0, 640, 480], ['draw', 192, 144, 256, 192]], 'zoom-out modes unchanged');
+  const browser = makeSrc(0, { ...cameraPolicy(), canvasFrames: false });
+  assert.strictEqual(browser._frameImage(1), browser.video);
+});

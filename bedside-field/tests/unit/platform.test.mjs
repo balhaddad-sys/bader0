@@ -26,9 +26,9 @@ test('in-app browsers are flagged, but never the Bedside Field app itself (also 
 
 test('camera policy: deadlines, front-camera check, canvas preview and step read-out only in the app', () => {
   ua('Mozilla/5.0 Chrome/131');
-  assert.deepStrictEqual(P.cameraPolicy(), { requestTimeoutMs: 0, modelTimeoutMs: 0, ensureFrontCamera: false, canvasPreview: false, showSteps: false });
+  assert.deepStrictEqual(P.cameraPolicy(), { requestTimeoutMs: 0, modelTimeoutMs: 0, ensureFrontCamera: false, canvasPreview: false, canvasFrames: false, showSteps: false });
   ua('Mozilla/5.0 Chrome/131 BedsideFieldApp/1.4.1');
-  assert.deepStrictEqual(P.cameraPolicy(), { requestTimeoutMs: 30000, modelTimeoutMs: 60000, ensureFrontCamera: true, canvasPreview: true, showSteps: true });
+  assert.deepStrictEqual(P.cameraPolicy(), { requestTimeoutMs: 30000, modelTimeoutMs: 60000, ensureFrontCamera: true, canvasPreview: true, canvasFrames: true, showSteps: true });
 });
 
 test('exports and printing go through the bridge in the app', () => {

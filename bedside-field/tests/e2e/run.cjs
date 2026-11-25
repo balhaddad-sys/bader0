@@ -100,6 +100,13 @@ async function cameraNoFace(browser) {
     mirror: await page.evaluate(() => getComputedStyle(document.querySelector('#cam-mirror')).display),
     errors,
   };
+  // No face for 10 s: the "Save a camera report" button appears and saves a text report through the bridge.
+  r.reportHiddenAtFirst = await page.isHidden('#c-report');
+  await page.waitForSelector('#c-report', { state: 'visible', timeout: 25000 });
+  await page.click('#c-report');
+  const saved = (await H.nativeCalls(page)).find((c) => c.call === 'saveFile');
+  r.report = saved && { name: saved.name.replace(/\d{4}-\d\d-\d\d-\d\d-\d\d/, 'DATE'), type: saved.type, firstLine: saved.text.split('\n')[0],
+    lines: saved.text.trim().split('\n').map((l) => l.split(':')[0]), noLabel: !/Bed|MRN/.test(saved.text) };
   await ctx.close();
   return r;
 }

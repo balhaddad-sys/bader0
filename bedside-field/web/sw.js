@@ -1,13 +1,13 @@
 // Offline-first service worker. App shell and the vendored MediaPipe runtime/model are
 // precached at install so the camera mode works with no network at the bedside.
-const VERSION = '1.4.1';
+const VERSION = '1.4.2';
 const SHELL_CACHE = `bf-shell-${VERSION}`;
 const VENDOR_CACHE = 'bf-vendor-1';   // big and rarely changes: kept across app updates
 
 const SHELL = [
   './', 'index.html', 'camera-test.html', 'styles.css', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png',
-  'js/app/flow.js', 'js/app/stage.js', 'js/app/state.js', 'js/camera/errors.js', 'js/camera/features.js',
+  'js/app/flow.js', 'js/app/stage.js', 'js/app/state.js', 'js/camera/diagnostics.js', 'js/camera/errors.js', 'js/camera/features.js',
   'js/camera/overlay.js', 'js/camera/source.js', 'js/core/analysis.js', 'js/core/calibration.js',
   'js/core/detect.js', 'js/core/engine.js', 'js/core/geometry.js', 'js/core/mapper.js', 'js/core/report.js',
   'js/core/sim.js', 'js/core/store.js', 'js/core/util.js', 'js/main.js', 'js/platform.js', 'js/screens/about.js',
