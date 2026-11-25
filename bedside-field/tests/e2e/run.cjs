@@ -130,6 +130,18 @@ async function cameraFace(browser, y4m) {
   return r;
 }
 
+// The double-simultaneous block runs only if each half of the field had >= 50 % of targets seen. A demo patient
+// sitting right at that cut-off (right superior quadrantanopia: one blind and one seeing quadrant on the right) runs
+// it or not by chance, so there the check is that the rule was applied, not which way it went.
+function dssOutcome(d, session) {
+  const h = session?.summary?.hemi;
+  if (!h || !session.summary.hasQuad || d.includeDSS === false) return d.dss;
+  const nearCut = [h.L.rate, h.R.rate].some((r) => Number.isFinite(r) && Math.abs(r - 0.5) < 0.13);
+  if (!nearCut) return d.dss;
+  const eligible = h.L.rate >= 0.5 && h.R.rate >= 0.5;
+  return (d.dss != null) === eligible ? 'at the 50% cut-off: rule applied' : `at the 50% cut-off: RULE VIOLATED (ran=${d.dss != null}, L=${h.L.rate}, R=${h.R.rate})`;
+}
+
 const DEMOS = [
   { profile: 'rhh', method: 'camera' },
   { profile: 'lhh', method: 'examiner' },
@@ -155,7 +167,7 @@ const DEMOS = [
   }
   const result = {
     smoke: smk, phone: ph, cameraDenied: denied, cameraNoFace: noface, cameraFace: face,
-    demos: demos.map(({ session, report, ...d }) => ({ ...d, reportStart: num(report).replace(/[A-Z][a-z]{2} #, # · #:# [AP]M/, 'DATE') })),
+    demos: demos.map(({ session, report, ...d }) => ({ ...d, dss: dssOutcome(d, session), reportStart: num(report).replace(/[A-Z][a-z]{2} #, # · #:# [AP]M/, 'DATE') })),
   };
   fs.writeFileSync(path.join(OUT, 'e2e-result.json'), JSON.stringify(result, null, 2));
   if (RECORD) { fs.writeFileSync(EXPECTED, JSON.stringify(result, null, 2)); console.log(`recorded ${EXPECTED} in ${Math.round((Date.now() - t0) / 1000)} s`); return; }

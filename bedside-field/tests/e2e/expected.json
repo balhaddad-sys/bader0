@@ -134,7 +134,7 @@
       ],
       "csvHeader": "idx,block,kind,locId,quad,ring,outcome,latency_ms,score_ms,first,stray_taps,valid_frac,fix_gx_deg,retried,reason",
       "pattern": "Right superior (upper) quadrantanopia pattern",
-      "dss": "Double simultaneous stimulation not interpretable for the right side",
+      "dss": "at the 50% cut-off: rule applied",
       "history": 1,
       "reportStart": "Bedside visual field screen Nov #, #, #:# AM · DEMO · Right superior quadrantanopia SIMULATED DEMO PATIENT — not real data Eye movement (camera-tracked) Bo"
     },
