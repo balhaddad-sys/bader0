@@ -89,7 +89,7 @@ async function cameraDenied(browser) {
 }
 
 async function cameraNoFace(browser) {
-  const { ctx, page, errors } = await H.openApp(browser, WEB);
+  const { ctx, page, errors } = await H.openApp(browser, WEB, { settings: { label: 'Bed 14 / MRN 5521' } });
   await page.click('input[name=method][value=camera]');
   await page.click('#btn-start'); await page.click('#btn-guide-go');
   await page.waitForSelector('#chk-live', { timeout: 30000 });
@@ -106,7 +106,7 @@ async function cameraNoFace(browser) {
   await page.click('#c-report');
   const saved = (await H.nativeCalls(page)).find((c) => c.call === 'saveFile');
   r.report = saved && { name: saved.name.replace(/\d{4}-\d\d-\d\d-\d\d-\d\d/, 'DATE'), type: saved.type, firstLine: saved.text.split('\n')[0],
-    lines: saved.text.trim().split('\n').map((l) => l.split(':')[0]), noLabel: !/Bed|MRN/.test(saved.text) };
+    lines: saved.text.trim().split('\n').map((l) => l.split(':')[0]), noLabel: !/Bed 14|5521/.test(saved.text) }; // the patient label must never be in the report
   await ctx.close();
   return r;
 }
