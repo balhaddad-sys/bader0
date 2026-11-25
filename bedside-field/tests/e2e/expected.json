@@ -68,7 +68,28 @@
     "status": "Camera is on, # frames seen, no face found. Hold the phone at arm’s length with ",
     "startDisabled": true,
     "mirror": "block",
-    "errors": []
+    "errors": [],
+    "reportHiddenAtFirst": true,
+    "report": {
+      "name": "camera-report-DATE.txt",
+      "type": "text/plain",
+      "firstLine": "Bedside Field camera report",
+      "lines": [
+        "Bedside Field camera report",
+        "time",
+        "app",
+        "browser engine",
+        "screen",
+        "camera start-up step",
+        "camera",
+        "video",
+        "frames processed",
+        "detection mode",
+        "light (centre/edge, 0-255)",
+        "camera policy"
+      ],
+      "noLabel": true
+    }
   },
   "cameraFace": {
     "tracked": "Face tracked · # fps",
