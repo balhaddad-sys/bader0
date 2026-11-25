@@ -15,13 +15,31 @@ export function dotExtent(geo) {
   return { dx: +clamp(0.7 * e.h, 8, 18).toFixed(1), dy: +clamp(0.6 * e.v, 5, 9).toFixed(1) };
 }
 
-export const DOT_MS = 1400;       // each dot stays this long
+export const DOT_MS = 1400;       // each dot stays at least this long
 export const SETTLE_MS = 650;     // after the dot jumps the eyes have landed and settled by then
+export const DOT_MIN_FRAMES = 8;  // steady frames wanted per dot (the fit trims outliers and needs 6)
+export const DOT_MAX_MS = 4000;   // ...but a dot never stays longer than this
 
 /** Recorded dwell -> the frames kept for fitting (steady part of the dwell, usable frames only). */
-export function dwellFrames(buf, t0) {
-  return buf.filter((x) => x.t >= t0 + SETTLE_MS && x.t <= t0 + DOT_MS && x.ok)
+export function dwellFrames(buf, t0, tEnd = t0 + DOT_MS) {
+  return buf.filter((x) => x.t >= t0 + SETTLE_MS && x.t <= tEnd && x.ok)
     .map((x) => ({ x: x.x, y: x.y, hx: x.hx, hy: x.hy, xr: x.xr, xl: x.xl, yr: x.yr, yl: x.yl }));
+}
+
+/**
+ * Keeps a dot up until it has enough steady frames. A device that tracks at ~30 fps has them after DOT_MS, so the
+ * dot moves on exactly as before; a slow one (a phone tracking on the CPU at ~8 fps) or a face that briefly left the
+ * picture gets more time, up to DOT_MAX_MS, instead of losing the dot. `onShort()` is called while waiting.
+ */
+export async function collectDot(buf, t0, { now, sleep, onShort = null }) {
+  await sleep(Math.max(0, t0 + DOT_MS - now()));
+  let frames = dwellFrames(buf, t0);
+  while (frames.length < DOT_MIN_FRAMES && now() - t0 < DOT_MAX_MS) {
+    onShort?.();
+    await sleep(100);
+    frames = dwellFrames(buf, t0, now());
+  }
+  return frames;
 }
 
 /** The same dwells, with x/y taken from one eye instead of the two-eye average. */

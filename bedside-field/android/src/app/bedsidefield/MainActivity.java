@@ -71,12 +71,13 @@ public class MainActivity extends Activity {
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(BG);
         root.addView(web, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        // Keep the page out from under a camera notch / punch-hole (edge-to-edge is enforced on Android 15+).
+        // Keep the page out from under a camera notch / punch-hole (edge-to-edge is enforced on Android 15+), with equal
+        // padding on both sides so the page stays centred on the physical screen.
         root.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
             @Override
             public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
-                int[] c = cutoutInsets(insets);
-                v.setPadding(c[0], c[1], c[2], c[3]);
+                int[] p = ScreenInsets.centred(cutoutInsets(insets));
+                v.setPadding(p[0], p[1], p[2], p[3]);
                 return insets;
             }
         });

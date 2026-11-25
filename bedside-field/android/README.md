@@ -8,13 +8,14 @@ service worker. The page detects the app (user-agent token `BedsideFieldApp`, or
 ```
 src/app/bedsidefield/
   MainActivity.java       window (full-screen landscape, screen kept on, cutout padding), WebView setup, lifecycle
+  ScreenInsets.java       pure helper: equal padding on both sides of a camera cutout, so the page stays centred
   AssetServer.java        serves assets/www; links to other sites open outside the app
   WebFiles.java           pure helpers: URL path → asset, MIME types, safe export names (JVM-tested)
   NativeBridge.java       window.BedsideNative: saveFile, print, cameraReport, frontCameraId
   Exports.java            CSV/JSON to Download/BedsideField (MediaStore on Android 10+), print dialog
   CameraPermissions.java  page camera requests ↔ Android camera permission (asked at start-up; one prompt at a time)
   CameraDoctor.java       native diagnosis when the camera will not start (permission, device policy, busy, open test)
-test/WebFilesTest.java    plain-JVM checks, run by build.sh before packaging
+test/*Test.java           plain-JVM checks for the pure helpers, run by build.sh before packaging
 ```
 
 What the app adds to the web version: camera permission asked at launch; exports saved to

@@ -24,8 +24,10 @@ fi
 rm -rf "$OUT" && mkdir -p "$OUT/gen" "$OUT/classes" "$OUT/test" "$OUT/assets"
 
 echo "› unit checks (plain JVM)"
-javac -nowarn -Xlint:-options -source 8 -target 8 -encoding UTF-8 -d "$OUT/test" src/app/bedsidefield/WebFiles.java test/WebFilesTest.java
+javac -nowarn -Xlint:-options -source 8 -target 8 -encoding UTF-8 -d "$OUT/test" \
+  src/app/bedsidefield/WebFiles.java src/app/bedsidefield/ScreenInsets.java test/WebFilesTest.java test/ScreenInsetsTest.java
 java -cp "$OUT/test" app.bedsidefield.WebFilesTest
+java -cp "$OUT/test" app.bedsidefield.ScreenInsetsTest
 
 echo "› web app"
 cp -r ../web "$OUT/assets/www"

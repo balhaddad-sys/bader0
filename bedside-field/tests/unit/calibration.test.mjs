@@ -6,7 +6,7 @@ import { mulberry32 } from '../../web/js/core/util.js';
 import { fitCalibration } from '../../web/js/core/detect.js';
 import { fitMapping, validateMapping, eyeAgreement, ACC } from '../../web/js/core/mapper.js';
 import { Geometry } from '../../web/js/core/geometry.js';
-import { gridDots, valDots, dotExtent, dwellFrames, asEye, scoreCheck, sessionCalSummary } from '../../web/js/core/calibration.js';
+import { gridDots, valDots, dotExtent, dwellFrames, collectDot, asEye, scoreCheck, sessionCalSummary, DOT_MS, DOT_MAX_MS, DOT_MIN_FRAMES } from '../../web/js/core/calibration.js';
 
 function reference(rawCal, rawVal, s, demo) {
   const asEye = (raw, eye) => eye === 'both' ? raw : raw.map((p) => ({ ...p,
@@ -114,4 +114,37 @@ test('sessionCalSummary rounds and keeps only the summary fields', () => {
   const s = sessionCalSummary({ okX: true, okY: false, acc: 1.23456, accX: 0.5, accY: null, prec: 2.3456, grade: 'good', M: { model: 'lin', useHead: 1 }, agree: { ok: 0 }, trackEye: 'left', extra: 'dropped' });
   assert.deepStrictEqual(s, { okX: true, okY: false, noiseDegX: undefined, noiseDegY: undefined, kx: undefined, ky: undefined, fps: undefined, flipped: undefined,
     acc: 1.23, accX: 0.5, accY: null, prec: 2.35, grade: 'good', model: 'lin', headCorr: true, eyesAgree: false, markerOff: null, camMode: null, trackEye: 'left' });
+});
+
+// Fake clock: samples arrive at `fps` while the dwell "sleeps"; `lostUntil` ms with no usable face.
+async function dwell(fps, { lostUntil = 0, okEvery = 1 } = {}) {
+  let t = 0; const buf = []; let next = 0, k = 0;
+  const advance = (ms) => { const end = t + ms; while (next <= end) { buf.push({ t: next, ok: next >= lostUntil && k++ % okEvery === 0, x: next, y: 0 }); next += 1000 / fps; } t = end; };
+  let shorts = 0;
+  const frames = await collectDot(buf, 0, { now: () => t, sleep: async (ms) => advance(ms), onShort: () => shorts++ });
+  return { frames, end: t, shorts };
+}
+
+test('fast camera: the dot moves on after DOT_MS with the same frames as before', async () => {
+  const r = await dwell(30);
+  assert.equal(r.end, DOT_MS);
+  assert.equal(r.shorts, 0);
+  assert.ok(r.frames.length >= DOT_MIN_FRAMES);
+  assert.ok(r.frames.every((f) => f.x >= 650 && f.x <= DOT_MS));
+});
+
+test('slow camera (~6 fps): the dot stays until 8 steady frames, then moves on', async () => {
+  const r = await dwell(6);
+  assert.equal(r.frames.length, DOT_MIN_FRAMES);
+  assert.ok(r.end > DOT_MS && r.end < DOT_MAX_MS, `ended at ${r.end}`);
+  assert.ok(r.shorts > 0);
+});
+
+test('face lost for a while: the dot waits for it, but never beyond DOT_MAX_MS', async () => {
+  const back = await dwell(30, { lostUntil: 2500 });
+  assert.ok(back.frames.length >= DOT_MIN_FRAMES && back.end <= DOT_MAX_MS);
+  assert.ok(back.frames.every((f) => f.x >= 2500));
+  const gone = await dwell(30, { lostUntil: 99999 });
+  assert.equal(gone.frames.length, 0);
+  assert.ok(gone.end >= DOT_MAX_MS && gone.end < DOT_MAX_MS + 200, `gave up at ${gone.end}`);
 });

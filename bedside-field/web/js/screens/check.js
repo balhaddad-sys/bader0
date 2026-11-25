@@ -13,7 +13,7 @@ import { explainCameraError } from '../camera/errors.js';
 import { cameraReportText } from '../camera/diagnostics.js';
 import { saveTextFile } from '../platform.js';
 import { GazeTracker } from '../core/mapper.js';
-import { gridDots, valDots, dotExtent, dwellFrames, scoreCheck, DOT_MS, MAP_NAMES } from '../core/calibration.js';
+import { gridDots, valDots, dotExtent, collectDot, scoreCheck, MAP_NAMES } from '../core/calibration.js';
 import { sleep, escapeHtml as esc } from '../core/util.js';
 
 export async function runCheck(retried = false) {
@@ -94,7 +94,8 @@ function positioningStatus(src, ok) {
   if (ok) {
     const dEst = src.lastFeat?.ipdPx ? estimateDistanceCm(src.lastFeat.ipdPx, src.frameW) : NaN;
     const dTxt = Number.isFinite(dEst) ? ` · distance ≈ ${Math.round(dEst)} cm (rough; set ${s.distanceCm})` : '';
-    return `<span style="color:#3ddc97">Face tracked</span>${dTxt} · ${src.fps.toFixed(0)} fps`;
+    const edge = faceAtEdge(src.lastFeat?.lm) ? ' · <b>the face touches the edge of the camera picture</b>: tilt or move the tablet so the whole face is in view' : '';
+    return `<span style="color:#3ddc97">Face tracked</span>${dTxt} · ${src.fps.toFixed(0)} fps${edge}`;
   }
   if (!src.diagnostics) return 'Looking for a face and open eyes…';
   const d = src.diagnostics();
@@ -103,6 +104,14 @@ function positioningStatus(src, ok) {
   if (d.frames === 0) return `Camera is on (${d.cam}) but the tracking model has not produced a frame yet… <small>video ${d.video}</small>`;
   if (d.faces === 0) return `Camera is on, ${d.frames} frames seen, <b>no face found</b>.${lightTxt || ' Hold the phone at arm’s length with the face inside the oval, both eyes visible.'} <small>mode: ${d.mode} · ${d.video}${L ? ` · light ${L.centre}/${L.edge}` : ''}${d.label ? ` · ${esc(d.label)}` : ''}</small>`;
   return `Face seen (${d.faces}/${d.frames} frames) but not steadily: hold still, open both eyes fully.${lightTxt} <small>mode: ${d.mode} · ${d.fps} fps${L ? ` · light ${L.centre}/${L.edge}` : ''}</small>`;
+}
+
+/** The face reaches the border of the camera frame (it is then easily lost when the eyes or head move). */
+function faceAtEdge(lm) {
+  if (!lm) return false;
+  let x0 = 1, x1 = 0, y0 = 1, y1 = 0;
+  for (const p of lm) { if (p.x < x0) x0 = p.x; if (p.x > x1) x1 = p.x; if (p.y < y0) y0 = p.y; if (p.y > y1) y1 = p.y; }
+  return x0 < 0.03 || x1 > 0.97 || y0 < 0.02 || y1 > 0.98;
 }
 
 /** At least 80 % of the last 600 ms of frames had a usable face. */
@@ -161,8 +170,11 @@ async function runDots(src, buf, prev) {
     $('#hud-prog').textContent = `${n}/${total}`;
     src.followDot?.(px, py);
     const t0 = performance.now();
-    await sleep(DOT_MS);
-    return { dx: px, dy: py, frames: dwellFrames(buf, t0) };
+    const frames = await collectDot(buf, t0, {
+      now: () => performance.now(), sleep,
+      onShort: () => { $('#hint').textContent = recentlyTracked(buf) ? `Follow the dot  ${n}/${total}` : 'Face lost: keep the face in the camera picture'; },
+    });
+    return { dx: px, dy: py, frames };
   };
   const rawCal = [], rawVal = [];
   if (!S.demo && 'eyeMode' in src) src.eyeMode = s.eye; // a repeated check starts again from both eyes

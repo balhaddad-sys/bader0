@@ -1,6 +1,6 @@
 {
   "name": "bedside-field",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "private": true,
   "description": "Offline bedside visual-field screening (PWA + Android WebView wrapper)",
   "type": "module",

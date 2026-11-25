@@ -1,6 +1,6 @@
 // Offline-first service worker. App shell and the vendored MediaPipe runtime/model are
 // precached at install so the camera mode works with no network at the bedside.
-const VERSION = '1.4.2';
+const VERSION = '1.4.3';
 const SHELL_CACHE = `bf-shell-${VERSION}`;
 const VENDOR_CACHE = 'bf-vendor-1';   // big and rarely changes: kept across app updates
 
