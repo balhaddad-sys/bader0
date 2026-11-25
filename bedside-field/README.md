@@ -13,7 +13,7 @@ The camera (`getUserMedia`) and service workers only work in a **secure context*
 **On a computer, to try it:**
 
 ```bash
-cd bedside-field
+cd bedside-field/web
 python3 -m http.server 8765        # or: npx serve .
 # open http://localhost:8765
 ```
@@ -23,7 +23,7 @@ python3 -m http.server 8765        # or: npx serve .
 1. Open the HTTPS URL once on the tablet, on Wi-Fi. The service worker precaches the app shell and the eye-tracking model (about 17 MB in total).
 2. Allow the camera when asked.
 3. Add to Home Screen (iPad: Share → Add to Home Screen; Android/Chrome: ⋮ → Install app). It then opens full screen and works with no network.
-4. When you ship an edit, bump `VERSION` in `sw.js` (and `js/store.js`) so installed copies pick up the new files.
+4. When you ship an edit, bump `VERSION` in `web/sw.js` (and `web/js/core/store.js`) so installed copies pick up the new files.
 
 ### Camera troubleshooting
 
@@ -105,20 +105,46 @@ Nothing leaves the device. There is no analytics, no server and no account. The 
 ## 9. Project layout
 
 ```
-index.html, styles.css, manifest.webmanifest, sw.js
-js/app.js        screens, flow, calibration, tracking check, settings
-js/engine.js     trial scheduling and the camera / examiner / touch trial flows
-js/detect.js     pure detection maths (calibration fit, fixation gate, saccade scoring)
-js/mapper.js     2D iris→gaze map: fit, model selection, head correction, out-of-sample validation, smoothing
-js/gaze.js       camera + MediaPipe, iris features
-js/geometry.js   pixels ⇄ degrees, target locations
-js/stimulus.js   canvas renderer (anchor, discs, Gabor, touch demo, return ring)
-js/analysis.js   quadrant classes, patterns, DSS, flags, reliability
-js/report.js     field map SVG, report HTML, CSV
-js/store.js      localStorage settings and sessions
-js/sim.js        virtual patient for demo and tests
-vendor/          MediaPipe Face Mesh (Apache-2.0), see NOTICE
-tests/           node --test tests/*.test.mjs
+web/                    the app: plain static files, deploy this folder as-is (no build step)
+  index.html, styles.css, manifest.webmanifest, sw.js, camera-test.html, NOTICE
+  js/main.js            entry point: wires the screens, registers the service worker (browser only)
+  js/platform.js        browser PWA vs Android app: environment checks, camera policy, the BedsideNative bridge
+  js/core/              pure logic, no DOM (unit-tested)
+    geometry.js           pixels ⇄ degrees, target locations
+    detect.js             detection maths: calibration fit, fixation gate, saccade scoring
+    mapper.js             2D iris→gaze map: fit, model selection, head correction, validation, smoothing
+    calibration.js        tracking-check dots and scoring (which eye to track, accuracy gates)
+    engine.js             trial scheduling and the camera / examiner / touch trial flows
+    analysis.js           quadrant classes, patterns, DSS, flags, reliability
+    report.js             field map SVG, report HTML, CSV
+    store.js              localStorage settings and sessions
+    sim.js                virtual patient for the demo and tests
+    util.js               maths, randomness, formatting
+  js/camera/            front camera + MediaPipe → gaze samples
+    source.js             camera start-up, detection modes, GPU→CPU fallback, frame loop
+    features.js           iris features from face landmarks
+    errors.js             plain-language camera error messages
+    overlay.js            eye outlines on the preview
+  js/ui/                DOM helpers, toast and panels (dom.js), stimulus canvas renderer (stimulus.js)
+  js/app/               shared state, the test stage (pause, buttons, gaze ring), the session flow
+  js/screens/           one module per screen: home, calibrate, guide, check, results, history, settings, about
+  vendor/               MediaPipe Face Mesh (Apache-2.0), see NOTICE
+android/                Android app: a WebView wrapper around web/ (see android/README.md)
+tests/
+  unit/                 node --test: pure modules, calibration scoring, camera state machine, platform, golden lock
+  golden/               behaviour lock: snapshot of every pure module's outputs on fixed inputs
+  e2e/                  Playwright: drives the real screens the way the Android app serves them
+  fixtures/             recorded sessions and a face frame for the fake camera
 ```
 
-Plain ES modules, no build step, no dependencies to install. Run the unit tests with `node --test tests/*.test.mjs` (Node 18+).
+Plain ES modules, no build step, no runtime dependencies. From this folder:
+
+```bash
+npm test                 # unit + golden tests (Node 18+)
+npm run test:e2e         # end-to-end, needs Playwright with Chromium (about 4 minutes)
+npm run serve            # http://localhost:8765
+npm run apk              # Android APK (see android/README.md)
+```
+
+When you ship an edit, bump `VERSION` in `web/sw.js` and `web/js/core/store.js` so installed copies pick up the new
+files, and add any new JS file to the `SHELL` list in `web/sw.js` so it works offline.

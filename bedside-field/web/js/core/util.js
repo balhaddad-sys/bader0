@@ -1,7 +1,4 @@
-// Small shared helpers (no DOM side effects at import time).
-
-export const $ = (sel, root = document) => root.querySelector(sel);
-export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+// Small pure helpers: maths, randomness, formatting. No DOM and no platform code (see ui/dom.js, platform.js).
 
 export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 export const deg2rad = (d) => (d * Math.PI) / 180;
@@ -47,43 +44,10 @@ export const rand = (lo, hi, rng = Math.random) => lo + (hi - lo) * rng();
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
-export function el(tag, props = {}, ...kids) {
-  const n = document.createElement(tag);
-  for (const [k, v] of Object.entries(props || {})) {
-    if (v === false || v == null) continue;
-    if (k === 'class') n.className = v;
-    else if (k === 'html') n.innerHTML = v;
-    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);
-    else n.setAttribute(k, v === true ? '' : v);
-  }
-  for (const kid of kids.flat()) {
-    if (kid == null || kid === false) continue;
-    n.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
-  }
-  return n;
-}
-
 export const fmtMs = (v) => (Number.isFinite(v) ? `${Math.round(v)} ms` : '—');
 export const fmtPct = (v) => (Number.isFinite(v) ? `${Math.round(v * 100)}%` : '—');
 export const fmtDeg = (v, d = 0) => (Number.isFinite(v) ? `${v.toFixed(d)}°` : '—');
 
 export function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-// True inside the Android app (a WebView wrapper that exposes `BedsideNative` and adds a UA token).
-export const NATIVE = typeof window !== 'undefined' && (!!window.BedsideNative || /BedsideFieldApp/.test(navigator.userAgent));
-
-export function downloadBlob(filename, text, type = 'application/json') {
-  // A WebView cannot save blob: downloads, so the Android app writes the file to Downloads/BedsideField itself.
-  if (typeof window !== 'undefined' && window.BedsideNative?.saveFile) { window.BedsideNative.saveFile(filename, type, String(text)); return; }
-  const blob = new Blob([text], { type });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.append(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }

@@ -3,7 +3,7 @@
 // A gaze SAMPLE is { t, ok, x, y }:
 //   t   ms timestamp (performance.now() clock)
 //   ok  false when no face / eye closed (blink) / low confidence
-//   x,y raw iris-offset features, normalised by eye width (see gaze.js).
+//   x,y raw iris-offset features, normalised by eye width (see camera/features.js).
 //       Their sign and scale are device-specific, so the tracking check fits a
 //       per-axis linear map  feature = a + k * gaze_degrees  (screen-right / screen-down positive).
 //
