@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<title>Camera test — Bedside Field</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0b0f14; color: #e6edf3; font: 16px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; padding: 16px max(16px, env(safe-area-inset-left)); }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p { margin: 8px 0; }
+  .dim { color: #8b98a5; font-size: 14px; }
+  button, a.btn { display: block; width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #2b3744; background: #18222d; color: #e6edf3; font: inherit; font-weight: 600; text-align: center; text-decoration: none; }
+  button.primary { background: #2f81f7; border-color: #2f81f7; color: #fff; }
+  .card { background: #121a23; border: 1px solid #243140; border-radius: 12px; padding: 12px 14px; margin: 12px 0; }
+  .ok { border-color: #238636; } .bad { border-color: #da3633; } .warn { border-color: #9e6a03; }
+  .ok h2 { color: #3fb950; } .bad h2 { color: #ff7b72; } .warn h2 { color: #d29922; }
+  h2 { font-size: 17px; margin: 0 0 6px; }
+  ol { margin: 6px 0 6px 20px; padding: 0; } li { margin: 5px 0; }
+  video { width: 100%; max-height: 52vh; border-radius: 10px; background: #000; transform: scaleX(-1); }
+  pre { white-space: pre-wrap; word-break: break-word; font: 13px/1.4 ui-monospace, Menlo, Consolas, monospace; margin: 0; color: #c9d1d9; }
+  .row { display: flex; gap: 10px; } .row > * { flex: 1; }
+</style>
+</head>
+<body>
+<h1>Camera test</h1>
+<p class="dim">A stand-alone page, with none of the app's code. It asks the browser for the camera directly and says exactly what the browser answered.</p>
+
+<button class="primary" id="go">Test camera</button>
+
+<div id="result"></div>
+<video id="v" playsinline muted autoplay hidden></video>
+<div class="row"><button id="stop" hidden>Stop camera</button></div>
+
+<div class="card"><h2>This browser</h2><pre id="env">…</pre></div>
+<div class="card"><h2>Report (screenshot this)</h2><pre id="report">Tap “Test camera”.</pre></div>
+<a class="btn" href="./">Open the Bedside Field app</a>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const ua = navigator.userAgent || '';
+  const inApp = /FBAN|FBAV|Instagram|Line\/|WhatsApp|Snapchat|TikTok|MicroMessenger|Twitter|; wv\)|GSA\/|Claude/i.test(ua);
+  const chromeVer = (ua.match(/(?:Chrome|CriOS)\/(\d+)/) || [])[1] || '?';
+  const lines = [];
+  let permState = 'unknown', stream = null;
+
+  const displayMode = ['fullscreen', 'standalone', 'minimal-ui', 'browser'].find((m) => matchMedia(`(display-mode: ${m})`).matches) || 'browser';
+  let inFrame = false; try { inFrame = window.top !== window.self; } catch { inFrame = true; }
+  let policy = 'n/a'; try { if (document.featurePolicy) policy = document.featurePolicy.allowsFeature('camera') ? 'camera allowed' : 'camera BLOCKED by page policy'; } catch {}
+
+  async function appVersion() {
+    try { const k = (await caches.keys()).filter((x) => x.startsWith('bf-shell-')); return k.length ? k.map((x) => x.slice(9)).join(', ') : 'not cached yet'; } catch { return 'n/a'; }
+  }
+  async function readPerm() {
+    try {
+      const p = await navigator.permissions.query({ name: 'camera' });
+      permState = p.state; p.onchange = () => { permState = p.state; paintEnv(); };
+    } catch { permState = 'not readable here'; }
+  }
+  async function paintEnv() {
+    const ver = await appVersion();
+    $('env').textContent = [
+      `Secure context (HTTPS): ${window.isSecureContext ? 'yes' : 'NO'}`,
+      `Address: ${location.protocol}//${location.host}`,
+      `Camera API present: ${navigator.mediaDevices && navigator.mediaDevices.getUserMedia ? 'yes' : 'NO'}`,
+      `Camera permission now: ${permState}`,
+      `Page policy: ${policy}`,
+      `Inside a frame: ${inFrame ? 'YES' : 'no'}`,
+      `Opened as: ${displayMode === 'browser' ? 'normal browser tab' : 'installed app (' + displayMode + ')'}`,
+      `Browser: Chrome/Chromium ${chromeVer}${inApp ? ' — looks like an IN-APP browser' : ''}`,
+      `Bedside Field cached version: ${ver}`,
+    ].join('\n');
+  }
+
+  function say(cls, title, html) { $('result').innerHTML = `<div class="card ${cls}"><h2>${title}</h2>${html}</div>`; }
+
+  const FIX_PERM = `<ol>
+    <li><b>Chrome:</b> tap the icon at the left of the address bar (lock or sliders) → <b>Permissions</b> (or Site settings) → <b>Camera → Allow</b>. If you see <b>Reset permissions</b>, tap it.</li>
+    <li>Or ⋮ → <b>Settings → Site settings → Camera</b>: switch on “Sites can ask to use your camera”, and remove this site from the <b>Blocked</b> list.</li>
+    <li><b>Android itself:</b> Settings → Apps → Chrome → Permissions → Camera → “Allow only while using the app”. Also check the phone's <b>Camera access</b> privacy switch (Quick Settings, or Settings → Privacy) is on.</li>
+    <li>Reload this page, tap <b>Test camera</b>, and when Chrome asks, choose <b>Allow</b> (“While using the app”).</li></ol>`;
+
+  function explain(e) {
+    const n = e && e.name || 'Error', m = e && e.message || String(e);
+    if (/denied by system/i.test(m)) return ['bad', 'Android is blocking Chrome’s camera', `<p>The phone's own permission is off for this browser (“${m}”). This is a phone setting, not a website setting:</p><ol><li>Settings → Apps → Chrome → Permissions → Camera → “Allow only while using the app”.</li><li>Check the phone's <b>Camera access</b> privacy switch is on (Quick Settings, or Settings → Privacy).</li><li>Reload this page and tap <b>Test camera</b> again.</li></ol>`];
+    if (/dismiss/i.test(m)) return ['bad', 'The permission prompt was dismissed', `<p>The prompt was closed without tapping Allow. Chrome counts that as a “no”, and after a few of them it stops showing the prompt for a while and refuses silently. Reset the site's permission, then try again.</p>${FIX_PERM}`];
+    if (n === 'NotAllowedError' || n === 'SecurityError') return ['bad', 'Camera permission is blocked for this site', `<p>Chrome refused (“${m}”). Either you tapped Block earlier, or the site is on Chrome's Blocked list.${inApp ? ' You are also inside an in-app browser: open this link in Chrome itself (⋮ → Open in Chrome).' : ''}</p>${FIX_PERM}`];
+    if (n === 'NotReadableError' || n === 'AbortError') return ['bad', 'The camera could not be started', `<p>Permission was fine but the camera would not open (“${m}”). Close other apps using the camera (camera app, video calls, other browser tabs), check the phone's <b>Camera access</b> privacy switch, then try again. If it keeps failing, restart the phone.</p>`];
+    if (n === 'NotFoundError' || n === 'OverconstrainedError') return ['bad', 'No camera found', `<p>The browser reports no usable camera (“${m}”).</p>`];
+    if (n === 'TypeError') return ['bad', 'Camera API unavailable', `<p>This page is not allowed to use the camera API (“${m}”). It needs HTTPS in a normal browser tab.</p>`];
+    return ['bad', 'Camera error', `<p>${n}: ${m}</p>`];
+  }
+
+  async function attempt(label, constraints) {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia(constraints);
+      return { label, ok: true, stream: s };
+    } catch (e) { return { label, ok: false, err: e }; }
+  }
+
+  async function run() {
+    const t0 = Date.now();
+    $('go').disabled = true; $('stop').hidden = true;
+    say('warn', 'Asking the browser…', '<p>If Chrome shows a camera prompt, tap <b>Allow</b> (“While using the app”).</p>');
+    const out = [`Time: ${new Date().toLocaleString()}`, `Chrome ${chromeVer}, ${displayMode}${inApp ? ', in-app browser' : ''}`, `Permission before: ${permState}`];
+    if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+      const r = explain(new TypeError('navigator.mediaDevices is undefined (needs HTTPS)'));
+      say(r[0], r[1], r[2]); out.push('Result: no camera API'); $('report').textContent = out.join('\n'); $('go').disabled = false; return;
+    }
+    const a = await attempt('front camera', { video: { facingMode: 'user' }, audio: false });
+    out.push(`Try 1 (front camera): ${a.ok ? 'OK' : (a.err.name + ' — ' + a.err.message)} (${Date.now() - t0} ms)`);
+    let win = a.ok ? a : null, last = a;
+    if (!a.ok && !/NotAllowed|Security/.test(a.err.name)) {
+      const b = await attempt('any camera', { video: true, audio: false });
+      out.push(`Try 2 (any camera): ${b.ok ? 'OK' : (b.err.name + ' — ' + b.err.message)}`);
+      if (b.ok) win = b; last = b;
+    }
+    await readPerm();
+    out.push(`Permission after: ${permState}`);
+    if (win) {
+      stream = win.stream;
+      const tr = stream.getVideoTracks()[0], st = tr.getSettings ? tr.getSettings() : {};
+      const v = $('v'); v.srcObject = stream; v.hidden = false; $('stop').hidden = false;
+      try { await v.play(); } catch {}
+      let devs = 0; try { devs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'videoinput').length; } catch {}
+      out.push(`Camera: ${tr.label || '(no label)'} · ${st.width || '?'}×${st.height || '?'} @ ${Math.round(st.frameRate || 0)} fps · facing ${st.facingMode || '?'} · ${devs} camera(s)`);
+      out.push('RESULT: CAMERA WORKS in this browser.');
+      say('ok', 'The camera works', '<p>This browser can use the camera on this site. If the Bedside Field app still shows a camera error, tell me — then the problem is in the app, not the phone. Tap <b>Open the Bedside Field app</b> below.</p>');
+    } else {
+      const r = explain(last.err); say(r[0], r[1], r[2]);
+      out.push('RESULT: FAILED — ' + last.err.name);
+    }
+    $('report').textContent = out.join('\n');
+    $('go').disabled = false; paintEnv();
+  }
+
+  $('go').addEventListener('click', run);
+  $('stop').addEventListener('click', () => { if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; $('v').hidden = true; $('stop').hidden = true; });
+  readPerm().then(paintEnv); paintEnv();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Bedside Field</title>
+<meta name="description" content="Bedside visual field screening for patients who cannot follow verbal instructions: saccadic, touch-localization and double-simultaneous-stimulation paradigms.">
+<meta name="theme-color" content="#0b0f14">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Bedside Field">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main id="app">
+
+  <!-- ============ HOME ============ -->
+  <section id="s-home" class="screen active">
+    <header class="top">
+      <div class="brand">
+        <img src="icons/icon.svg" alt="" width="46" height="46">
+        <div><h1>Bedside Field</h1><p>Saccadic &amp; touch perimetry for patients who can’t follow verbal instructions</p></div>
+      </div>
+      <div class="chips"><span id="chip-cal" class="chip"></span><span id="chip-cam" class="chip"></span><span id="chip-off" class="chip"></span></div>
+    </header>
+
+    <div class="cols">
+      <div class="card">
+        <label class="field">Patient label <small>(bed / ID — no names needed; stored on this device only)</small>
+          <input id="in-label" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="e.g. Bed 14 / MRN last 4">
+        </label>
+
+        <h3>How will the patient respond?</h3>
+        <div id="methods" class="choices">
+          <label class="choice"><input type="radio" name="method" value="camera">
+            <span class="c-title">Eye movement · camera</span>
+            <span class="c-body">The front camera detects the reflexive look toward each flashing target. Nothing to explain to the patient.</span></label>
+          <label class="choice"><input type="radio" name="method" value="examiner">
+            <span class="c-title">Eye movement · I’ll score it</span>
+            <span class="c-body">You watch the eyes over the tablet edge and tap Seen / Missed. Use when the camera can’t track (ptosis, glare, glasses).</span></label>
+          <label class="choice"><input type="radio" name="method" value="touch">
+            <span class="c-title">Touch the target</span>
+            <span class="c-body">Patient taps glowing circles after a wordless demo. Needs a usable hand and sustained attention.</span></label>
+        </div>
+
+        <p id="cam-note" class="hint-note" hidden>The camera isn’t available in this view (it needs HTTPS and camera permission), so Start will switch to examiner scoring. The simulated-patient demo still works.</p>
+
+        <h3>Eye(s) tested</h3>
+        <div id="eyes" class="seg" role="radiogroup">
+          <button type="button" data-v="both">Both eyes</button>
+          <button type="button" data-v="right">Right eye only</button>
+          <button type="button" data-v="left">Left eye only</button>
+        </div>
+
+        <label class="check"><input id="in-dss" type="checkbox"> <span>Follow with <b>double simultaneous stimulation</b> (extinction check) when both hemifields are seen</span></label>
+
+        <div class="startbar"><button id="btn-start" class="primary big">Start screening</button></div>
+        <div class="demo-row">
+          <select id="demo-profile" aria-label="Simulated patient"></select>
+          <button id="btn-demo" class="ghost">Try with a simulated patient</button>
+        </div>
+      </div>
+
+      <aside class="card side">
+        <h3>Before you start</h3>
+        <ul class="tips">
+          <li>Tablet <b>landscape</b>, propped ~30 cm from the face, screen centre level with the nose.</li>
+          <li>Dim the room, avoid glare and back-lighting; raise the screen brightness.</li>
+          <li>Screen size must be calibrated once per device — it sets the visual angles.</li>
+        </ul>
+        <nav class="links">
+          <button id="go-cal" class="link">Screen &amp; distance <span>›</span></button>
+          <button id="go-hist" class="link">Past tests <span>›</span></button>
+          <button id="go-settings" class="link">Settings <span>›</span></button>
+          <button id="go-about" class="link">About &amp; limits <span>›</span></button>
+        </nav>
+        <p class="ver" id="ver"></p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ CALIBRATION ============ -->
+  <section id="s-cal" class="screen">
+    <header class="top"><button class="back" data-go="home">‹ Back</button><h2>Screen &amp; distance</h2></header>
+    <div class="card narrow">
+      <h3>1 · Match a bank card to the screen</h3>
+      <p>Hold any bank or ID card flat against the glass, then drag the slider until the outline is exactly as wide as the card (85.6 mm).</p>
+      <div class="cardbox-wrap"><div id="cardbox"><span>card</span></div></div>
+      <input id="cal-slider" type="range" min="120" max="1200" value="330" aria-label="Card width">
+      <div class="row"><button id="cal-save-card" class="primary">Use this size</button></div>
+
+      <h3>…or enter the screen diagonal</h3>
+      <div class="row"><label class="field inline">Diagonal (inches)<input id="cal-diag" type="number" step="0.1" min="4" max="20" placeholder="e.g. 12.9"></label>
+        <button id="cal-save-diag">Use diagonal</button></div>
+
+      <h3>2 · Viewing distance</h3>
+      <div class="stepper"><button id="dist-minus" aria-label="Closer">−</button><div><b id="dist-val">30</b> cm</div><button id="dist-plus" aria-label="Farther">+</button></div>
+      <p class="hint">Measure from the bridge of the nose to the screen. 25–35 cm works well; the app uses this to convert pixels into degrees.</p>
+      <div id="cal-info" class="infobox"></div>
+    </div>
+  </section>
+
+  <!-- ============ POSITIONING GUIDE ============ -->
+  <section id="s-guide" class="screen">
+    <header class="top"><button class="back" data-go="home">‹ Back</button><h2>Position the tablet</h2></header>
+    <div class="card guide">
+      <div id="guide-art"></div>
+      <ul class="tips big">
+        <li>Landscape, ~<b id="g-dist">30</b> cm from the face — use a stand, or hold it steady.</li>
+        <li id="g-eye">Centre the tablet on the patient’s nose.</li>
+        <li>Face the room light, not a window or lamp behind the patient. Remove reflective glasses if you can.</li>
+        <li id="g-cam">The camera should see both eyes clearly; keep your hand and head out of its view.</li>
+      </ul>
+      <button id="btn-guide-go" class="primary big">Continue</button>
+    </div>
+  </section>
+
+  <!-- ============ TEST STAGE (also used for the tracking check) ============ -->
+  <section id="s-test" class="screen test">
+    <canvas id="stage"></canvas>
+    <div id="hot" aria-label="Hold for 1 second to pause"></div>
+    <div id="hud"><span id="hud-dot" class="dot"></span><span id="hud-prog"></span></div>
+    <div id="hint"></div>
+    <div id="exbar"></div>
+    <div id="preview"><video id="cam" playsinline muted></video><canvas id="cam-mirror"></canvas><canvas id="cam-ov" width="320" height="240"></canvas><div id="cam-info"></div></div>
+    <div id="panel" class="overlay"><div class="panel-card" id="panel-card"></div></div>
+    <div id="rotate" class="overlay"><div class="panel-card"><div class="rot-ico">⟲</div><h3>Rotate to landscape</h3><p>The test needs the wide screen.</p></div></div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section id="s-results" class="screen">
+    <header class="top noprint">
+      <button class="back" id="res-back">‹ Home</button><h2>Result</h2>
+      <div class="actions"><button id="res-print">Print / PDF</button><button id="res-csv">CSV</button><button id="res-json">JSON</button></div>
+    </header>
+    <div id="report" class="report"></div>
+    <div class="card noprint narrow" id="res-tools">
+      <label class="field">Notes <small>(saved with this test)</small><textarea id="res-notes" rows="2" placeholder="e.g. drowsy, glasses removed, left eye patched"></textarea></label>
+      <div class="row" id="res-actions"></div>
+    </div>
+  </section>
+
+  <!-- ============ HISTORY ============ -->
+  <section id="s-history" class="screen">
+    <header class="top"><button class="back" data-go="home">‹ Back</button><h2>Past tests</h2></header>
+    <div class="card narrow"><div id="hist-list"></div>
+      <p class="hint">Stored only in this browser on this device.</p></div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section id="s-settings" class="screen">
+    <header class="top"><button class="back" data-go="home">‹ Back</button><h2>Settings</h2></header>
+    <div class="card narrow" id="settings-form"></div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section id="s-about" class="screen">
+    <header class="top"><button class="back" data-go="home">‹ Back</button><h2>About &amp; limits</h2></header>
+    <div class="card narrow prose" id="about-body"></div>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

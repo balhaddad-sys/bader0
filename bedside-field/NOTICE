@@ -1,0 +1,9 @@
+Bedside Field — third-party components
+
+vendor/mediapipe/face_mesh/
+  MediaPipe Face Mesh (legacy JavaScript solution, npm package "@mediapipe/face_mesh"),
+  Copyright Google LLC, distributed under the Apache License, Version 2.0
+  (https://www.apache.org/licenses/LICENSE-2.0).
+  The files are included unmodified so the app can run its eye-tracking fully offline.
+
+Fonts: none bundled (the app uses the system UI font stack).

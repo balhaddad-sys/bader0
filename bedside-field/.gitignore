@@ -1,0 +1,10 @@
+# Android build output and signing material (never commit the keystore or its password)
+android/build/
+android/signing/
+*.apk
+*.idsig
+*.jks
+*.keystore
+# test output
+tests/out/
+node_modules/

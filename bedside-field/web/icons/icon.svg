@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0b0f14"/>
+  <g transform="translate(256 262)">
+    <ellipse rx="188" ry="150" fill="rgba(61,220,151,0.07)" stroke="#2f4256" stroke-width="12"/>
+    <line x1="-188" y1="0" x2="188" y2="0" stroke="#243546" stroke-width="6"/>
+    <line x1="0" y1="-150" x2="0" y2="150" stroke="#243546" stroke-width="6"/>
+    <circle r="62" fill="none" stroke="#ffb703" stroke-opacity=".45" stroke-width="10"/>
+    <circle r="36" fill="#ffb703"/>
+    <circle r="9" fill="#1b1200"/>
+    <g transform="translate(112 -78)">
+      <circle r="62" fill="#fff" fill-opacity=".14"/>
+      <circle r="40" fill="#fff"/>
+    </g>
+  </g>
+</svg>
