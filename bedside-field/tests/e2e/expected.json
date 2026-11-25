@@ -1,0 +1,190 @@
+{
+  "smoke": {
+    "chips": [
+      "Screen size not set \u00b7 will estimate",
+      "Camera available",
+      "Offline ready"
+    ],
+    "version": "Bedside Field v1.4.0 \u00b7 works offline once installed",
+    "demoProfiles": [
+      "rhh",
+      "lhh",
+      "rsq",
+      "neglect",
+      "normal"
+    ],
+    "calInfo": "# px/mm (bank-card match). In the current window (#\u00d7#px) at # cm the testable field is about \u00b1#\u00b0 horizontally and \u00b1#\u00b0 vertically. A #\u00b0 stimulus is # px wide.",
+    "dist": "31",
+    "chipsAfterCal": [
+      "Screen calibrated \u00b7 31 cm",
+      "Camera available",
+      "Offline ready"
+    ],
+    "settingsRows": [
+      "Target style",
+      "Full-screen browser mode",
+      "Head-movement correction",
+      "Gaze marker during the test",
+      "Fixation anchor",
+      "Target size (\u00b0)",
+      "Repeats per location",
+      "Target on-time (ms)",
+      "Response window (ms)",
+      "Gap before target (ms)",
+      "Touch time-out (ms)",
+      "Touch practice"
+    ],
+    "aboutHeadings": [
+      "What this is",
+      "Paradigms",
+      "Limits you should know",
+      "Privacy",
+      "Install"
+    ],
+    "historyEmpty": "No saved tests yet.",
+    "guide": {
+      "dist": "31",
+      "eye": "Cover the patient\u2019s left eye (patch or card) and centre the tablet on the open right eye.",
+      "camTip": false
+    },
+    "errors": []
+  },
+  "phone": {
+    "guideDist": "20",
+    "toast": "Phone-sized screen: viewing distance set to 20 cm. Hold the phone that close (change it under Screen & distance).",
+    "errors": []
+  },
+  "cameraDenied": {
+    "panel": "Camera not available Android has not given this app the camera. Tap \u201cTry the camera again\u201d and choose Allow; if no prompt appears: Settings \u2192 Apps \u2192 Bedside Field \u2192 Permissions \u2192 Camera \u2192 \u201cAllow only while using the app\u201d. App check: MOCK Technical detail: NotAllowedError at step \u201cpermission\u201d: Permission denied \u00b7 camera test page (shows exactly what the browser answers) Try the camera again Use examiner scoring Back",
+    "errors": [],
+    "notice": "You score this test The camera is not used now (its tracking was not accurate enough on this device, or you chose examiner scoring). After each target appears, watch the patient\u2019s eyes and tap Seen if they looked toward it, or Missed if not. Start examiner scoring",
+    "exbar": [
+      "Seen",
+      "Missed"
+    ],
+    "dot": "dot "
+  },
+  "cameraNoFace": {
+    "status": "Camera is on, # frames seen, no face found. Hold the phone at arm\u2019s length with ",
+    "startDisabled": true,
+    "mirror": "block",
+    "errors": []
+  },
+  "cameraFace": {
+    "tracked": "Face tracked \u00b7 # fps",
+    "hints": [
+      "Follow the dot  #/#"
+    ],
+    "verdictTitle": "Tracking check Tracking poor",
+    "verdictButtons": [
+      "Use examiner scoring",
+      "Repeat check",
+      "Cancel"
+    ],
+    "verdictRows": [
+      "Accuracy",
+      "Horizontal",
+      "Vertical",
+      "Frame rate"
+    ],
+    "errors": []
+  },
+  "demos": [
+    {
+      "profile": "rhh",
+      "method": "camera",
+      "done": true,
+      "errors": [],
+      "calls": [
+        "saveFile:field-DATE.csv:text/csv",
+        "saveFile:field-DATE.json:application/json",
+        "print"
+      ],
+      "csvHeader": "idx,block,kind,locId,quad,ring,outcome,latency_ms,score_ms,first,stray_taps,valid_frac,fix_gx_deg,retried,reason",
+      "pattern": "Right homonymous hemianopia pattern",
+      "dss": null,
+      "history": 1,
+      "reportStart": "Bedside visual field screen Nov #, #, #:# AM \u00b7 DEMO \u00b7 Right homonymous hemianopia SIMULATED DEMO PATIENT \u2014 not real data Eye movement (camera-tracked) Both"
+    },
+    {
+      "profile": "lhh",
+      "method": "examiner",
+      "done": true,
+      "errors": [],
+      "calls": [
+        "saveFile:field-DATE.csv:text/csv",
+        "saveFile:field-DATE.json:application/json",
+        "print"
+      ],
+      "csvHeader": "idx,block,kind,locId,quad,ring,outcome,latency_ms,score_ms,first,stray_taps,valid_frac,fix_gx_deg,retried,reason",
+      "pattern": "Left homonymous hemianopia pattern",
+      "dss": null,
+      "history": 1,
+      "reportStart": "Bedside visual field screen Nov #, #, #:# AM \u00b7 DEMO \u00b7 Left homonymous hemianopia SIMULATED DEMO PATIENT \u2014 not real data Eye movement (examiner-scored) Both"
+    },
+    {
+      "profile": "rsq",
+      "method": "camera",
+      "done": true,
+      "errors": [],
+      "calls": [
+        "saveFile:field-DATE.csv:text/csv",
+        "saveFile:field-DATE.json:application/json",
+        "print"
+      ],
+      "csvHeader": "idx,block,kind,locId,quad,ring,outcome,latency_ms,score_ms,first,stray_taps,valid_frac,fix_gx_deg,retried,reason",
+      "pattern": "Right superior (upper) quadrantanopia pattern",
+      "dss": "Double simultaneous stimulation not interpretable for the right side",
+      "history": 1,
+      "reportStart": "Bedside visual field screen Nov #, #, #:# AM \u00b7 DEMO \u00b7 Right superior quadrantanopia SIMULATED DEMO PATIENT \u2014 not real data Eye movement (camera-tracked) Bo"
+    },
+    {
+      "profile": "normal",
+      "method": "touch",
+      "done": true,
+      "errors": [],
+      "calls": [
+        "saveFile:field-DATE.csv:text/csv",
+        "saveFile:field-DATE.json:application/json",
+        "print"
+      ],
+      "csvHeader": "idx,block,kind,locId,quad,ring,outcome,latency_ms,score_ms,first,stray_taps,valid_frac,fix_gx_deg,retried,reason",
+      "pattern": "No field defect detected on this screen",
+      "dss": "No visual extinction detected",
+      "history": 1,
+      "reportStart": "Bedside visual field screen Nov #, #, #:# AM \u00b7 DEMO \u00b7 Normal fields SIMULATED DEMO PATIENT \u2014 not real data Touch-to-target Both eyes (binocular) SCREENING "
+    },
+    {
+      "profile": "neglect",
+      "method": "camera",
+      "done": true,
+      "errors": [],
+      "calls": [
+        "saveFile:field-DATE.csv:text/csv",
+        "saveFile:field-DATE.json:application/json",
+        "print"
+      ],
+      "csvHeader": "idx,block,kind,locId,quad,ring,outcome,latency_ms,score_ms,first,stray_taps,valid_frac,fix_gx_deg,retried,reason",
+      "pattern": "No field defect detected on this screen",
+      "dss": "Left-sided visual extinction pattern",
+      "history": 1,
+      "reportStart": "Bedside visual field screen Nov #, #, #:# AM \u00b7 DEMO \u00b7 Left extinction (intact fields) SIMULATED DEMO PATIENT \u2014 not real data Eye movement (camera-tracked) "
+    },
+    {
+      "profile": "rhh",
+      "method": "touch",
+      "done": true,
+      "errors": [],
+      "calls": [
+        "saveFile:field-DATE.csv:text/csv",
+        "saveFile:field-DATE.json:application/json",
+        "print"
+      ],
+      "csvHeader": "idx,block,kind,locId,quad,ring,outcome,latency_ms,score_ms,first,stray_taps,valid_frac,fix_gx_deg,retried,reason",
+      "pattern": "Right homonymous hemianopia pattern",
+      "dss": null,
+      "history": 1,
+      "reportStart": "Bedside visual field screen Nov #, #, #:# AM \u00b7 DEMO \u00b7 Right homonymous hemianopia SIMULATED DEMO PATIENT \u2014 not real data Touch-to-target Both eyes (binocul"
+    }
+  ]
+}

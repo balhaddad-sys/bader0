@@ -1,0 +1,1339 @@
+{
+ "id": "mwvmw0vm0lnc",
+ "createdAt": 1795581542002,
+ "appVersion": "1.4.0",
+ "label": "DEMO · Normal fields",
+ "method": "touch",
+ "eye": "both",
+ "demo": true,
+ "calSource": null,
+ "stimulus": "disc",
+ "flickerHz": 12,
+ "windowMs": 1800,
+ "reps": 2,
+ "geo": {
+  "pxPerMm": 3.78,
+  "distanceCm": 30,
+  "width": 1280,
+  "height": 800,
+  "halfDegH": 29.4,
+  "halfDegV": 19.4,
+  "stimDeg": 3
+ },
+ "cal": null,
+ "trials": [
+  {
+   "idx": 0,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UR-out",
+   "quad": "UR",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UR-out",
+     "h": 20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 23669,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 541,
+   "latency": 541
+  },
+  {
+   "idx": 1,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LL-out",
+   "quad": "LL",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LL-out",
+     "h": -20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 26336,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 1042,
+   "latency": 1042
+  },
+  {
+   "idx": 2,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UL-in",
+   "quad": "UL",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UL-in",
+     "h": -11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 29552,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 1099,
+   "latency": 1099
+  },
+  {
+   "idx": 3,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UR-in",
+   "quad": "UR",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UR-in",
+     "h": 11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 33502,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 1201,
+   "latency": 1201
+  },
+  {
+   "idx": 4,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LR-out",
+   "quad": "LR",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LR-out",
+     "h": 20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 37570,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 558,
+   "latency": 558
+  },
+  {
+   "idx": 5,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UL-out",
+   "quad": "UL",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UL-out",
+     "h": -20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 40202,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 1158,
+   "latency": 1158
+  },
+  {
+   "idx": 6,
+   "block": "quad",
+   "kind": "catch",
+   "locId": "catch",
+   "quad": null,
+   "ring": null,
+   "elev": null,
+   "side": null,
+   "targets": [],
+   "method": "touch",
+   "outcome": "cr",
+   "tOnset": 44185,
+   "stray": 0
+  },
+  {
+   "idx": 7,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LR-in",
+   "quad": "LR",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LR-in",
+     "h": 11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 48002,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 637,
+   "latency": 637
+  },
+  {
+   "idx": 8,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LL-in",
+   "quad": "LL",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LL-in",
+     "h": -11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 51651,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 635,
+   "latency": 635
+  },
+  {
+   "idx": 9,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LR-out",
+   "quad": "LR",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LR-out",
+     "h": 20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 54585,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 1028,
+   "latency": 1028
+  },
+  {
+   "idx": 10,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LL-in",
+   "quad": "LL",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LL-in",
+     "h": -11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 58701,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 490,
+   "latency": 490
+  },
+  {
+   "idx": 11,
+   "block": "quad",
+   "kind": "catch",
+   "locId": "catch",
+   "quad": null,
+   "ring": null,
+   "elev": null,
+   "side": null,
+   "targets": [],
+   "method": "touch",
+   "outcome": "fa",
+   "tOnset": 61485,
+   "stray": 1
+  },
+  {
+   "idx": 12,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UL-in",
+   "quad": "UL",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UL-in",
+     "h": -11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 65751,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 608,
+   "latency": 608
+  },
+  {
+   "idx": 13,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UR-in",
+   "quad": "UR",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UR-in",
+     "h": 11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 68684,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 1064,
+   "latency": 1064
+  },
+  {
+   "idx": 14,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LR-in",
+   "quad": "LR",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LR-in",
+     "h": 11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 72484,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 610,
+   "latency": 610
+  },
+  {
+   "idx": 15,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UR-out",
+   "quad": "UR",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UR-out",
+     "h": 20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 76167,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 624,
+   "latency": 624
+  },
+  {
+   "idx": 16,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UL-out",
+   "quad": "UL",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UL-out",
+     "h": -20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 78752,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 927,
+   "latency": 927
+  },
+  {
+   "idx": 17,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LL-out",
+   "quad": "LL",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LL-out",
+     "h": -20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 81717,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 1192,
+   "latency": 1192
+  },
+  {
+   "idx": 18,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-up",
+   "quad": null,
+   "ring": null,
+   "elev": "up",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-up-L",
+     "h": -17,
+     "v": 6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-up-R",
+     "h": 17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "both",
+   "tOnset": 86700,
+   "stray": 0,
+   "strayTaps": [],
+   "first": "R",
+   "rtL": 1632,
+   "rtR": 1053,
+   "latency": 1053
+  },
+  {
+   "idx": 19,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-lo",
+   "quad": null,
+   "ring": null,
+   "elev": "lo",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-lo-L",
+     "h": -17,
+     "v": -6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-lo-R",
+     "h": 17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "right",
+   "tOnset": 91350,
+   "stray": 0,
+   "strayTaps": [],
+   "first": "R",
+   "rtL": null,
+   "rtR": 727,
+   "latency": 727
+  },
+  {
+   "idx": 20,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-up",
+   "quad": null,
+   "ring": null,
+   "elev": "up",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-up-L",
+     "h": -17,
+     "v": 6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-up-R",
+     "h": 17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "both",
+   "tOnset": 99650,
+   "stray": 0,
+   "strayTaps": [],
+   "first": "L",
+   "rtL": 1057,
+   "rtR": 1721,
+   "latency": 1057
+  },
+  {
+   "idx": 21,
+   "block": "dss",
+   "kind": "catch",
+   "locId": "catch",
+   "quad": null,
+   "ring": null,
+   "elev": null,
+   "side": null,
+   "targets": [],
+   "method": "touch",
+   "outcome": "cr",
+   "tOnset": 103517,
+   "stray": 0
+  },
+  {
+   "idx": 22,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-up-R",
+   "quad": "UR",
+   "ring": null,
+   "elev": "up",
+   "side": "R",
+   "targets": [
+    {
+     "id": "DSS-up-R",
+     "h": 17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 107433,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 448,
+   "latency": 448
+  },
+  {
+   "idx": 23,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-up-R",
+   "quad": "UR",
+   "ring": null,
+   "elev": "up",
+   "side": "R",
+   "targets": [
+    {
+     "id": "DSS-up-R",
+     "h": 17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 110900,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 988,
+   "latency": 988
+  },
+  {
+   "idx": 24,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-up",
+   "quad": null,
+   "ring": null,
+   "elev": "up",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-up-L",
+     "h": -17,
+     "v": 6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-up-R",
+     "h": 17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "both",
+   "tOnset": 114916,
+   "stray": 0,
+   "strayTaps": [],
+   "first": "R",
+   "rtL": 1677,
+   "rtR": 759,
+   "latency": 759
+  },
+  {
+   "idx": 25,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-up-L",
+   "quad": "UL",
+   "ring": null,
+   "elev": "up",
+   "side": "L",
+   "targets": [
+    {
+     "id": "DSS-up-L",
+     "h": -17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 119199,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 1035,
+   "latency": 1035
+  },
+  {
+   "idx": 26,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-lo",
+   "quad": null,
+   "ring": null,
+   "elev": "lo",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-lo-L",
+     "h": -17,
+     "v": -6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-lo-R",
+     "h": 17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "both",
+   "tOnset": 123166,
+   "stray": 0,
+   "strayTaps": [],
+   "first": "R",
+   "rtL": 1588,
+   "rtR": 1308,
+   "latency": 1308
+  },
+  {
+   "idx": 27,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-up-L",
+   "quad": "UL",
+   "ring": null,
+   "elev": "up",
+   "side": "L",
+   "targets": [
+    {
+     "id": "DSS-up-L",
+     "h": -17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 126732,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 1335,
+   "latency": 1335
+  },
+  {
+   "idx": 28,
+   "block": "dss",
+   "kind": "catch",
+   "locId": "catch",
+   "quad": null,
+   "ring": null,
+   "elev": null,
+   "side": null,
+   "targets": [],
+   "method": "touch",
+   "outcome": "cr",
+   "tOnset": 130515,
+   "stray": 0
+  },
+  {
+   "idx": 29,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-lo-L",
+   "quad": "LL",
+   "ring": null,
+   "elev": "lo",
+   "side": "L",
+   "targets": [
+    {
+     "id": "DSS-lo-L",
+     "h": -17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 135098,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 1291,
+   "latency": 1291
+  },
+  {
+   "idx": 30,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-lo-R",
+   "quad": "LR",
+   "ring": null,
+   "elev": "lo",
+   "side": "R",
+   "targets": [
+    {
+     "id": "DSS-lo-R",
+     "h": 17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 138748,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 622,
+   "latency": 622
+  },
+  {
+   "idx": 31,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-lo-R",
+   "quad": "LR",
+   "ring": null,
+   "elev": "lo",
+   "side": "R",
+   "targets": [
+    {
+     "id": "DSS-lo-R",
+     "h": 17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 141965,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 572,
+   "latency": 572
+  },
+  {
+   "idx": 32,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-lo",
+   "quad": null,
+   "ring": null,
+   "elev": "lo",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-lo-L",
+     "h": -17,
+     "v": -6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-lo-R",
+     "h": 17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "both",
+   "tOnset": 145216,
+   "stray": 0,
+   "strayTaps": [],
+   "first": "R",
+   "rtL": 1550,
+   "rtR": 711,
+   "latency": 711
+  },
+  {
+   "idx": 33,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-lo-L",
+   "quad": "LL",
+   "ring": null,
+   "elev": "lo",
+   "side": "L",
+   "targets": [
+    {
+     "id": "DSS-lo-L",
+     "h": -17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "seen",
+   "tOnset": 149848,
+   "stray": 0,
+   "strayTaps": [],
+   "rt": 729,
+   "latency": 729
+  },
+  {
+   "idx": 34,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-lo",
+   "quad": null,
+   "ring": null,
+   "elev": "lo",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-lo-L",
+     "h": -17,
+     "v": -6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-lo-R",
+     "h": 17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "both",
+   "tOnset": 152765,
+   "stray": 0,
+   "strayTaps": [],
+   "first": "L",
+   "rtL": 623,
+   "rtR": 1660,
+   "latency": 623
+  },
+  {
+   "idx": 35,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-up",
+   "quad": null,
+   "ring": null,
+   "elev": "up",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-up-L",
+     "h": -17,
+     "v": 6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-up-R",
+     "h": 17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "touch",
+   "outcome": "both",
+   "tOnset": 157481,
+   "stray": 0,
+   "strayTaps": [],
+   "first": "R",
+   "rtL": 1302,
+   "rtR": 652,
+   "latency": 652
+  }
+ ],
+ "notes": "",
+ "summary": {
+  "hasQuad": true,
+  "hasDss": true,
+  "interpretation": [
+   {
+    "tone": "ok",
+    "text": "No field defect detected on this screen",
+    "detail": "All four quadrants were detected (≥75% of valid trials) within roughly ±29° horizontally, ±19° vertically. This does not exclude small, relative, or far-peripheral (e.g. temporal crescent) loss."
+   },
+   {
+    "tone": "ok",
+    "text": "No visual extinction detected",
+    "detail": "Both sides were detected on single stimuli (left 100%, right 100%) and under bilateral stimulation (left 88%, right 100%)."
+   },
+   {
+    "tone": "warn",
+    "text": "Slower responses toward the left field",
+    "detail": "Median 985 vs 631 ms. If detection there is intact, consider an attentional / frontal-eye-field contribution rather than a pure field cut."
+   }
+  ],
+  "flags": [
+   {
+    "tone": "warn",
+    "text": "Slower responses toward the left field",
+    "detail": "Median 985 vs 631 ms. If detection there is intact, consider an attentional / frontal-eye-field contribution rather than a pure field cut."
+   }
+  ],
+  "quads": {
+   "UR": {
+    "n": 4,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 844,
+    "cls": "intact",
+    "in": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": 1132.5
+    },
+    "out": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": 582.5
+    }
+   },
+   "UL": {
+    "n": 4,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 1013,
+    "cls": "intact",
+    "in": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": 853.5
+    },
+    "out": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": 1042.5
+    }
+   },
+   "LR": {
+    "n": 4,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 623.5,
+    "cls": "intact",
+    "in": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": 623.5
+    },
+    "out": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": 793
+    }
+   },
+   "LL": {
+    "n": 4,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 838.5,
+    "cls": "intact",
+    "in": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": 562.5
+    },
+    "out": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": 1117
+    }
+   }
+  },
+  "cls": {
+   "UR": "intact",
+   "UL": "intact",
+   "LR": "intact",
+   "LL": "intact"
+  },
+  "hemi": {
+   "R": {
+    "n": 8,
+    "seen": 8,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 630.5,
+    "cls": "intact"
+   },
+   "L": {
+    "n": 8,
+    "seen": 8,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 984.5,
+    "cls": "intact"
+   },
+   "U": {
+    "n": 8,
+    "seen": 8,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 995.5,
+    "cls": "intact"
+   },
+   "Lo": {
+    "n": 8,
+    "seen": 8,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 636,
+    "cls": "intact"
+   }
+  },
+  "locations": {
+   "UR-out": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 582.5,
+    "quad": "UR",
+    "ring": "out",
+    "target": {
+     "id": "UR-out",
+     "h": 20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   },
+   "LL-out": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 1117,
+    "quad": "LL",
+    "ring": "out",
+    "target": {
+     "id": "LL-out",
+     "h": -20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   },
+   "UL-in": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 853.5,
+    "quad": "UL",
+    "ring": "in",
+    "target": {
+     "id": "UL-in",
+     "h": -11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   },
+   "UR-in": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 1132.5,
+    "quad": "UR",
+    "ring": "in",
+    "target": {
+     "id": "UR-in",
+     "h": 11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   },
+   "LR-out": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 793,
+    "quad": "LR",
+    "ring": "out",
+    "target": {
+     "id": "LR-out",
+     "h": 20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   },
+   "UL-out": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 1042.5,
+    "quad": "UL",
+    "ring": "out",
+    "target": {
+     "id": "UL-out",
+     "h": -20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   },
+   "LR-in": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 623.5,
+    "quad": "LR",
+    "ring": "in",
+    "target": {
+     "id": "LR-in",
+     "h": 11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   },
+   "LL-in": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 562.5,
+    "quad": "LL",
+    "ring": "in",
+    "target": {
+     "id": "LL-in",
+     "h": -11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   }
+  },
+  "catch": {
+   "n": 4,
+   "fa": 1,
+   "rate": 0.25
+  },
+  "reliability": {
+   "attempts": 36,
+   "invalid": 0,
+   "invalidFrac": 0,
+   "faRate": 0.25,
+   "trackingFrac": null,
+   "overrides": 0,
+   "reasons": [
+    "Some false alarms on catch trials (1/4)."
+   ],
+   "level": "fair"
+  },
+  "pattern": {
+   "code": "NONE",
+   "tone": "ok",
+   "title": "No field defect detected on this screen",
+   "detail": "All four quadrants were detected (≥75% of valid trials) within roughly ±29° horizontally, ±19° vertically. This does not exclude small, relative, or far-peripheral (e.g. temporal crescent) loss."
+  },
+  "dss": {
+   "uniL": {
+    "n": 4,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 1163
+   },
+   "uniR": {
+    "n": 4,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 597
+   },
+   "bi": {
+    "n": 8,
+    "both": 7,
+    "left": 0,
+    "right": 1,
+    "none": 0
+   },
+   "detL": 0.875,
+   "detR": 1,
+   "first": {
+    "L": 2,
+    "R": 6
+   },
+   "extinction": null,
+   "tone": "ok",
+   "title": "No visual extinction detected",
+   "detail": "Both sides were detected on single stimuli (left 100%, right 100%) and under bilateral stimulation (left 88%, right 100%)."
+  }
+ }
+}

@@ -1,0 +1,1445 @@
+{
+ "id": "mwvmvb3mctlw",
+ "createdAt": 1795581508594,
+ "appVersion": "1.4.0",
+ "label": "DEMO · Right superior quadrantanopia",
+ "method": "camera",
+ "eye": "both",
+ "demo": true,
+ "calSource": null,
+ "stimulus": "disc",
+ "flickerHz": 12,
+ "windowMs": 1800,
+ "reps": 2,
+ "geo": {
+  "pxPerMm": 3.78,
+  "distanceCm": 30,
+  "width": 1280,
+  "height": 800,
+  "halfDegH": 29.4,
+  "halfDegV": 19.4,
+  "stimDeg": 3
+ },
+ "cal": {
+  "okX": true,
+  "okY": true,
+  "noiseDegX": 0.5904092404670576,
+  "noiseDegY": 1.8071157026311075,
+  "kx": -0.0075365223674948335,
+  "ky": 0.004266949760633878,
+  "fps": 30,
+  "flipped": false,
+  "acc": 0.34,
+  "accX": 0.12,
+  "accY": 0.32,
+  "prec": 1.56,
+  "grade": "excellent",
+  "model": "diag",
+  "headCorr": true,
+  "eyesAgree": null,
+  "markerOff": {
+   "x": 0,
+   "y": 0
+  },
+  "camMode": null,
+  "trackEye": "both"
+ },
+ "trials": [
+  {
+   "idx": 0,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UL-out",
+   "quad": "UL",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UL-out",
+     "h": -20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 23742,
+   "latency": 256,
+   "peakDeg": 21,
+   "firstQuad": "UL",
+   "validFrac": 1,
+   "fixGx": -0.07,
+   "fixGy": 0.16,
+   "fixOverride": false
+  },
+  {
+   "idx": 1,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UR-out",
+   "quad": "UR",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UR-out",
+     "h": 20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "camera",
+   "outcome": "missed",
+   "tOnset": 26676,
+   "latency": null,
+   "peakDeg": 3.6,
+   "firstQuad": null,
+   "validFrac": 0.93,
+   "fixGx": -0.06,
+   "fixGy": -0.55,
+   "fixOverride": false
+  },
+  {
+   "idx": 2,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LR-out",
+   "quad": "LR",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LR-out",
+     "h": 20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 30958,
+   "latency": 299,
+   "peakDeg": 23.5,
+   "firstQuad": "LR",
+   "validFrac": 1,
+   "fixGx": 0.02,
+   "fixGy": -0.32,
+   "fixOverride": false
+  },
+  {
+   "idx": 3,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LL-in",
+   "quad": "LL",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LL-in",
+     "h": -11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 34208,
+   "latency": 416,
+   "peakDeg": 13.6,
+   "firstQuad": "LL",
+   "validFrac": 1,
+   "fixGx": 0.22,
+   "fixGy": 0.02,
+   "fixOverride": false
+  },
+  {
+   "idx": 4,
+   "block": "quad",
+   "kind": "catch",
+   "locId": "catch",
+   "quad": null,
+   "ring": null,
+   "elev": null,
+   "side": null,
+   "targets": [],
+   "method": "camera",
+   "outcome": "cr",
+   "tOnset": 37324,
+   "latency": null,
+   "validFrac": 0.93,
+   "fixGx": 0.16,
+   "fixGy": -0.22,
+   "fixOverride": false
+  },
+  {
+   "idx": 5,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UL-in",
+   "quad": "UL",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UL-in",
+     "h": -11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 40041,
+   "latency": 325,
+   "peakDeg": 12.7,
+   "firstQuad": "UL",
+   "validFrac": 1,
+   "fixGx": -0.07,
+   "fixGy": 0.12,
+   "fixOverride": false
+  },
+  {
+   "idx": 6,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UR-in",
+   "quad": "UR",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UR-in",
+     "h": 11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "camera",
+   "outcome": "missed",
+   "tOnset": 43091,
+   "latency": null,
+   "peakDeg": 5.1,
+   "firstQuad": null,
+   "validFrac": 1,
+   "fixGx": 0.06,
+   "fixGy": 0.56,
+   "fixOverride": false
+  },
+  {
+   "idx": 7,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LR-in",
+   "quad": "LR",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LR-in",
+     "h": 11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 45791,
+   "latency": 251,
+   "peakDeg": 14.3,
+   "firstQuad": "LR",
+   "validFrac": 1,
+   "fixGx": 0.14,
+   "fixGy": 0.68,
+   "fixOverride": false
+  },
+  {
+   "idx": 8,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LL-out",
+   "quad": "LL",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LL-out",
+     "h": -20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 48607,
+   "latency": 239,
+   "peakDeg": 22.2,
+   "firstQuad": "LL",
+   "validFrac": 0.93,
+   "fixGx": -0.05,
+   "fixGy": -0.6,
+   "fixOverride": false
+  },
+  {
+   "idx": 9,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UR-out",
+   "quad": "UR",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UR-out",
+     "h": 20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "camera",
+   "outcome": "missed",
+   "tOnset": 51357,
+   "latency": null,
+   "peakDeg": 3.5,
+   "firstQuad": null,
+   "validFrac": 1,
+   "fixGx": 0.05,
+   "fixGy": 0.17,
+   "fixOverride": false
+  },
+  {
+   "idx": 10,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LR-out",
+   "quad": "LR",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LR-out",
+     "h": 20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 54357,
+   "latency": 330,
+   "peakDeg": 21.8,
+   "firstQuad": "LR",
+   "validFrac": 1,
+   "fixGx": 0.02,
+   "fixGy": 0.02,
+   "fixOverride": false
+  },
+  {
+   "idx": 11,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LL-out",
+   "quad": "LL",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LL-out",
+     "h": -20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 57507,
+   "latency": 315,
+   "peakDeg": 23.3,
+   "firstQuad": "LL",
+   "validFrac": 1,
+   "fixGx": 0.09,
+   "fixGy": 0.74,
+   "fixOverride": false
+  },
+  {
+   "idx": 12,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UL-out",
+   "quad": "UL",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UL-out",
+     "h": -20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 60523,
+   "latency": 203,
+   "peakDeg": 22.8,
+   "firstQuad": "UL",
+   "validFrac": 0.78,
+   "fixGx": 0.16,
+   "fixGy": -0.19,
+   "fixOverride": false
+  },
+  {
+   "idx": 13,
+   "block": "quad",
+   "kind": "catch",
+   "locId": "catch",
+   "quad": null,
+   "ring": null,
+   "elev": null,
+   "side": null,
+   "targets": [],
+   "method": "camera",
+   "outcome": "cr",
+   "tOnset": 63557,
+   "latency": null,
+   "validFrac": 0.93,
+   "fixGx": 0.02,
+   "fixGy": 0.92,
+   "fixOverride": false
+  },
+  {
+   "idx": 14,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LL-in",
+   "quad": "LL",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LL-in",
+     "h": -11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "camera",
+   "outcome": "missed",
+   "tOnset": 66723,
+   "latency": null,
+   "peakDeg": 3.9,
+   "firstQuad": null,
+   "validFrac": 0.93,
+   "fixGx": -0.05,
+   "fixGy": 0.44,
+   "fixOverride": false
+  },
+  {
+   "idx": 15,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UR-in",
+   "quad": "UR",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UR-in",
+     "h": 11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "camera",
+   "outcome": "missed",
+   "tOnset": 69640,
+   "latency": null,
+   "peakDeg": 3.6,
+   "firstQuad": null,
+   "validFrac": 1,
+   "fixGx": 0.11,
+   "fixGy": -0.37,
+   "fixOverride": false
+  },
+  {
+   "idx": 16,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UL-in",
+   "quad": "UL",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UL-in",
+     "h": -11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 73656,
+   "latency": 303,
+   "peakDeg": 12.8,
+   "firstQuad": "UL",
+   "validFrac": 1,
+   "fixGx": 0.06,
+   "fixGy": -0.56,
+   "fixOverride": false
+  },
+  {
+   "idx": 17,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LR-in",
+   "quad": "LR",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LR-in",
+     "h": 11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 76656,
+   "latency": 306,
+   "peakDeg": 13.8,
+   "firstQuad": "LR",
+   "validFrac": 0.87,
+   "fixGx": 0.06,
+   "fixGy": -0.01,
+   "fixOverride": false
+  },
+  {
+   "idx": 18,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-lo",
+   "quad": null,
+   "ring": null,
+   "elev": "lo",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-lo-L",
+     "h": -17,
+     "v": -6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-lo-R",
+     "h": 17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "both",
+   "tOnset": 83043,
+   "first": "R",
+   "latency": 255,
+   "secondLatency": 849,
+   "validFrac": 0.95,
+   "fixGx": 0.01,
+   "fixGy": -0.5,
+   "fixOverride": false
+  },
+  {
+   "idx": 19,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-up",
+   "quad": null,
+   "ring": null,
+   "elev": "up",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-up-L",
+     "h": -17,
+     "v": 6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-up-R",
+     "h": 17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "left",
+   "tOnset": 86856,
+   "first": "L",
+   "latency": 271,
+   "secondLatency": null,
+   "validFrac": 0.95,
+   "fixGx": -0.08,
+   "fixGy": 0.62,
+   "fixOverride": false
+  },
+  {
+   "idx": 20,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-up-R",
+   "quad": "UR",
+   "ring": null,
+   "elev": "up",
+   "side": "R",
+   "targets": [
+    {
+     "id": "DSS-up-R",
+     "h": 17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "missed",
+   "tOnset": 92040,
+   "latency": null,
+   "peakDeg": 5.5,
+   "firstQuad": null,
+   "validFrac": 0.93,
+   "fixGx": -0.14,
+   "fixGy": 0.9,
+   "fixOverride": false
+  },
+  {
+   "idx": 21,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-up-L",
+   "quad": "UL",
+   "ring": null,
+   "elev": "up",
+   "side": "L",
+   "targets": [
+    {
+     "id": "DSS-up-L",
+     "h": -17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 95055,
+   "latency": 222,
+   "peakDeg": 18.6,
+   "firstQuad": "UL",
+   "validFrac": 0.93,
+   "fixGx": -0.35,
+   "fixGy": -0.24,
+   "fixOverride": false
+  },
+  {
+   "idx": 22,
+   "block": "dss",
+   "kind": "catch",
+   "locId": "catch",
+   "quad": null,
+   "ring": null,
+   "elev": null,
+   "side": null,
+   "targets": [],
+   "method": "camera",
+   "outcome": "cr",
+   "tOnset": 97923,
+   "latency": null,
+   "validFrac": 1,
+   "fixGx": 0.08,
+   "fixGy": -0.51,
+   "fixOverride": false
+  },
+  {
+   "idx": 23,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-lo",
+   "quad": null,
+   "ring": null,
+   "elev": "lo",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-lo-L",
+     "h": -17,
+     "v": -6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-lo-R",
+     "h": 17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "both",
+   "tOnset": 101005,
+   "first": "L",
+   "latency": 311,
+   "secondLatency": 806,
+   "validFrac": 0.95,
+   "fixGx": -0.17,
+   "fixGy": -0.38,
+   "fixOverride": false
+  },
+  {
+   "idx": 24,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-up",
+   "quad": null,
+   "ring": null,
+   "elev": "up",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-up-L",
+     "h": -17,
+     "v": 6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-up-R",
+     "h": 17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "left",
+   "tOnset": 105339,
+   "first": "L",
+   "latency": 169,
+   "secondLatency": null,
+   "validFrac": 1,
+   "fixGx": -0.02,
+   "fixGy": -0.39,
+   "fixOverride": false
+  },
+  {
+   "idx": 25,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-lo",
+   "quad": null,
+   "ring": null,
+   "elev": "lo",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-lo-L",
+     "h": -17,
+     "v": -6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-lo-R",
+     "h": 17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "both",
+   "tOnset": 109238,
+   "first": "L",
+   "latency": 328,
+   "secondLatency": 790,
+   "validFrac": 1,
+   "fixGx": 0.1,
+   "fixGy": 0.36,
+   "fixOverride": false
+  },
+  {
+   "idx": 26,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-lo-L",
+   "quad": "LL",
+   "ring": null,
+   "elev": "lo",
+   "side": "L",
+   "targets": [
+    {
+     "id": "DSS-lo-L",
+     "h": -17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 113088,
+   "latency": 306,
+   "peakDeg": 17.6,
+   "firstQuad": "LL",
+   "validFrac": 1,
+   "fixGx": 0.03,
+   "fixGy": -0.31,
+   "fixOverride": false
+  },
+  {
+   "idx": 27,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-lo",
+   "quad": null,
+   "ring": null,
+   "elev": "lo",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-lo-L",
+     "h": -17,
+     "v": -6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-lo-R",
+     "h": 17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "both",
+   "tOnset": 115955,
+   "first": "L",
+   "latency": 278,
+   "secondLatency": 773,
+   "validFrac": 0.89,
+   "fixGx": 0.02,
+   "fixGy": 0.18,
+   "fixOverride": false
+  },
+  {
+   "idx": 28,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-lo-R",
+   "quad": "LR",
+   "ring": null,
+   "elev": "lo",
+   "side": "R",
+   "targets": [
+    {
+     "id": "DSS-lo-R",
+     "h": 17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 119772,
+   "latency": 387,
+   "peakDeg": 17.9,
+   "firstQuad": "LR",
+   "validFrac": 0.85,
+   "fixGx": 0.09,
+   "fixGy": -0.25,
+   "fixOverride": false
+  },
+  {
+   "idx": 29,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-up-R",
+   "quad": "UR",
+   "ring": null,
+   "elev": "up",
+   "side": "R",
+   "targets": [
+    {
+     "id": "DSS-up-R",
+     "h": 17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "missed",
+   "tOnset": 122738,
+   "latency": null,
+   "peakDeg": 5,
+   "firstQuad": null,
+   "validFrac": 1,
+   "fixGx": 0,
+   "fixGy": -0.78,
+   "fixOverride": false
+  },
+  {
+   "idx": 30,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-up-L",
+   "quad": "UL",
+   "ring": null,
+   "elev": "up",
+   "side": "L",
+   "targets": [
+    {
+     "id": "DSS-up-L",
+     "h": -17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 125554,
+   "latency": 281,
+   "peakDeg": 19.5,
+   "firstQuad": "UL",
+   "validFrac": 1,
+   "fixGx": -0.16,
+   "fixGy": 0.48,
+   "fixOverride": false
+  },
+  {
+   "idx": 31,
+   "block": "dss",
+   "kind": "catch",
+   "locId": "catch",
+   "quad": null,
+   "ring": null,
+   "elev": null,
+   "side": null,
+   "targets": [],
+   "method": "camera",
+   "outcome": "cr",
+   "tOnset": 129421,
+   "latency": null,
+   "validFrac": 1,
+   "fixGx": -0.05,
+   "fixGy": 0.32,
+   "fixOverride": false
+  },
+  {
+   "idx": 32,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-up",
+   "quad": null,
+   "ring": null,
+   "elev": "up",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-up-L",
+     "h": -17,
+     "v": 6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-up-R",
+     "h": 17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "left",
+   "tOnset": 132104,
+   "first": "L",
+   "latency": 200,
+   "secondLatency": null,
+   "validFrac": 0.89,
+   "fixGx": 0.32,
+   "fixGy": -0.21,
+   "fixOverride": false
+  },
+  {
+   "idx": 33,
+   "block": "dss",
+   "kind": "dss-bi",
+   "locId": "DSS-bi-up",
+   "quad": null,
+   "ring": null,
+   "elev": "up",
+   "side": null,
+   "targets": [
+    {
+     "id": "DSS-up-L",
+     "h": -17,
+     "v": 6.6,
+     "ecc": 18.1
+    },
+    {
+     "id": "DSS-up-R",
+     "h": 17,
+     "v": 6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "left",
+   "tOnset": 135971,
+   "first": "L",
+   "latency": 194,
+   "secondLatency": null,
+   "validFrac": 0.95,
+   "fixGx": 0.02,
+   "fixGy": -0.44,
+   "fixOverride": false
+  },
+  {
+   "idx": 34,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-lo-L",
+   "quad": "LL",
+   "ring": null,
+   "elev": "lo",
+   "side": "L",
+   "targets": [
+    {
+     "id": "DSS-lo-L",
+     "h": -17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 139720,
+   "latency": 305,
+   "peakDeg": 18.8,
+   "firstQuad": "LL",
+   "validFrac": 1,
+   "fixGx": 0.02,
+   "fixGy": -0.56,
+   "fixOverride": false
+  },
+  {
+   "idx": 35,
+   "block": "dss",
+   "kind": "dss-uni",
+   "locId": "DSS-lo-R",
+   "quad": "LR",
+   "ring": null,
+   "elev": "lo",
+   "side": "R",
+   "targets": [
+    {
+     "id": "DSS-lo-R",
+     "h": 17,
+     "v": -6.6,
+     "ecc": 18.1
+    }
+   ],
+   "method": "camera",
+   "outcome": "seen",
+   "tOnset": 142753,
+   "latency": 308,
+   "peakDeg": 17.7,
+   "firstQuad": "LR",
+   "validFrac": 1,
+   "fixGx": 0.01,
+   "fixGy": -0.43,
+   "fixOverride": false
+  }
+ ],
+ "notes": "",
+ "summary": {
+  "hasQuad": true,
+  "hasDss": true,
+  "interpretation": [
+   {
+    "tone": "bad",
+    "text": "Right superior (upper) quadrantanopia pattern",
+    "detail": "Only the upper-right quadrant was missed. Fits a LEFT temporal (Meyer’s loop) or inferior-radiation / lingual-gyrus lesion."
+   },
+   {
+    "tone": "warn",
+    "text": "Double simultaneous stimulation not interpretable for the right side",
+    "detail": "Single stimuli on the right side were not reliably detected (left 100%, right 50%), so failure under bilateral stimulation cannot be called extinction. Extinction is only meaningful where single stimuli are detected."
+   }
+  ],
+  "flags": [],
+  "quads": {
+   "UR": {
+    "n": 4,
+    "seen": 0,
+    "delayed": 0,
+    "missed": 4,
+    "invalid": 0,
+    "rate": 0,
+    "lat": null,
+    "cls": "defective",
+    "in": {
+     "n": 2,
+     "seen": 0,
+     "delayed": 0,
+     "missed": 2,
+     "invalid": 0,
+     "rate": 0,
+     "lat": null
+    },
+    "out": {
+     "n": 2,
+     "seen": 0,
+     "delayed": 0,
+     "missed": 2,
+     "invalid": 0,
+     "rate": 0,
+     "lat": null
+    }
+   },
+   "UL": {
+    "n": 4,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 279.5,
+    "cls": "intact",
+    "in": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": 314
+    },
+    "out": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": 229.5
+    }
+   },
+   "LR": {
+    "n": 4,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 302.5,
+    "cls": "intact",
+    "in": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": 278.5
+    },
+    "out": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": 314.5
+    }
+   },
+   "LL": {
+    "n": 4,
+    "seen": 3,
+    "delayed": 0,
+    "missed": 1,
+    "invalid": 0,
+    "rate": 0.75,
+    "lat": 315,
+    "cls": "intact",
+    "in": {
+     "n": 2,
+     "seen": 1,
+     "delayed": 0,
+     "missed": 1,
+     "invalid": 0,
+     "rate": 0.5,
+     "lat": 416
+    },
+    "out": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": 277
+    }
+   }
+  },
+  "cls": {
+   "UR": "defective",
+   "UL": "intact",
+   "LR": "intact",
+   "LL": "intact"
+  },
+  "hemi": {
+   "R": {
+    "n": 8,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 4,
+    "invalid": 0,
+    "rate": 0.5,
+    "lat": 302.5,
+    "cls": "equivocal"
+   },
+   "L": {
+    "n": 8,
+    "seen": 7,
+    "delayed": 0,
+    "missed": 1,
+    "invalid": 0,
+    "rate": 0.875,
+    "lat": 303,
+    "cls": "intact"
+   },
+   "U": {
+    "n": 8,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 4,
+    "invalid": 0,
+    "rate": 0.5,
+    "lat": 279.5,
+    "cls": "equivocal"
+   },
+   "Lo": {
+    "n": 8,
+    "seen": 7,
+    "delayed": 0,
+    "missed": 1,
+    "invalid": 0,
+    "rate": 0.875,
+    "lat": 306,
+    "cls": "intact"
+   }
+  },
+  "locations": {
+   "UL-out": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 229.5,
+    "quad": "UL",
+    "ring": "out",
+    "target": {
+     "id": "UL-out",
+     "h": -20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   },
+   "UR-out": {
+    "n": 2,
+    "seen": 0,
+    "delayed": 0,
+    "missed": 2,
+    "invalid": 0,
+    "rate": 0,
+    "lat": null,
+    "quad": "UR",
+    "ring": "out",
+    "target": {
+     "id": "UR-out",
+     "h": 20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   },
+   "LR-out": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 314.5,
+    "quad": "LR",
+    "ring": "out",
+    "target": {
+     "id": "LR-out",
+     "h": 20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   },
+   "LL-in": {
+    "n": 2,
+    "seen": 1,
+    "delayed": 0,
+    "missed": 1,
+    "invalid": 0,
+    "rate": 0.5,
+    "lat": 416,
+    "quad": "LL",
+    "ring": "in",
+    "target": {
+     "id": "LL-in",
+     "h": -11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   },
+   "UL-in": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 314,
+    "quad": "UL",
+    "ring": "in",
+    "target": {
+     "id": "UL-in",
+     "h": -11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   },
+   "UR-in": {
+    "n": 2,
+    "seen": 0,
+    "delayed": 0,
+    "missed": 2,
+    "invalid": 0,
+    "rate": 0,
+    "lat": null,
+    "quad": "UR",
+    "ring": "in",
+    "target": {
+     "id": "UR-in",
+     "h": 11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   },
+   "LR-in": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 278.5,
+    "quad": "LR",
+    "ring": "in",
+    "target": {
+     "id": "LR-in",
+     "h": 11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   },
+   "LL-out": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 277,
+    "quad": "LL",
+    "ring": "out",
+    "target": {
+     "id": "LL-out",
+     "h": -20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   }
+  },
+  "catch": {
+   "n": 4,
+   "fa": 0,
+   "rate": 0
+  },
+  "reliability": {
+   "attempts": 36,
+   "invalid": 0,
+   "invalidFrac": 0,
+   "faRate": 0,
+   "trackingFrac": 0.9608333333333334,
+   "overrides": 0,
+   "reasons": [],
+   "level": "good"
+  },
+  "pattern": {
+   "code": "RSQ",
+   "tone": "bad",
+   "title": "Right superior (upper) quadrantanopia pattern",
+   "detail": "Only the upper-right quadrant was missed. Fits a LEFT temporal (Meyer’s loop) or inferior-radiation / lingual-gyrus lesion."
+  },
+  "dss": {
+   "uniL": {
+    "n": 4,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": 293
+   },
+   "uniR": {
+    "n": 4,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 2,
+    "invalid": 0,
+    "rate": 0.5,
+    "lat": 347.5
+   },
+   "bi": {
+    "n": 8,
+    "both": 4,
+    "left": 4,
+    "right": 0,
+    "none": 0
+   },
+   "detL": 1,
+   "detR": 0.5,
+   "first": {
+    "L": 7,
+    "R": 1
+   },
+   "extinction": null,
+   "tone": "warn",
+   "title": "Double simultaneous stimulation not interpretable for the right side",
+   "detail": "Single stimuli on the right side were not reliably detected (left 100%, right 50%), so failure under bilateral stimulation cannot be called extinction. Extinction is only meaningful where single stimuli are detected."
+  }
+ }
+}

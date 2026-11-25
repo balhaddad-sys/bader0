@@ -1,0 +1,742 @@
+{
+ "id": "mwvmuupfab11",
+ "createdAt": 1795581487348,
+ "appVersion": "1.4.0",
+ "label": "DEMO · Left homonymous hemianopia",
+ "method": "examiner",
+ "eye": "both",
+ "demo": true,
+ "calSource": null,
+ "stimulus": "disc",
+ "flickerHz": 12,
+ "windowMs": 1800,
+ "reps": 2,
+ "geo": {
+  "pxPerMm": 3.78,
+  "distanceCm": 30,
+  "width": 1280,
+  "height": 800,
+  "halfDegH": 29.4,
+  "halfDegV": 19.4,
+  "stimDeg": 3
+ },
+ "cal": null,
+ "trials": [
+  {
+   "idx": 0,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UL-in",
+   "quad": "UL",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UL-in",
+     "h": -11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "examiner",
+   "outcome": "missed",
+   "tOnset": 1682,
+   "scoreMs": 978
+  },
+  {
+   "idx": 1,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LL-out",
+   "quad": "LL",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LL-out",
+     "h": -20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "examiner",
+   "outcome": "missed",
+   "tOnset": 5130,
+   "scoreMs": 789
+  },
+  {
+   "idx": 2,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UR-out",
+   "quad": "UR",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UR-out",
+     "h": 20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "examiner",
+   "outcome": "seen",
+   "tOnset": 8496,
+   "scoreMs": 879
+  },
+  {
+   "idx": 3,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LL-in",
+   "quad": "LL",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LL-in",
+     "h": -11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "examiner",
+   "outcome": "missed",
+   "tOnset": 10993,
+   "scoreMs": 904
+  },
+  {
+   "idx": 4,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LR-in",
+   "quad": "LR",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LR-in",
+     "h": 11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "examiner",
+   "outcome": "seen",
+   "tOnset": 14010,
+   "scoreMs": 881
+  },
+  {
+   "idx": 5,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UR-in",
+   "quad": "UR",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UR-in",
+     "h": 11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "examiner",
+   "outcome": "seen",
+   "tOnset": 16610,
+   "scoreMs": 1041
+  },
+  {
+   "idx": 6,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UL-out",
+   "quad": "UL",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UL-out",
+     "h": -20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "examiner",
+   "outcome": "missed",
+   "tOnset": 19912,
+   "scoreMs": 763
+  },
+  {
+   "idx": 7,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LR-out",
+   "quad": "LR",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LR-out",
+     "h": 20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "examiner",
+   "outcome": "seen",
+   "tOnset": 22460,
+   "scoreMs": 996
+  },
+  {
+   "idx": 8,
+   "block": "quad",
+   "kind": "catch",
+   "locId": "catch",
+   "quad": null,
+   "ring": null,
+   "elev": null,
+   "side": null,
+   "targets": [],
+   "method": "examiner",
+   "outcome": "cr",
+   "tOnset": 25760,
+   "scoreMs": 841
+  },
+  {
+   "idx": 9,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UR-in",
+   "quad": "UR",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UR-in",
+     "h": 11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "examiner",
+   "outcome": "seen",
+   "tOnset": 28476,
+   "scoreMs": 778
+  },
+  {
+   "idx": 10,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UL-in",
+   "quad": "UL",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UL-in",
+     "h": -11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "examiner",
+   "outcome": "missed",
+   "tOnset": 31326,
+   "scoreMs": 835
+  },
+  {
+   "idx": 11,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LR-in",
+   "quad": "LR",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LR-in",
+     "h": 11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "examiner",
+   "outcome": "seen",
+   "tOnset": 34710,
+   "scoreMs": 827
+  },
+  {
+   "idx": 12,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UR-out",
+   "quad": "UR",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UR-out",
+     "h": 20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "examiner",
+   "outcome": "seen",
+   "tOnset": 38026,
+   "scoreMs": 810
+  },
+  {
+   "idx": 13,
+   "block": "quad",
+   "kind": "catch",
+   "locId": "catch",
+   "quad": null,
+   "ring": null,
+   "elev": null,
+   "side": null,
+   "targets": [],
+   "method": "examiner",
+   "outcome": "cr",
+   "tOnset": 40543,
+   "scoreMs": 852
+  },
+  {
+   "idx": 14,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LR-out",
+   "quad": "LR",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LR-out",
+     "h": 20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "examiner",
+   "outcome": "seen",
+   "tOnset": 43842,
+   "scoreMs": 755
+  },
+  {
+   "idx": 15,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LL-out",
+   "quad": "LL",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LL-out",
+     "h": -20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "examiner",
+   "outcome": "missed",
+   "tOnset": 46592,
+   "scoreMs": 912
+  },
+  {
+   "idx": 16,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "UL-out",
+   "quad": "UL",
+   "ring": "out",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "UL-out",
+     "h": -20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   ],
+   "method": "examiner",
+   "outcome": "missed",
+   "tOnset": 50060,
+   "scoreMs": 844
+  },
+  {
+   "idx": 17,
+   "block": "quad",
+   "kind": "quad",
+   "locId": "LL-in",
+   "quad": "LL",
+   "ring": "in",
+   "elev": null,
+   "side": null,
+   "targets": [
+    {
+     "id": "LL-in",
+     "h": -11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   ],
+   "method": "examiner",
+   "outcome": "missed",
+   "tOnset": 53425,
+   "scoreMs": 879
+  }
+ ],
+ "notes": "",
+ "summary": {
+  "hasQuad": true,
+  "hasDss": false,
+  "interpretation": [
+   {
+    "tone": "bad",
+    "text": "Left homonymous hemianopia pattern",
+    "detail": "Both left-sided quadrants were missed with the right intact. Fits a retrochiasmal lesion on the RIGHT. Where responses are absent on the left, also consider hemispatial neglect (see the double-simultaneous block)."
+   }
+  ],
+  "flags": [],
+  "quads": {
+   "UR": {
+    "n": 4,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": null,
+    "cls": "intact",
+    "in": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": null
+    },
+    "out": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": null
+    }
+   },
+   "UL": {
+    "n": 4,
+    "seen": 0,
+    "delayed": 0,
+    "missed": 4,
+    "invalid": 0,
+    "rate": 0,
+    "lat": null,
+    "cls": "defective",
+    "in": {
+     "n": 2,
+     "seen": 0,
+     "delayed": 0,
+     "missed": 2,
+     "invalid": 0,
+     "rate": 0,
+     "lat": null
+    },
+    "out": {
+     "n": 2,
+     "seen": 0,
+     "delayed": 0,
+     "missed": 2,
+     "invalid": 0,
+     "rate": 0,
+     "lat": null
+    }
+   },
+   "LR": {
+    "n": 4,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": null,
+    "cls": "intact",
+    "in": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": null
+    },
+    "out": {
+     "n": 2,
+     "seen": 2,
+     "delayed": 0,
+     "missed": 0,
+     "invalid": 0,
+     "rate": 1,
+     "lat": null
+    }
+   },
+   "LL": {
+    "n": 4,
+    "seen": 0,
+    "delayed": 0,
+    "missed": 4,
+    "invalid": 0,
+    "rate": 0,
+    "lat": null,
+    "cls": "defective",
+    "in": {
+     "n": 2,
+     "seen": 0,
+     "delayed": 0,
+     "missed": 2,
+     "invalid": 0,
+     "rate": 0,
+     "lat": null
+    },
+    "out": {
+     "n": 2,
+     "seen": 0,
+     "delayed": 0,
+     "missed": 2,
+     "invalid": 0,
+     "rate": 0,
+     "lat": null
+    }
+   }
+  },
+  "cls": {
+   "UR": "intact",
+   "UL": "defective",
+   "LR": "intact",
+   "LL": "defective"
+  },
+  "hemi": {
+   "R": {
+    "n": 8,
+    "seen": 8,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": null,
+    "cls": "intact"
+   },
+   "L": {
+    "n": 8,
+    "seen": 0,
+    "delayed": 0,
+    "missed": 8,
+    "invalid": 0,
+    "rate": 0,
+    "lat": null,
+    "cls": "defective"
+   },
+   "U": {
+    "n": 8,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 4,
+    "invalid": 0,
+    "rate": 0.5,
+    "lat": null,
+    "cls": "equivocal"
+   },
+   "Lo": {
+    "n": 8,
+    "seen": 4,
+    "delayed": 0,
+    "missed": 4,
+    "invalid": 0,
+    "rate": 0.5,
+    "lat": null,
+    "cls": "equivocal"
+   }
+  },
+  "locations": {
+   "UL-in": {
+    "n": 2,
+    "seen": 0,
+    "delayed": 0,
+    "missed": 2,
+    "invalid": 0,
+    "rate": 0,
+    "lat": null,
+    "quad": "UL",
+    "ring": "in",
+    "target": {
+     "id": "UL-in",
+     "h": -11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   },
+   "LL-out": {
+    "n": 2,
+    "seen": 0,
+    "delayed": 0,
+    "missed": 2,
+    "invalid": 0,
+    "rate": 0,
+    "lat": null,
+    "quad": "LL",
+    "ring": "out",
+    "target": {
+     "id": "LL-out",
+     "h": -20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   },
+   "UR-out": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": null,
+    "quad": "UR",
+    "ring": "out",
+    "target": {
+     "id": "UR-out",
+     "h": 20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   },
+   "LL-in": {
+    "n": 2,
+    "seen": 0,
+    "delayed": 0,
+    "missed": 2,
+    "invalid": 0,
+    "rate": 0,
+    "lat": null,
+    "quad": "LL",
+    "ring": "in",
+    "target": {
+     "id": "LL-in",
+     "h": -11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   },
+   "LR-in": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": null,
+    "quad": "LR",
+    "ring": "in",
+    "target": {
+     "id": "LR-in",
+     "h": 11.5,
+     "v": -5.8,
+     "ecc": 12.9
+    }
+   },
+   "UR-in": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": null,
+    "quad": "UR",
+    "ring": "in",
+    "target": {
+     "id": "UR-in",
+     "h": 11.5,
+     "v": 5.8,
+     "ecc": 12.9
+    }
+   },
+   "UL-out": {
+    "n": 2,
+    "seen": 0,
+    "delayed": 0,
+    "missed": 2,
+    "invalid": 0,
+    "rate": 0,
+    "lat": null,
+    "quad": "UL",
+    "ring": "out",
+    "target": {
+     "id": "UL-out",
+     "h": -20.9,
+     "v": 10.9,
+     "ecc": 23.2
+    }
+   },
+   "LR-out": {
+    "n": 2,
+    "seen": 2,
+    "delayed": 0,
+    "missed": 0,
+    "invalid": 0,
+    "rate": 1,
+    "lat": null,
+    "quad": "LR",
+    "ring": "out",
+    "target": {
+     "id": "LR-out",
+     "h": 20.9,
+     "v": -10.9,
+     "ecc": 23.2
+    }
+   }
+  },
+  "catch": {
+   "n": 2,
+   "fa": 0,
+   "rate": 0
+  },
+  "reliability": {
+   "attempts": 18,
+   "invalid": 0,
+   "invalidFrac": 0,
+   "faRate": 0,
+   "trackingFrac": null,
+   "overrides": 0,
+   "reasons": [],
+   "level": "good"
+  },
+  "pattern": {
+   "code": "LHH",
+   "tone": "bad",
+   "title": "Left homonymous hemianopia pattern",
+   "detail": "Both left-sided quadrants were missed with the right intact. Fits a retrochiasmal lesion on the RIGHT. Where responses are absent on the left, also consider hemispatial neglect (see the double-simultaneous block)."
+  }
+ }
+}
